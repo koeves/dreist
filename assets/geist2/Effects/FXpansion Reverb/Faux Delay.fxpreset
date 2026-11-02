@@ -1,0 +1,5 @@
+<root>
+    <Effect name="Effect" version="2" EffectType="FXpansion Reverb" Mix="0.7150000333786011" Parameter0="1" Parameter4="0.7100000381469727" Parameter5="0.1700000017881393">
+        <VFixedString_260 name="PresetName" string="C:\Users\lawrence_fx\Documents\FXpansion\Geist2\Effects\FXpansion Reverb\Faux Delay.fxpreset" />
+    </Effect>
+</root>

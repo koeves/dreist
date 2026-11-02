@@ -1,0 +1,5 @@
+<root>
+    <Effect name="Effect" version="2" EffectType="Analog Ring Mod" Mix="0.4450001120567322" Parameter1="1" Parameter2="0.2100001275539398" Parameter3="0.8950000405311585">
+        <VFixedString_260 name="PresetName" string="C:\Users\lawrence_fx\Documents\FXpansion\Geist2\Effects\Analog Ring Mod\Roughener.fxpreset" />
+    </Effect>
+</root>

@@ -1,0 +1,5 @@
+<root>
+    <Effect name="Effect" version="2" EffectType="Driver" Level="0.7599999904632568" Mix="1" Parameter0="0.90625" Parameter1="1" Parameter3="0.5299999713897705" Parameter4="1" Parameter5="1" Parameter6="0.1800000071525574" Parameter7="0.5249999761581421" Parameter8="0.6200000047683716">
+        <VFixedString_260 name="PresetName" string="C:\Users\lawrence_fx\Documents\FXpansion\Geist2\Effects\Driver\HF Crush.fxpreset" />
+    </Effect>
+</root>

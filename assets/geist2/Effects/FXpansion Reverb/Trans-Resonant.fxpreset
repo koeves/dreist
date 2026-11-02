@@ -1,0 +1,5 @@
+<root>
+    <Effect name="Effect" version="2" EffectType="FXpansion Reverb" Mix="0.6650000214576721" Parameter0="0.04500000178813934" Parameter1="0.9300000071525574" Parameter4="0.08500000089406967" Parameter5="0.08500000089406967">
+        <VFixedString_260 name="PresetName" string="C:\Users\lawrence_fx\Documents\FXpansion\Geist2\Effects\FXpansion Reverb\Trans-Resonant.fxpreset" />
+    </Effect>
+</root>

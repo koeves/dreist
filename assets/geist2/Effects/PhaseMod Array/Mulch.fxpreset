@@ -1,0 +1,5 @@
+<root>
+    <Effect name="Effect" version="2" EffectType="PhaseMod Array" Level="0.8299999833106995" Mix="0.5800000429153442" Parameter0="0.05500000342726708" Parameter2="0.6000000238418579" Parameter3="0.6799999475479126" Parameter5="0.5649999976158142">
+        <VFixedString_260 name="PresetName" string="C:\Users\lawrence_fx\Documents\FXpansion\Geist2\Effects\PhaseMod Array\Mulch.fxpreset" />
+    </Effect>
+</root>

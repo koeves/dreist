@@ -1,0 +1,5 @@
+<root>
+    <Effect name="Effect" version="2" EffectType="Shaped Distortion" Level="0.6349999308586121" Mix="0.4749999046325684" Mix_Slot1="-0.04500001668930054" Parameter0="0.15625" Parameter1="0.5849999785423279" Parameter2="1" Parameter3="0.2199999988079071" Parameter4="0.4426511824131012" Parameter5="1">
+        <VFixedString_260 name="PresetName" string="C:\Users\lawrence_fx\Documents\FXpansion\Geist2\Effects\Shaped Distortion\Tighten Up.fxpreset" />
+    </Effect>
+</root>

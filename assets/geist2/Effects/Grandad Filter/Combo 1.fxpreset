@@ -1,0 +1,5 @@
+<root>
+    <Effect name="Effect" version="2" EffectType="Grandad Filter" Mix="1" Parameter0="0.6010389924049377" Parameter1="0.6666666865348816" Parameter2="0.4999999701976776" Parameter3="0.1550000011920929" Parameter4="0.5099599957466126" Parameter5="1">
+        <VFixedString_260 name="PresetName" string="C:\Users\lawrence_fx\Documents\FXpansion\Geist2\Effects\Grandad Filter\Combo 1.fxpreset" />
+    </Effect>
+</root>

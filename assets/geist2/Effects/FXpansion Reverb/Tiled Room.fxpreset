@@ -1,0 +1,5 @@
+<root>
+    <Effect name="Effect" version="2" EffectType="FXpansion Reverb" Mix="0.2849999964237213" Parameter0="0.4050000309944153" Parameter1="0.5299999713897705" Parameter2="1" Parameter3="0.3649999797344208" Parameter4="0.3650000095367432">
+        <VFixedString_260 name="PresetName" string="C:\Users\lawrence_fx\Documents\FXpansion\Geist2\Effects\FXpansion Reverb\Tiled Room.fxpreset" />
+    </Effect>
+</root>

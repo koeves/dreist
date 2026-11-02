@@ -1,0 +1,5 @@
+<root>
+    <Effect name="Effect" version="2" EffectType="Amber Chorus" Mix="0.6100000143051148" Parameter0="0.6000000238418579" Parameter1="0.3899999856948853" Parameter2="0.8250001072883606" Parameter3="1">
+        <VFixedString_260 name="PresetName" string="C:\Users\lawrence_fx\Documents\FXpansion\Geist2\Effects\Amber Chorus\Orwellian.fxpreset" />
+    </Effect>
+</root>

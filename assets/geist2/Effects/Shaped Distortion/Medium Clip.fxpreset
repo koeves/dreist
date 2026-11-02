@@ -1,0 +1,5 @@
+<root>
+    <Effect name="Effect" version="2" EffectType="Shaped Distortion" Level="0.5550000071525574" Mix="0.5549998879432678" Parameter0="0.6874999403953552" Parameter1="0.6800000667572022" Parameter3="0.7199999690055847" Parameter4="0.4426511824131012" Parameter5="1">
+        <VFixedString_260 name="PresetName" string="C:\Users\lawrence_fx\Documents\FXpansion\Geist2\Effects\Shaped Distortion\Medium Clip.fxpreset" />
+    </Effect>
+</root>

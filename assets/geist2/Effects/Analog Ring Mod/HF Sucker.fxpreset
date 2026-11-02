@@ -1,0 +1,5 @@
+<root>
+    <Effect name="Effect" version="2" EffectType="Analog Ring Mod" Mix="1" Parameter1="0.9150000214576721" Parameter2="0.4500000178813934" Parameter3="0.3050000071525574">
+        <VFixedString_260 name="PresetName" string="C:\Users\lawrence_fx\Documents\FXpansion\Geist2\Effects\Analog Ring Mod\HF Sucker.fxpreset" />
+    </Effect>
+</root>

@@ -1,0 +1,5 @@
+<root>
+    <Effect name="Effect" version="2" EffectType="PhaseMod Array" Level="0.8450000286102295" Mix="0.6699999570846558" Parameter0="0.8500000238418579" Parameter1="0.5" Parameter2="0.6600000262260437" Parameter3="0.1600000262260437" Parameter4="0.2899999916553497" Parameter5="0.4350000023841858">
+        <VFixedString_260 name="PresetName" string="C:\Users\lawrence_fx\Documents\FXpansion\Geist2\Effects\PhaseMod Array\HF Reactive.fxpreset" />
+    </Effect>
+</root>

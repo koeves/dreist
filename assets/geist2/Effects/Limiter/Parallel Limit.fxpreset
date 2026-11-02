@@ -1,0 +1,5 @@
+<root>
+    <Effect name="Effect" version="2" EffectType="Limiter" Mix="0.1700000017881393" Parameter0="1" Parameter1="0.6199999451637268" Parameter2="1">
+        <VFixedString_260 name="PresetName" string="C:\Users\lawrence_fx\Documents\FXpansion\Geist2\Effects\Limiter\Parallel Limit.fxpreset" />
+    </Effect>
+</root>

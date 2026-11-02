@@ -1,0 +1,5 @@
+<root>
+    <Effect name="Effect" version="2" EffectType="Bloom" Mix="0.4249999821186066" Parameter0="1" Parameter1="0.4649999737739563" Parameter2="0.8650000095367432" Parameter3="0.4799999892711639" Parameter6="1" Parameter7="1">
+        <VFixedString_260 name="PresetName" string="C:\Users\lawrence_fx\Documents\FXpansion\Geist2\Effects\Bloom\Stutter Build.fxpreset" />
+    </Effect>
+</root>

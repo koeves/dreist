@@ -1,0 +1,5 @@
+<root>
+    <Effect name="Effect" version="2" EffectType="Maul" Mix="0.3699999749660492" Parameter0="0.8125" Parameter1="0.699999988079071" Parameter2="0.675000011920929" Parameter3="0.4699999988079071" Parameter4="0.6200000047683716" Parameter5="0.2700000107288361" Parameter6="0.6549999713897705" Parameter7="0.6299999952316284" Parameter8="0.5">
+        <VFixedString_260 name="PresetName" string="C:\Users\lawrence_fx\Documents\FXpansion\Geist2\Effects\Maul\Classic Drive.fxpreset" />
+    </Effect>
+</root>

@@ -1,0 +1,5 @@
+<root>
+    <Effect name="Effect" version="2" EffectType="Drum Dynamics" Mix="1" Parameter0="0.3300000131130219" Parameter1="0.7649999856948853">
+        <VFixedString_260 name="PresetName" string="C:\Users\lawrence_fx\Documents\FXpansion\Geist2\Effects\Drum Dynamics\Mock Compress.fxpreset" />
+    </Effect>
+</root>

@@ -1,0 +1,5 @@
+<root>
+    <Effect name="Effect" version="2" EffectType="Bloom" Mix="0.5299999713897705" Mix_Slot1="-0.02000004053115845" Parameter1_Slot1="1.862645149230957e-009" Parameter2="0.09999994188547134" Parameter3="1" Parameter6="1">
+        <VFixedString_260 name="PresetName" string="C:\Users\lawrence_fx\Documents\FXpansion\Geist2\Effects\Bloom\Cheap Room.fxpreset" />
+    </Effect>
+</root>

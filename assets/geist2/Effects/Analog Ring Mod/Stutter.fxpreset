@@ -1,0 +1,5 @@
+<root>
+    <Effect name="Effect" version="2" EffectType="Analog Ring Mod" Mix="1" Parameter0="1" Parameter3="1">
+        <VFixedString_260 name="PresetName" string="C:\Users\lawrence_fx\Documents\FXpansion\Geist2\Effects\Analog Ring Mod\Stutter.fxpreset" />
+    </Effect>
+</root>

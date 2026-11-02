@@ -1,0 +1,5 @@
+<root>
+    <Effect name="Effect" version="2" EffectType="PhaseMod Array" Mix="0.4950000047683716" Parameter0="0.5" Parameter2="1" Parameter3="0.9000000357627869" Parameter4="0.4399999976158142" Parameter5="0.3849999904632568">
+        <VFixedString_260 name="PresetName" string="C:\Users\lawrence_fx\Documents\FXpansion\Geist2\Effects\PhaseMod Array\Semitone Mod.fxpreset" />
+    </Effect>
+</root>

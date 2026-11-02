@@ -1,0 +1,5 @@
+<root>
+    <Effect name="Effect" version="2" EffectType="VCA Compressor" Mix="1" Parameter0="0.3100000321865082" Parameter1="0.08499996364116669" Parameter2="0.3850000500679016" Parameter3="0.3149999380111694" Parameter4="0.5550000071525574" Parameter5="0.135000005364418">
+        <VFixedString_260 name="PresetName" string="C:\Users\lawrence_fx\Documents\FXpansion\Geist2\Effects\VCA Compressor\Snappy Release.fxpreset" />
+    </Effect>
+</root>

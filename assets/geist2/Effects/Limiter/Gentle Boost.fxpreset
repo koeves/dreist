@@ -1,0 +1,5 @@
+<root>
+    <Effect name="Effect" version="2" EffectType="Limiter" Mix="0.7849999666213989" Parameter1="0.5499999523162842" Parameter2="0.9850000143051148">
+        <VFixedString_260 name="PresetName" string="C:\Users\lawrence_fx\Documents\FXpansion\Geist2\Effects\Limiter\Gentle Boost.fxpreset" />
+    </Effect>
+</root>

@@ -1,0 +1,5 @@
+<root>
+    <Effect name="Effect" version="2" EffectType="Maul" Mix="0.6200000047683716" Parameter0="0.40625" Parameter1="0.4950000047683716" Parameter2="0.6000000238418579" Parameter3="0.8400000333786011" Parameter4="0.6200000047683716" Parameter5="0.3499999642372131" Parameter6="0.6050000190734863" Parameter7="0.7049999833106995" Parameter8="0.5400000214576721">
+        <VFixedString_260 name="PresetName" string="C:\Users\lawrence_fx\Documents\FXpansion\Geist2\Effects\Maul\RM Bitcrush.fxpreset" />
+    </Effect>
+</root>

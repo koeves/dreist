@@ -1,0 +1,16 @@
+[package]
+name = "geist-dsp"
+edition.workspace = true
+version.workspace = true
+license.workspace = true
+description = "Sampler voice DSP ported from the Geist2 engine (envelopes, interpolation, mixing)"
+
+[dependencies]
+signalsmith-stretch = "0.1.3"
+rustfft = "6"
+
+[dev-dependencies]
+geist-testkit = { path = "../geist-testkit" }
+
+[lints]
+workspace = true

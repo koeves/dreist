@@ -1,0 +1,5 @@
+<root>
+    <Effect name="Effect" version="2" EffectType="Drum Dynamics" Mix="1" Parameter0="0.6800000071525574" Parameter1="0.6650000214576721">
+        <VFixedString_260 name="PresetName" string="C:\Users\lawrence_fx\Documents\FXpansion\Geist2\Effects\Drum Dynamics\Add Movement.fxpreset" />
+    </Effect>
+</root>

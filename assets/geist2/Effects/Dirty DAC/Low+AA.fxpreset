@@ -1,0 +1,5 @@
+<root>
+    <Effect name="Effect" version="2" EffectType="Dirty DAC" Mix="1" Parameter1="1">
+        <VFixedString_260 name="PresetName" string="C:\Users\lawrence_fx\Documents\FXpansion\Geist2\Effects\Dirty DAC\Low.fxpreset" />
+    </Effect>
+</root>

@@ -1,0 +1,5 @@
+<root>
+    <Effect name="Effect" version="2" EffectType="PhaseMod Array" Mix="0.6999999284744263" Parameter2="1" Parameter3="1">
+        <VFixedString_260 name="PresetName" string="C:\Users\lawrence_fx\Documents\FXpansion\Geist2\Effects\PhaseMod Array\Wide Low End.fxpreset" />
+    </Effect>
+</root>

@@ -1,0 +1,5 @@
+<root>
+    <Effect name="Effect" version="2" EffectType="Drum Dynamics" Mix="1" Parameter1="0.7850000262260437" Parameter2="1">
+        <VFixedString_260 name="PresetName" string="C:\Users\lawrence_fx\Documents\FXpansion\Geist2\Effects\Drum Dynamics\Extreme Sustain.fxpreset" />
+    </Effect>
+</root>

@@ -1,0 +1,7 @@
+<root>
+    <vector name="defaultStyles">
+        <VString string="/Styles/Dreist.style/Colours.stylesheet" />
+        <VString string="/Styles/Dreist.style/Fonts.stylesheet" />
+        <VString string="/Styles/Dreist.style/Styles.stylesheet" />
+    </vector>
+</root>

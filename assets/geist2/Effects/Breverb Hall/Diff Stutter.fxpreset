@@ -1,0 +1,5 @@
+<root>
+    <Effect name="Effect" version="2" EffectType="Breverb Hall" Mix="0.4996910095214844" Parameter3="0.4943540096282959" Parameter4="1">
+        <VFixedString_260 name="PresetName" string="C:\Users\lawrence_fx\Documents\FXpansion\Geist2\Effects\Breverb Hall\Breverb Hall (Diff Stutter).fxpreset" />
+    </Effect>
+</root>

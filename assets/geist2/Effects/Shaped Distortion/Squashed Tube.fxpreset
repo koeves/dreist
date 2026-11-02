@@ -1,0 +1,5 @@
+<root>
+    <Effect name="Effect" version="2" EffectType="Shaped Distortion" Mix="0.7399998903274536" Parameter0="0.21875" Parameter1="0.7100000381469727" Parameter2="1" Parameter3="1" Parameter4="0.452651172876358" Parameter5="1">
+        <VFixedString_260 name="PresetName" string="C:\Users\lawrence_fx\Documents\FXpansion\Geist2\Effects\Shaped Distortion\Squashed Tube.fxpreset" />
+    </Effect>
+</root>

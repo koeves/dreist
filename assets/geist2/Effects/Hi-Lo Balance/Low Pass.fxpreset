@@ -1,0 +1,5 @@
+<root>
+    <Effect name="Effect" version="2" EffectType="Hi-Lo Balance" Mix="1" Parameter1="0.425000011920929">
+        <VFixedString_260 name="PresetName" string="C:\Users\lawrence_fx\Documents\FXpansion\Geist2\Effects\Hi-Lo Balance\Remove Top End.fxpreset" />
+    </Effect>
+</root>

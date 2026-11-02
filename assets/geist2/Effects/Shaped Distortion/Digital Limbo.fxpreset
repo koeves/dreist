@@ -1,0 +1,5 @@
+<root>
+    <Effect name="Effect" version="2" EffectType="Shaped Distortion" Level="0.5199999809265137" Mix="0.9999998807907105" Parameter0="1" Parameter1="1" Parameter2="1" Parameter3="1" Parameter4="0.432651162147522">
+        <VFixedString_260 name="PresetName" string="C:\Users\lawrence_fx\Documents\FXpansion\Geist2\Effects\Shaped Distortion\Digital Limbo.fxpreset" />
+    </Effect>
+</root>

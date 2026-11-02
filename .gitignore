@@ -1,0 +1,9 @@
+/target
+# Reverse-engineering tools and notes live in the private dreist-re repository.
+/re/
+*.rea-snapshot
+.DS_Store
+
+# Conflict copies made by file sync ("name 2.rs").
+crates/**/* [0-9].rs
+__pycache__/

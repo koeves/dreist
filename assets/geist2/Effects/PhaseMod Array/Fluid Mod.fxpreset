@@ -1,0 +1,5 @@
+<root>
+    <Effect name="Effect" version="2" EffectType="PhaseMod Array" Level="0.6349999904632568" Mix="0.6599999666213989" Parameter0="0.2200000286102295" Parameter1="0.5" Parameter2="0.4549999833106995" Parameter3="1" Parameter4="0.8100000023841858" Parameter5="1">
+        <VFixedString_260 name="PresetName" string="C:\Users\lawrence_fx\Documents\FXpansion\Geist2\Effects\PhaseMod Array\Fluid Mod.fxpreset" />
+    </Effect>
+</root>

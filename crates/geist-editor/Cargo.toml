@@ -1,0 +1,26 @@
+[package]
+name = "geist-editor"
+edition.workspace = true
+version.workspace = true
+license.workspace = true
+description = "Geist2 editor panels on top of geist-gui, driving geist-engine through commands"
+
+[dependencies]
+geist-formats = { path = "../geist-formats" }
+geist-engine = { path = "../geist-engine" }
+geist-dsp = { path = "../geist-dsp" }
+geist-gui = { path = "../geist-gui" }
+rfd = { version = "0.16", optional = true }
+
+[features]
+window = ["geist-gui/window", "dep:rfd"]
+
+[[example]]
+name = "editor"
+required-features = ["window"]
+
+[dev-dependencies]
+geist-testkit = { path = "../geist-testkit" }
+
+[lints]
+workspace = true

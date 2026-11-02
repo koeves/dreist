@@ -1,0 +1,5 @@
+<root>
+    <Effect name="Effect" version="2" EffectType="Maul" Level="0.6949999928474426" Mix="0.75" Parameter0="0.03125" Parameter1="1" Parameter2="0.85999995470047" Parameter3="0.6800000667572022" Parameter4="0.4650000333786011" Parameter5="0.9300000667572022" Parameter6="0.8400000333786011" Parameter7="0.6599999666213989" Parameter8="0.125">
+        <VFixedString_260 name="PresetName" string="C:\Users\lawrence_fx\Documents\FXpansion\Geist2\Effects\Maul\Sizzler.fxpreset" />
+    </Effect>
+</root>

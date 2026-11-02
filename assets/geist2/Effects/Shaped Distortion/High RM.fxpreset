@@ -1,0 +1,5 @@
+<root>
+    <Effect name="Effect" version="2" EffectType="Shaped Distortion" Mix="0.9999998807907105" Parameter0="0.34375" Parameter1="0.9250000715255737" Parameter3="1" Parameter4="0.5376511812210083">
+        <VFixedString_260 name="PresetName" string="C:\Users\lawrence_fx\Documents\FXpansion\Geist2\Effects\Shaped Distortion\High RM.fxpreset" />
+    </Effect>
+</root>

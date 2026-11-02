@@ -1,0 +1,5 @@
+<root>
+    <Effect name="Effect" version="2" EffectType="PhaseMod Array" Mix="1" Parameter0="0.4850000143051148" Parameter1="1" Parameter2="0.5850000381469727" Parameter3="0.2950000166893005" Parameter4="0.7550000548362732" Parameter5="0.1949999630451202">
+        <VFixedString_260 name="PresetName" string="C:\Users\lawrence_fx\Documents\FXpansion\Geist2\Effects\PhaseMod Array\Major Triad.fxpreset" />
+    </Effect>
+</root>

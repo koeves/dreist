@@ -1,0 +1,5 @@
+<root>
+    <Effect name="Effect" version="2" EffectType="Limiter" Mix="0.2750000059604645" Parameter0="1" Parameter1="0.9399999380111694" Parameter2="0.7150000333786011">
+        <VFixedString_260 name="PresetName" string="C:\Users\lawrence_fx\Documents\FXpansion\Geist2\Effects\Limiter\Break Fattener.fxpreset" />
+    </Effect>
+</root>

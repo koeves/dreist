@@ -1,0 +1,5 @@
+<root>
+    <Effect name="Effect" version="2" EffectType="Bloom" Mix="0.4800000190734863" Parameter0="0.5" Parameter1="0.244999960064888" Parameter2="0.4750000536441803" Parameter3="0.8999999761581421" Parameter4="1" Parameter6="1" Parameter7="1">
+        <VFixedString_260 name="PresetName" string="C:\Users\lawrence_fx\Documents\FXpansion\Geist2\Effects\Bloom\Stereo Skitter.fxpreset" />
+    </Effect>
+</root>

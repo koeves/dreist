@@ -1,0 +1,5 @@
+<root>
+    <Effect name="Effect" version="2" EffectType="FXpansion Reverb" Mix="0.8500000238418579" Parameter0="0.5699999928474426" Parameter1="0.7950000166893005" Parameter2="0.9300000071525574" Parameter4="0.7250000238418579" Parameter5="0.574999988079071">
+        <VFixedString_260 name="PresetName" string="C:\Users\lawrence_fx\Documents\FXpansion\Geist2\Effects\FXpansion Reverb\Crumble.fxpreset" />
+    </Effect>
+</root>

@@ -1,0 +1,5 @@
+<root>
+    <Effect name="Effect" version="2" EffectType="Bloom" Mix="0.4800000190734863" Parameter0="0.5" Parameter2="0.800000011920929">
+        <VFixedString_260 name="PresetName" string="C:\Users\lawrence_fx\Documents\FXpansion\Geist2\Effects\Bloom\Detuned String.fxpreset" />
+    </Effect>
+</root>

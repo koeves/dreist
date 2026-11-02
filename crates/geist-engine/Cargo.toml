@@ -1,0 +1,17 @@
+[package]
+name = "geist-engine"
+edition.workspace = true
+version.workspace = true
+license.workspace = true
+description = "Geist2 engine runtime: step sequencer, song sequencer, pad/engine mixing, offline render"
+
+[dependencies]
+geist-formats = { path = "../geist-formats" }
+geist-dsp = { path = "../geist-dsp" }
+symphonia = { version = "0.5.5", default-features = false, features = ["wav", "aiff", "pcm"] }
+
+[dev-dependencies]
+geist-testkit = { path = "../geist-testkit" }
+
+[lints]
+workspace = true

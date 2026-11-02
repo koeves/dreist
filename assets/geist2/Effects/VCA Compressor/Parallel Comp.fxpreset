@@ -1,0 +1,5 @@
+<root>
+    <Effect name="Effect" version="2" EffectType="VCA Compressor" Mix="0.3349999785423279" Parameter2="1" Parameter3="1" Parameter4="0.75" Parameter5="1">
+        <VFixedString_260 name="PresetName" string="C:\Users\lawrence_fx\Documents\FXpansion\Geist2\Effects\VCA Compressor\Parallel Comp.fxpreset" />
+    </Effect>
+</root>

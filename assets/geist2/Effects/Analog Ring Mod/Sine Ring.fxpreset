@@ -1,0 +1,5 @@
+<root>
+    <Effect name="Effect" version="2" EffectType="Analog Ring Mod" Mix="0.625" Parameter1="0.6000000238418579" Parameter2="0.5200000405311585" Parameter3="0.8299999833106995">
+        <VFixedString_260 name="PresetName" string="C:\Users\lawrence_fx\Documents\FXpansion\Geist2\Effects\Analog Ring Mod\Sine Ring.fxpreset" />
+    </Effect>
+</root>

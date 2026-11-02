@@ -1,0 +1,5 @@
+<root>
+    <Effect name="Effect" version="2" EffectType="Analog Ring Mod" Mix="0.5600000023841858" Parameter0="0.6666666865348816" Parameter1="0.4850000143051148" Parameter2="0.1500000059604645" Parameter3="0.6150000691413879">
+        <VFixedString_260 name="PresetName" string="C:\Users\lawrence_fx\Documents\FXpansion\Geist2\Effects\Analog Ring Mod\Raspy Saw.fxpreset" />
+    </Effect>
+</root>

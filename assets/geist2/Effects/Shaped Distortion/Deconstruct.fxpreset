@@ -1,0 +1,5 @@
+<root>
+    <Effect name="Effect" version="2" EffectType="Shaped Distortion" Mix="0.8549998998641968" Parameter0="0.46875" Parameter1="0.2700000107288361" Parameter3="1" Parameter4="0.5526511669158936">
+        <VFixedString_260 name="PresetName" string="C:\Users\lawrence_fx\Documents\FXpansion\Geist2\Effects\Shaped Distortion\Deconstruct.fxpreset" />
+    </Effect>
+</root>

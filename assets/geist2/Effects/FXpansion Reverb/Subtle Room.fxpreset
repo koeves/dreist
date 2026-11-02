@@ -1,0 +1,5 @@
+<root>
+    <Effect name="Effect" version="2" EffectType="FXpansion Reverb" Mix="0.1799999922513962" Parameter0="0.199999988079071" Parameter1="0.5" Parameter2="0.5200000405311585" Parameter3="0.4850000143051148" Parameter4="0.4900000095367432" Parameter5="0.5099999904632568">
+        <VFixedString_260 name="PresetName" string="C:\Users\lawrence_fx\Documents\FXpansion\Geist2\Effects\FXpansion Reverb\Subtle Room.fxpreset" />
+    </Effect>
+</root>

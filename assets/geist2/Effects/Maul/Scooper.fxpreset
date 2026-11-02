@@ -1,0 +1,5 @@
+<root>
+    <Effect name="Effect" version="2" EffectType="Maul" Level="0.8650000095367432" Mix="0.6299999952316284" Mix_Slot1="0.004999995231628418" Parameter0="0.625" Parameter1="0.2600000202655792" Parameter2="0.4249999523162842" Parameter3="0.6399999856948853" Parameter4="0.449999988079071" Parameter5="0.75" Parameter6="0.425000011920929" Parameter7="0.7050000429153442" Parameter8="0.4850000143051148">
+        <VFixedString_260 name="PresetName" string="C:\Users\lawrence_fx\Documents\FXpansion\Geist2\Effects\Maul\Scooper.fxpreset" />
+    </Effect>
+</root>

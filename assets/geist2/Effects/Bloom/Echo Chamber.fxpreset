@@ -1,0 +1,5 @@
+<root>
+    <Effect name="Effect" version="2" EffectType="Bloom" Mix="0.3949999809265137" Parameter1="0.2849999964237213" Parameter2="0.625" Parameter3="0.3499999940395355" Parameter4="1">
+        <VFixedString_260 name="PresetName" string="C:\Users\lawrence_fx\Documents\FXpansion\Geist2\Effects\Bloom\Echo Chamber.fxpreset" />
+    </Effect>
+</root>

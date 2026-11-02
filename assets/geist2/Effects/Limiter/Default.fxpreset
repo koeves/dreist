@@ -1,0 +1,5 @@
+<root>
+    <Effect name="Effect" version="2" EffectType="Limiter" Hardness="0.5" Mix="1" Post-Gain="1" Pre-Gain="0.5">
+        <VFixedString_260 name="PresetName" string="Default.fxpreset" />
+    </Effect>
+</root>

@@ -1,0 +1,5 @@
+<root>
+    <Effect name="Effect" version="2" EffectType="VCA Compressor" Mix="1" Parameter1="0.08499999344348908" Parameter2="0.7199999690055847" Parameter3="1" Parameter4="1" Parameter5="1">
+        <VFixedString_260 name="PresetName" string="C:\Users\lawrence_fx\Documents\FXpansion\Geist2\Effects\VCA Compressor\Super Squashed.fxpreset" />
+    </Effect>
+</root>

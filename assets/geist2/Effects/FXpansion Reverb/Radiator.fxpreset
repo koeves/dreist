@@ -1,0 +1,5 @@
+<root>
+    <Effect name="Effect" version="2" EffectType="FXpansion Reverb" Mix="0.7200000286102295" Parameter1="0.8550000190734863" Parameter2="0.429999977350235" Parameter4="0.3650000095367432" Parameter5="1">
+        <VFixedString_260 name="PresetName" string="C:\Users\lawrence_fx\Documents\FXpansion\Geist2\Effects\FXpansion Reverb\Radiator.fxpreset" />
+    </Effect>
+</root>

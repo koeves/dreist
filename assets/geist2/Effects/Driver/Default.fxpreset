@@ -1,0 +1,5 @@
+<root>
+    <Effect name="Effect" version="2" Drive="0.5350000262260437" EffectType="Driver" InGain="0.5012317895889282" Mix="1" Mode="0.21875" OutGain="0.5012317895889282" Saturate="1">
+        <VFixedString_260 name="PresetName" string="/Users/paulchana/Documents/FXpansion/Geist2/Effects/Driver/Default.fxpreset" />
+    </Effect>
+</root>

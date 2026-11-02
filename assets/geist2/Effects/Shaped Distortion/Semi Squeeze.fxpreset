@@ -1,0 +1,5 @@
+<root>
+    <Effect name="Effect" version="2" EffectType="Shaped Distortion" Level="0.5049999952316284" Mix="0.6100000143051148" Parameter0="0.78125" Parameter1="0.5800000429153442" Parameter2="1" Parameter3="0.6649999618530273" Parameter4="0.4126511514186859">
+        <VFixedString_260 name="PresetName" string="C:\Users\lawrence_fx\Documents\FXpansion\Geist2\Effects\Shaped Distortion\Semi Squeeze.fxpreset" />
+    </Effect>
+</root>

@@ -1,0 +1,5 @@
+<root>
+    <Effect name="Effect" version="2" EffectType="FXpansion Reverb" Mix="0.4399999976158142" Parameter0="0.1149999722838402" Parameter1="0.8100000023841858" Parameter2="0.5800000429153442" Parameter3="1" Parameter4="0.4000000059604645" Parameter5="0.5099999904632568">
+        <VFixedString_260 name="PresetName" string="C:\Users\lawrence_fx\Documents\FXpansion\Geist2\Effects\FXpansion Reverb\Plate Tube.fxpreset" />
+    </Effect>
+</root>

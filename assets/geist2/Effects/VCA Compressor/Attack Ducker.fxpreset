@@ -1,0 +1,5 @@
+<root>
+    <Effect name="Effect" version="2" EffectType="VCA Compressor" Mix="1" Parameter0="0.07000003755092621" Parameter1="0.5799999833106995" Parameter2="0.5700000524520874" Parameter3="0.4549999535083771" Parameter4="0.6649999618530273" Parameter5="0.2250000089406967">
+        <VFixedString_260 name="PresetName" string="C:\Users\lawrence_fx\Documents\FXpansion\Geist2\Effects\VCA Compressor\Attack Ducker.fxpreset" />
+    </Effect>
+</root>

@@ -1,0 +1,5 @@
+<root>
+    <Effect name="Effect" version="2" EffectType="Bloom" Mix="0.5099999904632568" Mix_Slot1="-0.08500000834465027" Parameter0="1" Parameter1="0.2800000011920929" Parameter2="0.6200000643730164" Parameter3="0.2300000190734863" Parameter4="1" Parameter6="1">
+        <VFixedString_260 name="PresetName" string="C:\Users\lawrence_fx\Documents\FXpansion\Geist2\Effects\Bloom\Pong Dub.fxpreset" />
+    </Effect>
+</root>

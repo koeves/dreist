@@ -1,0 +1,5 @@
+<root>
+    <Effect name="Effect" version="2" EffectType="Analog Ring Mod" Mix="0.4700000286102295" Parameter0="0.6666666865348816" Parameter1="1" Parameter2="0.3199999928474426" Parameter3="0.3100000023841858">
+        <VFixedString_260 name="PresetName" string="C:\Users\lawrence_fx\Documents\FXpansion\Geist2\Effects\Analog Ring Mod\Mid Resonance.fxpreset" />
+    </Effect>
+</root>

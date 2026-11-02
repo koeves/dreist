@@ -1,0 +1,5 @@
+<root>
+    <Effect name="Effect" version="2" EffectType="PhaseMod Array" Level="0.6950000524520874" Mix="1" Parameter0="0.1550000011920929" Parameter1="0.5" Parameter3="0.04500001668930054" Parameter4="0.949999988079071" Parameter5="1">
+        <VFixedString_260 name="PresetName" string="C:\Users\lawrence_fx\Documents\FXpansion\Geist2\Effects\PhaseMod Array\Phase Squash.fxpreset" />
+    </Effect>
+</root>

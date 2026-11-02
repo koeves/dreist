@@ -1,0 +1,5 @@
+<root>
+    <Effect name="Effect" version="2" EffectType="Classic Guru Filter" Mix="1" Parameter0="1" Parameter1="0.5" Parameter2="0.1499999761581421">
+        <VFixedString_260 name="PresetName" string="C:\Users\lawrence_fx\Documents\FXpansion\Geist2\Effects\Classic Guru Filter\High Pass.fxpreset" />
+    </Effect>
+</root>

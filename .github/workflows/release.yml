@@ -1,0 +1,78 @@
+name: Release
+
+# Builds Dreist (VST3, CLAP, standalone) on macOS and Windows and attaches
+# the zips to the GitHub release. A manual run builds the checked-out ref
+# and uploads to the release `tag` only when `upload` is set.
+on:
+  release:
+    types: [published]
+  workflow_dispatch:
+    inputs:
+      tag:
+        description: "Release tag (names the zips; the upload target)"
+        required: true
+        default: "v0.1.0-beta1"
+      upload:
+        description: "Upload the zips to the release"
+        type: boolean
+        default: false
+
+permissions:
+  contents: write
+
+env:
+  CARGO_TERM_COLOR: always
+  TAG: ${{ github.event.release.tag_name || inputs.tag || 'dev' }}
+  UPLOAD: ${{ github.event_name == 'release' || inputs.upload }}
+
+jobs:
+  build:
+    strategy:
+      fail-fast: false
+      matrix:
+        include:
+          - os: macos-14
+            name: macOS
+          - os: windows-latest
+            name: Windows
+    runs-on: ${{ matrix.os }}
+    defaults:
+      run:
+        shell: bash
+    steps:
+      - uses: actions/checkout@v4
+      - uses: dtolnay/rust-toolchain@stable
+      - uses: Swatinem/rust-cache@v2
+      - name: Test
+        # The effect fingerprints are checked separately below: they hash
+        # float output, which can differ between platforms.
+        run: cargo test --locked --workspace -- --skip effects_match_fingerprints
+      - name: Effect fingerprints (platform-dependent)
+        continue-on-error: true
+        run: cargo test --locked -p geist-dsp --test fx_harness effects_match_fingerprints
+      - name: Build (macOS)
+        if: runner.os == 'macOS'
+        run: |
+          scripts/build.sh
+          cd target/bundled
+          ditto -c -k --keepParent Dreist.vst3 "Dreist-$TAG-${{ matrix.name }}-VST3.zip"
+          ditto -c -k --keepParent Dreist.clap "Dreist-$TAG-${{ matrix.name }}-CLAP.zip"
+          ditto -c -k --keepParent Dreist.app "Dreist-$TAG-${{ matrix.name }}-App.zip"
+      - name: Build (Windows)
+        if: runner.os == 'Windows'
+        run: |
+          scripts/build-windows.sh
+          cd target/bundled
+          mv Dreist-CLAP Dreist && 7z a -tzip "Dreist-$TAG-${{ matrix.name }}-CLAP.zip" Dreist && mv Dreist Dreist-CLAP
+          mv Dreist-App Dreist && 7z a -tzip "Dreist-$TAG-${{ matrix.name }}-App.zip" Dreist && mv Dreist Dreist-App
+          7z a -tzip "Dreist-$TAG-${{ matrix.name }}-VST3.zip" Dreist.vst3
+      - uses: actions/upload-artifact@v4
+        with:
+          name: Dreist-${{ env.TAG }}-${{ matrix.name }}
+          path: target/bundled/Dreist-*.zip
+          retention-days: 7
+      - name: Upload to release
+        if: env.UPLOAD == 'true'
+        env:
+          GH_TOKEN: ${{ github.token }}
+        run: gh release upload "$TAG" target/bundled/Dreist-*.zip --clobber

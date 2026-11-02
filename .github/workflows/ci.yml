@@ -1,0 +1,54 @@
+name: CI
+
+on:
+  push:
+    branches: [main]
+  pull_request:
+
+env:
+  CARGO_TERM_COLOR: always
+
+jobs:
+  checks:
+    # Engine, DSP, editor and GUI tests run headless on Linux (tests that
+    # need the Geist2 factory content skip when it is not installed).
+    runs-on: ubuntu-24.04
+    steps:
+      - uses: actions/checkout@v4
+      - uses: dtolnay/rust-toolchain@stable
+        with:
+          components: rustfmt, clippy
+      - uses: Swatinem/rust-cache@v2
+      - name: Format
+        run: cargo fmt --all --check
+      - name: Clippy
+        run: cargo clippy --locked -p geist-formats -p geist-dsp -p geist-engine -p geist-gui -p geist-editor -p geist-cli --all-targets -- -D warnings
+      - name: Test
+        # The effect fingerprints hash float output, which differs between
+        # platforms (they match on macOS): checked separately, non-fatal.
+        run: cargo test --locked -p geist-formats -p geist-dsp -p geist-engine -p geist-gui -p geist-editor -p geist-cli -- --skip effects_match_fingerprints
+      - name: Effect fingerprints (platform-dependent)
+        continue-on-error: true
+        run: cargo test --locked -p geist-dsp --test fx_harness effects_match_fingerprints
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.12"
+      - name: Generated UI assets are up to date
+        run: |
+          sudo apt-get install -y libegl1 libgl1
+          pip install skia-python==144.1 fonttools==4.68.0
+          python3 scripts/uigen/uigen.py --check
+      - name: Third-party notices are up to date
+        run: python3 scripts/notices.py --check
+
+  macos:
+    # The plugin and app link AppKit: build them on macOS.
+    runs-on: macos-14
+    steps:
+      - uses: actions/checkout@v4
+      - uses: dtolnay/rust-toolchain@stable
+      - uses: Swatinem/rust-cache@v2
+      - name: Build plugin and standalone
+        run: |
+          cargo build --locked -p geist-plugin --release
+          cargo build --locked -p geist-plugin --features standalone --bin geist-standalone --release

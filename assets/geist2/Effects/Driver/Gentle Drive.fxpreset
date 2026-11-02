@@ -1,0 +1,5 @@
+<root>
+    <Effect name="Effect" version="2" EffectType="Driver" Mix="0.2750000059604645" Parameter0="0.09375" Parameter1="0.8199999928474426" Parameter3="0.5299999713897705" Parameter5="1" Parameter6="0.1800000071525574" Parameter7="0.5249999761581421" Parameter8="0.6200000047683716">
+        <VFixedString_260 name="PresetName" string="C:\Users\lawrence_fx\Documents\FXpansion\Geist2\Effects\Driver\Gentle Drive.fxpreset" />
+    </Effect>
+</root>
