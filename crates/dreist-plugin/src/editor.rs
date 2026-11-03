@@ -361,7 +361,7 @@ fn startup_size() -> (u32, u32) {
     parsed.unwrap_or(((SIZE.0 as f64 * ui).round() as u32, (SIZE.1 as f64 * ui).round() as u32))
 }
 
-/// [re:0d8a70] the editor's document in the bridge and the persisted session
+/// Store the editor's document in the bridge and the persisted session
 /// when it changed (`wait`: even if the worker holds the document).
 fn sync_session(bridge: &Bridge, params: &crate::DreistParams, ed: &DreistGui, wait: bool) {
     let mut d = if wait {

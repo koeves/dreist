@@ -1,4 +1,4 @@
-//! [re:b00098] as a CLAP/VST3 instrument (nih-plug). The engine is
+//! the original as a CLAP/VST3 instrument (nih-plug). The engine is
 //! [re:c79b4c]; this crate maps host MIDI, transport, automation
 //! parameters and output buses onto it. The editor (`editor.rs`) draws the
 //! installed v2 skin with `dreist-gui`.
@@ -352,7 +352,7 @@ impl Plugin for DreistPlugin {
         self.swap_in_rebuilt();
         let Some(engine) = self.engine.as_mut() else { return ProcessStatus::Normal };
         // The standalone has no host transport: nih-plug's backend reports
-        // "playing at 120 BPM" every block, so [re:b00098] runs its own (Play /
+        // "playing at 120 BPM" every block, so the original runs its own (Play /
         // Stop, the project tempo), as the original standalone shell does.
         if !cfg!(feature = "standalone") {
             let t = context.transport();

@@ -8,7 +8,7 @@
 # Output: target/bundled/Dreist.vst3, Dreist.clap, Dreist.app
 #
 # Signing: ad-hoc by default. With DREIST_SIGN_IDENTITY set (a "Developer
-# ID [re:b291be]: ..." identity in the keychain) the bundles are signed
+# ID Application: ..." identity in the keychain) the bundles are signed
 # with the hardened runtime and a timestamp; with DREIST_NOTARY_PROFILE
 # also set (a `xcrun notarytool store-credentials` profile) they are
 # notarised and stapled.

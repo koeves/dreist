@@ -83,7 +83,7 @@ def header():
         N("Label", "MemoryUsageBox", (156, 17, 42, 15), id=100002, style="HeaderBarConsoleRightTextStyle", text=""),
     ])
     hb = dict(style="HeaderBarIconButtonStyle")
-    # [re:c10d76]: two rows of 24 px buttons.
+    # Transport: two rows of 24 px buttons.
     r1, r2 = 0, 26
     transport = N("Panel", "Transport", (W - 252, 5, 250, 50), pin="rtb", id=100002, style="InvisibleStyle", kids=[
         N("Button", "PlayButton", (0, r1, 36, 24), displayName="Play", id=100002, style="PlayButtonStyle", text=""),
