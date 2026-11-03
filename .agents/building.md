@@ -43,14 +43,16 @@ editor suite's seconds into many minutes.
 
 ## Tests
 
-The shared crates (and their goldens) are tested in dreist-commons
-(`../dreist-commons`); this repository tests the plugin and CLI:
+The shared crates (and their goldens) are the `commons` submodule's own
+workspace; this repository tests the plugin and CLI, and runs the shared suite
+against Dreist's assets:
 
     cargo test --workspace
-    (cd ../dreist-commons && cargo test -p dreist-engine --test realtime)  # no heap use on the audio path
-    (cd ../dreist-commons && cargo test -p dreist-dsp --test fx_harness)   # effect fingerprints
+    DREIST_UI=$PWD/assets/ui DREIST_RESOURCES=$PWD/assets/factory cargo test --manifest-path commons/Cargo.toml --workspace
+    cargo test --manifest-path commons/Cargo.toml -p dreist-engine --test realtime  # no heap use on the audio path
+    cargo test --manifest-path commons/Cargo.toml -p dreist-dsp --test fx_harness   # effect fingerprints
 
-Golden fingerprints live in dreist-commons' `crates/*/tests/golden/` (`fx.txt`,
+Golden fingerprints live in `commons/crates/*/tests/golden/` (`fx.txt`,
 `engine.txt`, `screens.txt`). After an intended change to audio or rendering,
 regenerate them and review the diff:
 

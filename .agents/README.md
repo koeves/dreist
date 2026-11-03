@@ -10,9 +10,9 @@ Outside README files, code, comments and docs carry no original product, vendor
 or class names; legacy on-disk names live in `dreist_formats::legacy`, and RE
 evidence is cited by tag (`[re:xxxxxx]`, map in `koeves/dreist-re`).
 
-Dreist is a thin app on **dreist-commons** (private `koeves/dreist-commons`,
-pinned by `rev` in `Cargo.toml`; see README for the local override): the shared crates below except `dreist-plugin` and
-`dreist-cli` live there. Dreist installs its profile (names, resources,
+Dreist is a thin app on **dreist-commons** (`koeves/dreist-commons`, a git
+submodule at `commons`, used by path): the shared crates below except
+`dreist-plugin` and `dreist-cli` live there. Dreist installs its profile (names, resources,
 `.dreist*` save family, settings folder `Dreist`, migrated from `Geist-rs`) at
 start-up.
 
@@ -37,7 +37,8 @@ pattern/swing templates (bundled).
 
 ## Quick commands
 
-    cargo test --workspace            # app crates; the shared crates test in ../dreist-commons
+    cargo test --workspace            # app crates
+    cargo test --manifest-path commons/Cargo.toml --workspace   # shared crates, against assets/ via DREIST_UI / DREIST_RESOURCES
     cargo fmt --all --check
     cargo clippy --workspace --all-targets -- -D warnings
     scripts/build.sh                  # macOS bundles into target/bundled/
@@ -45,20 +46,18 @@ pattern/swing templates (bundled).
 
 ## Commits
 
-- No AI attribution of any kind: no `Co-Authored-By: Claude`, no
-  `Claude-Session:` trailer, no "Generated with ..." lines, in commits, PRs,
-  tags or release notes.
-- Author and committer are the repository's configured git identity; do not
-  override `--author`.
-- Short imperative subject; a body only when the why is not obvious.
-- Keep the repository private (`koeves/dreist`).
+[git.md](git.md): Conventional Commits, no AI attribution, the changelog,
+releases and commons submodule bumps. Keep the repository private
+(`koeves/dreist`).
 
 ## More
 
 - [building.md](building.md): build, test and run on macOS and Windows; content; test goldens.
 - [ui.md](ui.md): the generated skins, styles and icons; UI screenshots.
+- [git.md](git.md): commits, changelog, releases, the commons submodule.
 - [release.md](release.md): the release workflow, signing, third-party notices.
 - [conventions.md](conventions.md): formatting, lints, realtime safety, errors, comments.
 
 Private reverse-engineering notes live in `koeves/dreist-re` (`dreist/`), for
-those with access. The shared crates' tests and goldens run in dreist-commons.
+those with access. The shared crates' tests and goldens run in dreist-commons
+and, against Dreist's assets, in Dreist's CI.
