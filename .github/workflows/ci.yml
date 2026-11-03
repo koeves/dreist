@@ -10,8 +10,8 @@ env:
 
 jobs:
   checks:
-    # The CLI, the shared crates against Dreist's assets and the generated
-    # files check headless on Linux.
+    # The CLI, the editor, the shared crates against Dreist's assets and the
+    # generated files check headless on Linux.
     runs-on: ubuntu-24.04
     env:
       DREIST_UI: ${{ github.workspace }}/assets/ui
@@ -27,9 +27,9 @@ jobs:
       - name: Format
         run: cargo fmt --all --check
       - name: Clippy
-        run: cargo clippy --locked -p dreist-cli --all-targets -- -D warnings
+        run: cargo clippy --locked -p dreist-cli -p dreist-editor --all-targets -- -D warnings
       - name: Test
-        run: cargo test --locked -p dreist-cli
+        run: cargo test --locked -p dreist-cli -p dreist-editor
       - name: Shared crates against Dreist's assets
         # The effect fingerprints hash float output, which differs between
         # platforms (they match on macOS, checked there): non-fatal here.

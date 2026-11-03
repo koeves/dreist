@@ -1,15 +1,10 @@
 //! Dreist's app profile (`dreist_formats::profile`): the workspace's
 //! reference profile with Dreist's own resources (this repository's
-//! `assets/ui` and `assets/factory` in development builds) and its earlier
-//! settings folder name.
+//! `assets/ui` and `assets/factory` in development builds).
 
 use dreist_formats::profile::{BASE, Profile, Resources};
 
-/// The settings folder name of Dreist's beta (moved to "Dreist" on first launch).
-pub const LEGACY_SETTINGS_DIR: &str = "Geist-rs";
-
 pub static DREIST: Profile = Profile {
-    legacy_settings_dirs: &[LEGACY_SETTINGS_DIR],
     ui: Resources { dev_dirs: &[concat!(env!("CARGO_MANIFEST_DIR"), "/../../assets/ui")], ..BASE.ui },
     factory: Resources { dev_dirs: &[concat!(env!("CARGO_MANIFEST_DIR"), "/../../assets/factory")], ..BASE.factory },
     ..BASE

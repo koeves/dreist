@@ -11,8 +11,8 @@ or class names; legacy on-disk names live in `dreist_formats::legacy`, and RE
 evidence is cited by tag (`[re:xxxxxx]`, map in `koeves/dreist-re`).
 
 Dreist is a thin app on **dreist-commons** (`koeves/dreist-commons`, a git
-submodule at `commons`, used by path): the shared crates below except
-`dreist-plugin` and `dreist-cli` live there. Dreist installs its profile (names, resources,
+submodule at `commons`, used by path): the shared crates below marked
+"commons" live there. Dreist installs its profile (names, resources,
 `.dreist*` save family, settings folder `Dreist`, migrated from `Geist-rs`) at
 start-up.
 
@@ -24,7 +24,7 @@ start-up.
 | `dreist-dsp` (commons) | voices, filters, modulators, timestretch, the 47 effects |
 | `dreist-engine` (commons) | sequencer, mixer, modulation, song, scenes, sampler, MIDI, export |
 | `dreist-gui` (commons) | skin-driven UI toolkit (baseview + softbuffer + tiny-skia) |
-| `dreist-editor` (commons) | the editor panels and their behaviour |
+| `dreist-editor` | the editor panels and their behaviour (Dreist's own; `src/app.rs` holds the About text, settings folder, effect menu and document readers) |
 | `dreist-plugin` | nih-plug VST3 / CLAP plugin and the standalone app |
 | `dreist-cli` | command-line tools: `dreist-inspect` (check a file's samples), `dreist-render` (offline render to WAV), `dreist-nulltest` / `dreist-stemfit` / `dreist-bands` (compare renders) |
 | `dreist-testkit` (commons) | test helpers: golden fingerprints, signal checks, allocation counting |

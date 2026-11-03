@@ -63,12 +63,13 @@ Windows and publishes the GitHub release with the zips.
 
 ## Layout
 
-Dreist is a thin app on [dreist-commons](https://github.com/koeves/dreist-commons), the
-crates it shares with Einst (a Geist v1 rebuild): `dreist-formats`, `dreist-dsp`, `dreist-engine`,
-`dreist-gui`, `dreist-editor`, `dreist-testkit`. This repository has:
+Dreist is an app on [dreist-commons](https://github.com/koeves/dreist-commons), the crates it
+shares with Einst (a Geist v1 rebuild): `dreist-formats`, `dreist-dsp`, `dreist-engine`,
+`dreist-gui`, `dreist-testkit`. This repository has:
 
 | Crate | Role |
 |---|---|
+| `dreist-editor` | Dreist's editor: panels, dialogs, settings, effect menu, document readers |
 | `dreist-plugin` | nih-plug VST3 / CLAP / standalone, and Dreist's app profile |
 | `dreist-cli` | `dreist-inspect`: summarise a project file, check its samples; render and comparison tools |
 | `xtask` | nih-plug bundler |

@@ -53,7 +53,7 @@ against Dreist's assets:
     cargo test --manifest-path commons/Cargo.toml -p dreist-dsp --test fx_harness   # effect fingerprints
 
 Golden fingerprints live in `commons/crates/*/tests/golden/` (`fx.txt`,
-`engine.txt`, `screens.txt`). After an intended change to audio or rendering,
+`engine.txt`) and `crates/dreist-editor/tests/golden/screens.txt`. After an intended change to audio or rendering,
 regenerate them and review the diff:
 
     UPDATE_GOLDEN=1 cargo test -p dreist-editor --lib screens_match_fingerprints
