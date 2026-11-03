@@ -41,15 +41,12 @@ jobs:
         shell: bash
     steps:
       - uses: actions/checkout@v4
+        with:
+          submodules: recursive
       - uses: dtolnay/rust-toolchain@stable
       - uses: Swatinem/rust-cache@v2
       - name: Test
-        # The effect fingerprints are checked separately below: they hash
-        # float output, which can differ between platforms.
-        run: cargo test --locked --workspace -- --skip effects_match_fingerprints
-      - name: Effect fingerprints (platform-dependent)
-        continue-on-error: true
-        run: cargo test --locked -p dreist-dsp --test fx_harness effects_match_fingerprints
+        run: cargo test --locked --workspace
       - name: Build (macOS)
         if: runner.os == 'macOS'
         run: |
