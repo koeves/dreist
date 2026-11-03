@@ -77,7 +77,7 @@ def layer_button():
 def inspector():
     W, H = 800, 350
     LW = 120
-    side = N("Panel", None, (0, 0, LW, H), pin="ltb", style="Geist2BackPanelStyle", kids=[
+    side = N("Panel", None, (0, 0, LW, H), pin="ltb", style="BackPanelStyle", kids=[
         N("Panel", None, (0, -5, LW, 60), pin="t", style="InvisibleStyle", kids=[
             N("Panel", "PadSelButton", (0, 0, LW, 60), pin="lr", overloadClass="PadSelectionButton")]),
         N("Button", "ShowSplits", (0, 57, LW, 22), pin="lrt", displayName="Velocity splits and pad options",
@@ -86,7 +86,7 @@ def inspector():
           ScrollViewStyle="InvisibleStyle", TableHeaderPanelStyle="InvisibleStyle", TablePanelStyle="InspectorTableStyle",
           intHeaderHeight=0, intScrollBarDim=10),
     ])
-    return N("Panel", None, (0, 0, W, H), style="Geist2BackPanelStyle", kids=[
+    return N("Panel", None, (0, 0, W, H), style="BackPanelStyle", kids=[
         side,
         N("Panel", "LayerPanel", (LW, 0, W - LW, H), pin="lrtb", overloadClass="LayerPanel", style="LayerPanelStyle"),
         N("Panel", "VelocitySplitPanel", (LW, 0, W - LW, H), pin="lrtb", overloadClass="VelocitySplitPanel", style="InvisibleStyle"),

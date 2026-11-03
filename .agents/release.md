@@ -16,7 +16,7 @@ To rebuild a release's assets, run the workflow by hand:
 ## Signing
 
 Builds are unsigned. On macOS `scripts/build.sh` signs ad hoc; with
-`DREIST_SIGN_IDENTITY` (a Developer ID Application identity) it signs with the
+`DREIST_SIGN_IDENTITY` (a Developer ID [re:b291be] identity) it signs with the
 hardened runtime, and with `DREIST_NOTARY_PROFILE` too it notarises and
 staples. The release workflow sets neither, so users right-click › Open the
 app (see the README). Windows binaries are unsigned (SmartScreen warns).

@@ -5,7 +5,7 @@ version.workspace = true
 # The VST3 export links nih-plug's VST3 bindings (GPLv3), so this crate and
 # the plugins and app built from it are GPL-3.0-or-later.
 license = "GPL-3.0-or-later"
-description = "Geist CLAP/VST3 plugin and standalone (nih-plug)"
+description = "Dreist CLAP/VST3 plugin and standalone (nih-plug)"
 
 [lib]
 crate-type = ["cdylib", "lib"]

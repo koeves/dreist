@@ -26,14 +26,14 @@ The `.exe` and `.clap` are bare files on Windows, so their resources sit in a
     cargo run -p dreist-cli --bin dreist-render --release -- <file.geist> <out.wav> [seconds]
 
 Resources resolve through `dreist_formats::paths`: `DREIST_RESOURCES` /
-`DREIST_UI`, then the bundle's `Contents/Resources/{Geist2,Dreist}` (or
+`DREIST_UI`, then the bundle's [re:3b3416] (or
 `Resources/` beside a Windows binary), then the repository's `assets/`.
 
 ## Content
 
-Dreist ships no samples. Content comes from FXpansion's Geist2 packs (the
+Dreist ships no samples. Content comes from the original vendor's v2 packs (the
 factory/starter content). The browser reads `DREIST_CONTENT`, else
-`Content` in the documents folder (default `~/Documents/FXpansion/Geist2`,
+`Content` in the documents folder (default `~/Documents/the original vendor/v2`,
 option `LocalDocumentsPath`). Many tests use the factory content when it is
 installed and skip quietly when it is not (CI has none).
 

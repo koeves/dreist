@@ -8,9 +8,9 @@
   binary's constants and operation order, and explicit min/max where `clamp`
   would treat NaN differently. Keep that style in `dreist-dsp` and
   `dreist-engine`.
-- **Fidelity**: behaviour matches Geist2, including its integer wrapping and
+- **Fidelity**: behaviour matches v2, including its integer wrapping and
   rounding. Comments name the original function (and address) a piece of code
-  follows, e.g. `` `Geist::SetupMetronome` 0x164b80 ``; keep them when editing.
+  follows, e.g. `` `the original::SetupMetronome` [re:86b3af] ``; keep them when editing.
 - **Realtime safety**: once warmed up, the audio path (engine processing,
   effects, voices) must not allocate, reallocate or free. Prepare buffers when the engine is (re)built; hand work to the
   editor/worker side through the existing message queues.

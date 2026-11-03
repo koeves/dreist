@@ -1,4 +1,4 @@
-//! Plugin editor: `dreist-editor` (the installed Geist2 skin) in the host's
+//! Plugin editor: `dreist-editor` (the installed v2 skin) in the host's
 //! parent view. The GUI talks to the audio thread through [`Bridge`]:
 //! commands one way, a state snapshot the other, both behind locks the
 //! audio thread only ever `try_lock`s.
@@ -53,7 +53,7 @@ pub struct UiState {
     /// Scene notifications.
     pub scene_events: Vec<dreist_engine::scene::SceneEvent>,
     /// A reserved buffer for the sampler's next take (see
-    /// `Sampler::give_spare`), kept ready by the rebuild worker.
+    /// [re:23fa47]), kept ready by the rebuild worker.
     pub spare_take: Option<dreist_engine::sampler::Take>,
 }
 
@@ -351,7 +351,7 @@ pub struct DreistEditor {
     pub size: Arc<std::sync::atomic::AtomicU64>,
 }
 
-/// `Editor::ComputeStartupSize`: `LastEditorSize` (window pixels) or the
+/// [re:46068f]: `LastEditorSize` (window pixels) or the
 /// default size × the UI scale.
 fn startup_size() -> (u32, u32) {
     let o = dreist_editor::options::Options::load();
@@ -361,7 +361,7 @@ fn startup_size() -> (u32, u32) {
     parsed.unwrap_or(((SIZE.0 as f64 * ui).round() as u32, (SIZE.1 as f64 * ui).round() as u32))
 }
 
-/// Store the editor's document in the bridge and the persisted session
+/// [re:0d8a70] the editor's document in the bridge and the persisted session
 /// when it changed (`wait`: even if the worker holds the document).
 fn sync_session(bridge: &Bridge, params: &crate::DreistParams, ed: &DreistGui, wait: bool) {
     let mut d = if wait {
@@ -426,7 +426,7 @@ impl Editor for DreistEditor {
                 g
             }
             Err(e) => {
-                nih_log!("Geist2 resources not usable: {e}");
+                nih_log!("Factory resources not usable: {e}");
                 self.bridge.editor_open.store(false, std::sync::atomic::Ordering::Release);
                 return Box::new(());
             }

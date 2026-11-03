@@ -2,18 +2,18 @@ Dreist
 Copyright (c) 2026 Daniel Köves and Dreist contributors
 
 Source code
-  Every crate in this repository except geist-plugin, and the scripts, are
+  Every crate in this repository except dreist-plugin, and the scripts, are
   licensed under either of
     - Apache License, Version 2.0 (LICENSE-APACHE), or
     - MIT license (LICENSE-MIT)
   at your option.
 
-  crates/geist-plugin is licensed under the GNU General Public License,
+  crates/dreist-plugin is licensed under the GNU General Public License,
   version 3 or later (LICENSE-GPL-3.0): it exports a VST3 plugin through
   nih-plug's VST3 bindings, which are GPLv3.
 
 Binaries
-  Dreist.app / Dreist.exe, Dreist.vst3 and Dreist.clap are built from geist-plugin and
+  Dreist.app / Dreist.exe, Dreist.vst3 and Dreist.clap are built from dreist-plugin and
   are therefore distributed under the GNU General Public License, version 3
   or later (LICENSE-GPL-3.0).
 

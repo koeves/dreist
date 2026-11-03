@@ -11,7 +11,7 @@ env:
 jobs:
   checks:
     # Engine, DSP, editor and GUI tests run headless on Linux (tests that
-    # need the Geist2 factory content skip when it is not installed).
+    # need the v2 factory content skip when it is not installed).
     runs-on: ubuntu-24.04
     steps:
       - uses: actions/checkout@v4

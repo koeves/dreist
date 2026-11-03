@@ -1,4 +1,4 @@
-//! `dreist-inspect <file.geist|file.geistkit>`: summarize a Geist2 file and
+//! `dreist-inspect <file.geist|file.geistkit>`: summarize a v2 file and
 //! check that every referenced sample resolves.
 
 use std::path::Path;

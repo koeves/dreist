@@ -1,7 +1,7 @@
-//! Geist as a CLAP/VST3 instrument (nih-plug). The engine is
-//! `dreist_engine::Geist`; this crate maps host MIDI, transport, automation
+//! [re:b00098] as a CLAP/VST3 instrument (nih-plug). The engine is
+//! [re:c79b4c]; this crate maps host MIDI, transport, automation
 //! parameters and output buses onto it. The editor (`editor.rs`) draws the
-//! installed Geist2 skin with `dreist-gui`.
+//! installed v2 skin with `dreist-gui`.
 
 // nih-plug's `nih_export_vst3!` expands to a statement with a trailing
 // semicolon in expression position (upstream).
@@ -21,7 +21,7 @@ use nih_plug::prelude::*;
 
 /// Stereo sub outputs exposed to the host ("Sub output 1..16").
 pub const SUB_PORTS: usize = 16;
-/// Host automation parameters routed to `BindingMap` host bindings.
+/// Host automation parameters routed to [re:0ad0c9] host bindings.
 pub const AUTOMATION_PARAMS: usize = 128;
 
 #[derive(Params)]
@@ -240,7 +240,7 @@ impl Plugin for DreistPlugin {
     }];
 
     const MIDI_INPUT: MidiConfig = MidiConfig::MidiCCs;
-    /// Send Note / Send CC (`Geist::ProcessVSTMIDIEventsSend`).
+    /// Send Note / Send CC ([re:5a8c24]).
     const MIDI_OUTPUT: MidiConfig = MidiConfig::MidiCCs;
     const SAMPLE_ACCURATE_AUTOMATION: bool = false;
 
@@ -291,7 +291,7 @@ impl Plugin for DreistPlugin {
                 nih_log!("failed to load {}: {e}", p.display());
                 Dreist::empty(sr, options)
             }),
-            // `Geist::LoadDefaultPresets` 0x165220 (from the constructor):
+            // [re:5cbd54] (from the constructor):
             // Tools › Save as default preset, when one was saved.
             (None, None) => dreist_editor::options::settings_dir()
                 .map(|d| d.join("DefaultPreset.geist"))
@@ -352,16 +352,16 @@ impl Plugin for DreistPlugin {
         self.swap_in_rebuilt();
         let Some(engine) = self.engine.as_mut() else { return ProcessStatus::Normal };
         // The standalone has no host transport: nih-plug's backend reports
-        // "playing at 120 BPM" every block, so Geist runs its own (Play /
+        // "playing at 120 BPM" every block, so [re:b00098] runs its own (Play /
         // Stop, the project tempo), as the original standalone shell does.
         if !cfg!(feature = "standalone") {
             let t = context.transport();
             engine.set_transport(t.playing, t.tempo.unwrap_or(120.0), t.pos_beats());
             // `GetEffectivePpqPos` honours the host loop only while slaved
-            // to a playing host (`Geist::IsSlavedToHost` 0x1d00f0); read after
+            // to a playing host ([re:b7aa68]); read after
             // this block's transport update (a host start loops at once).
             engine.set_host_loop(t.loop_range_beats().filter(|_| t.playing && engine.is_playing()));
-            // `Geist::ProcessTimeInfo` 0x1cc700: a host time signature
+            // [re:2b44b1]: a host time signature
             // (non-zero) replaces the document's.
             if let (Some(n), Some(d)) = (t.time_sig_numerator, t.time_sig_denominator) {
                 if n > 0 && d > 0 {
@@ -456,7 +456,7 @@ impl Plugin for DreistPlugin {
             }
         }
 
-        // effSetParameter → BindingMap::ProcessHostAutomation.
+        // effSetParameter → [re:e5b4e6].
         for (i, p) in self.params.automation.iter().enumerate() {
             let v = p.value.value();
             if v != self.last_auto[i] {
