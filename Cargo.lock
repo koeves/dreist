@@ -1013,6 +1013,88 @@ source = "registry+https://github.com/rust-lang/crates.io-index"
 checksum = "75b325c5dbd37f80359721ad39aca5a29fb04c89279657cffdda8736d0c0b9d2"
 
 [[package]]
+name = "dreist-cli"
+version = "0.1.0"
+dependencies = [
+ "dreist-dsp",
+ "dreist-engine",
+ "dreist-formats",
+]
+
+[[package]]
+name = "dreist-dsp"
+version = "0.1.0"
+dependencies = [
+ "rustfft",
+ "signalsmith-stretch",
+]
+
+[[package]]
+name = "dreist-editor"
+version = "0.1.0"
+dependencies = [
+ "dreist-dsp",
+ "dreist-engine",
+ "dreist-formats",
+ "dreist-gui",
+ "dreist-testkit",
+ "rfd",
+]
+
+[[package]]
+name = "dreist-engine"
+version = "0.1.0"
+dependencies = [
+ "dreist-dsp",
+ "dreist-formats",
+ "dreist-testkit",
+ "symphonia",
+]
+
+[[package]]
+name = "dreist-formats"
+version = "0.1.0"
+dependencies = [
+ "roxmltree",
+ "thiserror 2.0.21",
+]
+
+[[package]]
+name = "dreist-gui"
+version = "0.1.0"
+dependencies = [
+ "baseview",
+ "dreist-formats",
+ "fontdue",
+ "keyboard-types",
+ "objc",
+ "raw-window-handle 0.5.2",
+ "raw-window-handle 0.6.2",
+ "softbuffer",
+ "tiny-skia",
+]
+
+[[package]]
+name = "dreist-plugin"
+version = "0.1.0"
+dependencies = [
+ "cpal",
+ "dreist-dsp",
+ "dreist-editor",
+ "dreist-engine",
+ "dreist-formats",
+ "dreist-gui",
+ "midir",
+ "nih_plug",
+ "serde",
+ "serde_json",
+]
+
+[[package]]
+name = "dreist-testkit"
+version = "0.1.0"
+
+[[package]]
 name = "either"
 version = "1.19.0"
 source = "registry+https://github.com/rust-lang/crates.io-index"
@@ -1238,89 +1320,6 @@ dependencies = [
  "pin-project-lite",
  "slab",
 ]
-
-[[package]]
-name = "geist-cli"
-version = "0.1.0"
-dependencies = [
- "geist-dsp",
- "geist-engine",
- "geist-formats",
-]
-
-[[package]]
-name = "geist-dsp"
-version = "0.1.0"
-dependencies = [
- "geist-testkit",
- "rustfft",
- "signalsmith-stretch",
-]
-
-[[package]]
-name = "geist-editor"
-version = "0.1.0"
-dependencies = [
- "geist-dsp",
- "geist-engine",
- "geist-formats",
- "geist-gui",
- "geist-testkit",
- "rfd",
-]
-
-[[package]]
-name = "geist-engine"
-version = "0.1.0"
-dependencies = [
- "geist-dsp",
- "geist-formats",
- "geist-testkit",
- "symphonia",
-]
-
-[[package]]
-name = "geist-formats"
-version = "0.1.0"
-dependencies = [
- "roxmltree",
- "thiserror 2.0.21",
-]
-
-[[package]]
-name = "geist-gui"
-version = "0.1.0"
-dependencies = [
- "baseview",
- "fontdue",
- "geist-formats",
- "keyboard-types",
- "objc",
- "raw-window-handle 0.5.2",
- "raw-window-handle 0.6.2",
- "softbuffer",
- "tiny-skia",
-]
-
-[[package]]
-name = "geist-plugin"
-version = "0.1.0"
-dependencies = [
- "cpal",
- "geist-dsp",
- "geist-editor",
- "geist-engine",
- "geist-formats",
- "geist-gui",
- "midir",
- "nih_plug",
- "serde",
- "serde_json",
-]
-
-[[package]]
-name = "geist-testkit"
-version = "0.1.0"
 
 [[package]]
 name = "gethostname"

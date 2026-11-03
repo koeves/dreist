@@ -15,7 +15,7 @@ OUT = os.path.join(ROOT, "THIRD_PARTY_NOTICES.md")
 EXTRA = [
     ("Signalsmith Stretch (vendor/signalsmith-stretch)", "MIT", "https://github.com/Signalsmith-Audio/signalsmith-stretch"),
     ("baseview, patched (vendor/baseview)", "MIT OR Apache-2.0", "https://github.com/RustAudio/baseview"),
-    ("Liberation Sans (assets/dreist/Fonts)", "OFL-1.1", "https://github.com/liberationfonts/liberation-fonts"),
+    ("Liberation Sans (assets/ui/Fonts)", "OFL-1.1", "https://github.com/liberationfonts/liberation-fonts"),
 ]
 
 
@@ -24,7 +24,7 @@ def rows():
     pk = {p["id"]: p for p in meta["packages"]}
     ws = set(meta["workspace_members"])
     nodes = {n["id"]: n for n in meta["resolve"]["nodes"]}
-    stack = [i for i in ws if pk[i]["name"] in ("geist-plugin",)]
+    stack = [i for i in ws if pk[i]["name"] in ("dreist-plugin",)]
     seen = set()
     while stack:
         i = stack.pop()

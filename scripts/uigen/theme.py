@@ -1,7 +1,7 @@
 """Dreist's colour palette, fonts and control styles.
 
-Writes assets/dreist/Skin/Styles/Dreist.style/{Colours,Fonts,Styles}.stylesheet
-and assets/dreist/Skin/project.gltinfo. Style and colour *names* are the
+Writes assets/ui/Skin/Styles/Dreist.style/{Colours,Fonts,Styles}.stylesheet
+and assets/ui/Skin/project.gltinfo. Style and colour *names* are the
 interface the skins and the editor code look up; every value is ours.
 
 The look: dark ink chrome around pale paper panels, a cool slate scale in
@@ -90,7 +90,7 @@ COLOURS = [
 
 # ---------------------------------------------------------------- fonts
 
-SANS = "Dreist Sans"  # geist_gui::text: Liberation Sans, sized to fit
+SANS = "Dreist Sans"  # dreist_gui::text: Liberation Sans, sized to fit
 ICONS = "Dreist-Icons"
 
 # name -> (family, size, bold)

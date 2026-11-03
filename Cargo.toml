@@ -1,6 +1,6 @@
 [workspace]
 resolver = "2"
-members = ["crates/geist-formats", "crates/geist-dsp", "crates/geist-engine", "crates/geist-cli", "crates/geist-plugin", "crates/geist-gui", "crates/geist-editor", "crates/geist-testkit", "xtask"]
+members = ["crates/dreist-cli", "crates/dreist-plugin", "xtask"]
 
 [workspace.package]
 edition = "2024"
@@ -24,6 +24,13 @@ type_complexity = "allow"
 manual_range_contains = "allow"
 
 [workspace.dependencies]
+# The shared crates (dreist-commons).
+dreist-formats = { path = "../dreist-commons/crates/dreist-formats" }
+dreist-dsp = { path = "../dreist-commons/crates/dreist-dsp" }
+dreist-engine = { path = "../dreist-commons/crates/dreist-engine" }
+dreist-gui = { path = "../dreist-commons/crates/dreist-gui" }
+dreist-editor = { path = "../dreist-commons/crates/dreist-editor" }
+dreist-testkit = { path = "../dreist-commons/crates/dreist-testkit" }
 roxmltree = "0.20"
 thiserror = "2"
 
@@ -35,12 +42,12 @@ strip = false
 [profile.test]
 opt-level = 2
 
-# baseview with a re-entrancy guard (vendor/baseview/src/macos/window.rs):
+# baseview with a re-entrancy guard (dreist-commons vendor/baseview):
 # modal dialogs opened from a mouse event aborted the app.
 [patch."https://github.com/RustAudio/baseview.git"]
-baseview = { path = "vendor/baseview" }
+baseview = { path = "../dreist-commons/vendor/baseview" }
 
 # signalsmith-stretch with a fixed phase-randomisation seed
-# (vendor/signalsmith-stretch/src/wrapper.cpp) for reproducible renders.
+# (dreist-commons vendor/signalsmith-stretch) for reproducible renders.
 [patch.crates-io]
-signalsmith-stretch = { path = "vendor/signalsmith-stretch" }
+signalsmith-stretch = { path = "../dreist-commons/vendor/signalsmith-stretch" }

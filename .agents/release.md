@@ -29,5 +29,5 @@ code and fonts listed in `scripts/notices.py`:
     python3 scripts/notices.py            # rewrite after dependency changes
     python3 scripts/notices.py --check    # CI
 
-Licences: the crates are MIT OR Apache-2.0; `geist-plugin` and the binaries
+Licences: the crates are MIT OR Apache-2.0; `dreist-plugin` and the binaries
 are GPL-3.0-or-later (nih-plug's VST3 bindings). See `LICENSE`.

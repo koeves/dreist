@@ -1,6 +1,6 @@
 """Dreist's skin layouts: a small layout language and the XML writer.
 
-Every `.skin` under assets/dreist/Skin is generated from the panel modules
+Every `.skin` under assets/ui/Skin is generated from the panel modules
 next to this file (`fx.py`, `transmod.py`, ...).  A panel is a tree of
 `N` nodes: a control class, an optional name (the editor finds controls
 by name), a rect relative to the parent, a `pin` saying which parent
@@ -9,7 +9,7 @@ attributes.  `pin` letters: l/r/t/b stick to that edge (l+r stretches),
 c centres horizontally, m centres vertically.
 
 The writer turns pins into the ARLeft/ARTop/ARRight/ARBottom anchors the
-GUI reads (geist_gui::ctrl::Anchor), so rects and anchors can't drift
+GUI reads (dreist_gui::ctrl::Anchor), so rects and anchors can't drift
 apart.
 """
 
@@ -127,7 +127,7 @@ PANELS = ["fx", "transmod", "effects", "mixer", "pages", "browser", "patterns", 
 
 
 def outputs():
-    """Every generated skin, keyed by its path under assets/dreist."""
+    """Every generated skin, keyed by its path under assets/ui."""
     import importlib
 
     files = {}

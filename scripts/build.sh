@@ -33,14 +33,14 @@ out=target/bundled
 mkdir -p "$out"
 
 echo "==> VST3 / CLAP ($profile)"
-cargo run --package xtask --release -- bundle geist-plugin $flag
+cargo run --package xtask --release -- bundle dreist-plugin $flag
 
 echo "==> Standalone app ($profile)"
-cargo build -p geist-plugin --features standalone --bin geist-standalone $flag
+cargo build -p dreist-plugin --features standalone --bin dreist-standalone $flag
 app="$out/Dreist.app"
 rm -rf "$app"
 mkdir -p "$app/Contents/MacOS" "$app/Contents/Resources"
-cp "target/$profile/geist-standalone" "$app/Contents/MacOS/Dreist"
+cp "target/$profile/dreist-standalone" "$app/Contents/MacOS/Dreist"
 cat > "$app/Contents/Info.plist" <<PLIST
 <?xml version="1.0" encoding="UTF-8"?>
 <!DOCTYPE plist PUBLIC "-//Apple//DTD PLIST 1.0//EN" "http://www.apple.com/DTDs/PropertyList-1.0.dtd">
@@ -60,19 +60,19 @@ cat > "$app/Contents/Info.plist" <<PLIST
 </dict>
 </plist>
 PLIST
-# App icon (assets/dreist/AppIcon.icns, drawn by scripts/uigen/uigen.py).
-cp assets/dreist/AppIcon.icns "$app/Contents/Resources/AppIcon.icns"
+# App icon (assets/ui/AppIcon.icns, drawn by scripts/uigen/uigen.py).
+cp assets/ui/AppIcon.icns "$app/Contents/Resources/AppIcon.icns"
 
-# Bundle the resources (assets/geist2 = Geist2's factory presets, effect
-# chains and templates) into every bundle's Contents/Resources/Geist2, and
-# Dreist's own UI graphics (assets/dreist: icon font, cursors) into
-# Contents/Resources/Dreist, where geist_formats::paths looks first.
+# Bundle the resources (assets/factory: the factory presets, effect chains
+# and templates) into every bundle's Contents/Resources/Factory, and
+# Dreist's own UI graphics (assets/ui: skin, fonts, cursors, metronomes)
+# into Contents/Resources/Dreist, where Dreist's profile looks first.
 echo "==> Resources"
 for b in "$app" "$out/Dreist.vst3" "$out/Dreist.clap"; do
     mkdir -p "$b/Contents/Resources"
-    rm -rf "$b/Contents/Resources/Geist2" "$b/Contents/Resources/Dreist"
-    cp -R assets/geist2 "$b/Contents/Resources/Geist2"
-    cp -R assets/dreist "$b/Contents/Resources/Dreist"
+    rm -rf "$b/Contents/Resources/Factory" "$b/Contents/Resources/Dreist"
+    cp -R assets/factory "$b/Contents/Resources/Factory"
+    cp -R assets/ui "$b/Contents/Resources/Dreist"
     rm -f "$b/Contents/Resources/Dreist/preview.png" "$b/Contents/Resources/Dreist/AppIcon.png" "$b/Contents/Resources/Dreist/AppIcon.icns"
 done
 # Licence and notices travel with every bundle.

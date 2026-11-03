@@ -5,7 +5,7 @@ A modulator panel is a folding card: a header (menu at the left, the
 retrigger button at the right, any header switches before it), one row of
 knobs, then the modulator's graph filling the rest.  Knob names
 (Control0..) follow the modulator's parameter order in
-geist_formats::params::ModulatorType::params.
+dreist_formats::params::ModulatorType::params.
 """
 
 from . import N, skin

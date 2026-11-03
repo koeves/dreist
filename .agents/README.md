@@ -5,25 +5,25 @@ Rust. It is compatible with FXpansion Geist2 (2.1.2.13): it loads Geist2
 `.geist` projects, kits and patterns and plays them the same way. It builds as
 VST3, CLAP and a standalone app for macOS (Apple Silicon) and Windows (x64).
 
-The UI is branded "Dreist" (`geist_editor::PRODUCT`): no Geist or FXpansion
+The UI is branded "Dreist" (`dreist_editor::PRODUCT`): no Geist or FXpansion
 names in UI text. Crates and file formats keep their `geist` names.
 
 ## Crates
 
 | Crate | Purpose |
 |---|---|
-| `geist-formats` | Geist2 file formats (projects, kits, patterns, presets) and resource paths |
-| `geist-dsp` | voices, filters, modulators, timestretch, the 47 effects |
-| `geist-engine` | sequencer, mixer, modulation, song, scenes, sampler, MIDI, export |
-| `geist-gui` | skin-driven UI toolkit (baseview + softbuffer + tiny-skia) |
-| `geist-editor` | the editor panels and their behaviour |
-| `geist-plugin` | nih-plug VST3 / CLAP plugin and the standalone app |
-| `geist-cli` | command-line tools: `geist-inspect` (check a file's samples), `geist-render` (offline render to WAV), `geist-nulltest` / `geist-stemfit` / `geist-bands` (compare renders) |
-| `geist-testkit` | test helpers: golden fingerprints, signal checks, allocation counting |
-| `xtask` | nih-plug bundler (`cargo xtask bundle geist-plugin`) |
+| `dreist-formats` | Geist2 file formats (projects, kits, patterns, presets) and resource paths |
+| `dreist-dsp` | voices, filters, modulators, timestretch, the 47 effects |
+| `dreist-engine` | sequencer, mixer, modulation, song, scenes, sampler, MIDI, export |
+| `dreist-gui` | skin-driven UI toolkit (baseview + softbuffer + tiny-skia) |
+| `dreist-editor` | the editor panels and their behaviour |
+| `dreist-plugin` | nih-plug VST3 / CLAP plugin and the standalone app |
+| `dreist-cli` | command-line tools: `dreist-inspect` (check a file's samples), `dreist-render` (offline render to WAV), `dreist-nulltest` / `dreist-stemfit` / `dreist-bands` (compare renders) |
+| `dreist-testkit` | test helpers: golden fingerprints, signal checks, allocation counting |
+| `xtask` | nih-plug bundler (`cargo xtask bundle dreist-plugin`) |
 
-`vendor/` holds patched baseview and signalsmith-stretch. `assets/dreist` is
-Dreist's generated UI. `assets/geist2` holds Geist2's factory effect presets,
+`vendor/` holds patched baseview and signalsmith-stretch. `assets/ui` is
+Dreist's generated UI. `assets/factory` holds Geist2's factory effect presets,
 effect chains and pattern/swing templates (FXpansion's files, bundled).
 
 ## Quick commands
