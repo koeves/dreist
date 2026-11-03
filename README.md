@@ -89,7 +89,7 @@ shares with Einst (a Geist v1 rebuild): `dreist-formats`, `dreist-dsp`, `dreist-
 ## Related projects
 
 - [dreist-commons](https://github.com/koeves/dreist-commons): the shared library (formats, DSP,
-  engine, GUI, editor) that both apps are built on.
+  engine, GUI toolkit) that both apps are built on.
 - [Dreist](https://github.com/koeves/dreist): the Geist2 rebuild, an app on dreist-commons.
 - [Einst](https://github.com/koeves/einst): the Geist v1 rebuild, an app on dreist-commons.
 
