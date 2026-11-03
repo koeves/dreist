@@ -25,10 +25,10 @@ Artwork
 
 Third-party code and assets: THIRD_PARTY_NOTICES.md.
 
-Geist2 factory data
+The original instrument's factory data
   assets/factory (effect presets, effect chains, pattern and swing
-  templates) are FXpansion's files from Geist2, bundled with the builds;
-  they are not covered by the licences above.
+  templates) are the original instrument's files, bundled with the
+  builds; they are not covered by the licences above.
 
 Dreist is not affiliated with or endorsed by FXpansion. It reads
 files made by Geist2; Geist2 sample content is not included and is
