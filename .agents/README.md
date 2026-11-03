@@ -10,8 +10,8 @@ Outside README files, code, comments and docs carry no original product, vendor
 or class names; legacy on-disk names live in `dreist_formats::legacy`, and RE
 evidence is cited by tag (`[re:xxxxxx]`, map in `koeves/dreist-re`).
 
-Dreist is a thin app on **dreist-commons** (`../dreist-commons`, private
-`koeves/dreist-commons`): the shared crates below except `dreist-plugin` and
+Dreist is a thin app on **dreist-commons** (private `koeves/dreist-commons`,
+pinned by `rev` in `Cargo.toml`; see README for the local override): the shared crates below except `dreist-plugin` and
 `dreist-cli` live there. Dreist installs its profile (names, resources,
 `.dreist*` save family, settings folder `Dreist`, migrated from `Geist-rs`) at
 start-up.
