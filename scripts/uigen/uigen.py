@@ -8,9 +8,6 @@ the original plugin's resources:
 - Fonts/Dreist-Icons.ttf: the icon font. Same code points (U+E900..U+E92B)
   and meanings as the skins expect, so the .skin captions keep working.
 - Cursors/*.png and Cursors/Cursors.hotspots: the named image cursors.
-- AppIcon.icns (+ AppIcon.png, 1024 px): the macOS app icon, the header's
-  "D" mark on Apple's icon grid (824 px rounded square on a 1024 canvas,
-  continuous corners, drop shadow).
 - Metronomes/: synthesised click sets (scripts/uigen/sounds.py).
 - Skin/: the default stylesheets and colour theme (scripts/uigen/theme.py).
 - preview.png: a contact sheet of both, for review.
@@ -837,7 +834,6 @@ def outputs():
     files = {"Fonts/Dreist-Icons.ttf": font, "Cursors/Cursors.hotspots": hotspots_xml(cur).encode()}
     for name, (size, fn, _) in cur.items():
         files[f"Cursors/{name}.png"] = render_cursor(size, fn)
-    files["AppIcon.icns"], files["AppIcon.png"] = icns()
     files.update(theme.outputs())
     files.update(sounds.outputs())
     files.update(skins.outputs())

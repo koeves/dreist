@@ -60,7 +60,7 @@ cat > "$app/Contents/Info.plist" <<PLIST
 </dict>
 </plist>
 PLIST
-# App icon (assets/ui/AppIcon.icns, drawn by scripts/uigen/uigen.py).
+# App icon (assets/ui/AppIcon.icns, drawn by scripts/icon.py).
 cp assets/ui/AppIcon.icns "$app/Contents/Resources/AppIcon.icns"
 
 # Bundle the resources (assets/factory: the factory presets, effect chains

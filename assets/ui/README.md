@@ -7,9 +7,9 @@ Original artwork for Dreist, licensed like the rest of the workspace
   and meanings as the skins' icon captions; `dreist_gui::text` draws the
   skins' `FXpansion-Geist2-Icons` family with it.
 - `Cursors/`: the named image cursors and their hotspots.
-- `AppIcon.icns`, `AppIcon.png`: the app icon (the header's "D" mark
-  on Apple's 1024 px icon grid); `scripts/build.sh` puts the `.icns` in
-  `Dreist.app`.
+- `AppIcon.icns`, `AppIcon.png`: the app icon, a blue "D" on a dark rounded
+  square (`scripts/icon.py`, the same style as Einst's); `scripts/build.sh`
+  puts the `.icns` in `Dreist.app`.
 - `Metronomes/`: synthesised click sets (`scripts/uigen/sounds.py`).
 - `Skin/`: every panel layout (`.skin`), the stylesheets and the themes.
   Layouts come from `scripts/uigen/skins/` (one module per area); control
