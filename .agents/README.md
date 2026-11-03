@@ -5,30 +5,39 @@ Rust. It is compatible with FXpansion Geist2 (2.1.2.13): it loads Geist2
 `.geist` projects, kits and patterns and plays them the same way. It builds as
 VST3, CLAP and a standalone app for macOS (Apple Silicon) and Windows (x64).
 
-The UI is branded "Dreist" (`dreist_editor::PRODUCT`): no Geist or FXpansion
-names in UI text. Crates and file formats keep their `geist` names.
+The UI is branded "Dreist" (Dreist's app profile, `dreist-plugin/src/profile.rs`).
+Outside README files, code, comments and docs carry no original product, vendor
+or class names; legacy on-disk names live in `dreist_formats::legacy`, and RE
+evidence is cited by tag (`[re:xxxxxx]`, map in `koeves/dreist-re`).
+
+Dreist is a thin app on **dreist-commons** (`../dreist-commons`, private
+`koeves/dreist-commons`): the shared crates below except `dreist-plugin` and
+`dreist-cli` live there. Dreist installs its profile (names, resources,
+`.dreist*` save family, settings folder `Dreist`, migrated from `Geist-rs`) at
+start-up.
 
 ## Crates
 
 | Crate | Purpose |
 |---|---|
-| `dreist-formats` | Geist2 file formats (projects, kits, patterns, presets) and resource paths |
-| `dreist-dsp` | voices, filters, modulators, timestretch, the 47 effects |
-| `dreist-engine` | sequencer, mixer, modulation, song, scenes, sampler, MIDI, export |
-| `dreist-gui` | skin-driven UI toolkit (baseview + softbuffer + tiny-skia) |
-| `dreist-editor` | the editor panels and their behaviour |
+| `dreist-formats` (commons) | file formats (projects, kits, patterns, presets), resource paths, the app profile |
+| `dreist-dsp` (commons) | voices, filters, modulators, timestretch, the 47 effects |
+| `dreist-engine` (commons) | sequencer, mixer, modulation, song, scenes, sampler, MIDI, export |
+| `dreist-gui` (commons) | skin-driven UI toolkit (baseview + softbuffer + tiny-skia) |
+| `dreist-editor` (commons) | the editor panels and their behaviour |
 | `dreist-plugin` | nih-plug VST3 / CLAP plugin and the standalone app |
 | `dreist-cli` | command-line tools: `dreist-inspect` (check a file's samples), `dreist-render` (offline render to WAV), `dreist-nulltest` / `dreist-stemfit` / `dreist-bands` (compare renders) |
-| `dreist-testkit` | test helpers: golden fingerprints, signal checks, allocation counting |
+| `dreist-testkit` (commons) | test helpers: golden fingerprints, signal checks, allocation counting |
 | `xtask` | nih-plug bundler (`cargo xtask bundle dreist-plugin`) |
 
-`vendor/` holds patched baseview and signalsmith-stretch. `assets/ui` is
-Dreist's generated UI. `assets/factory` holds Geist2's factory effect presets,
-effect chains and pattern/swing templates (FXpansion's files, bundled).
+dreist-commons' `vendor/` holds patched baseview and signalsmith-stretch
+(`[patch]` entries in `Cargo.toml`). `assets/ui` is Dreist's generated UI.
+`assets/factory` holds the original's factory effect presets, effect chains and
+pattern/swing templates (bundled).
 
 ## Quick commands
 
-    cargo test --workspace
+    cargo test --workspace            # app crates; the shared crates test in ../dreist-commons
     cargo fmt --all --check
     cargo clippy --workspace --all-targets -- -D warnings
     scripts/build.sh                  # macOS bundles into target/bundled/
@@ -51,5 +60,5 @@ effect chains and pattern/swing templates (FXpansion's files, bundled).
 - [release.md](release.md): the release workflow, signing, third-party notices.
 - [conventions.md](conventions.md): formatting, lints, realtime safety, errors, comments.
 
-Private reverse-engineering notes for Geist2 live in `koeves/dreist-re`, for
-those with access.
+Private reverse-engineering notes live in `koeves/dreist-re` (`dreist/`), for
+those with access. The shared crates' tests and goldens run in dreist-commons.

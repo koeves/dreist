@@ -31,10 +31,10 @@ Resources resolve through `dreist_formats::paths`: `DREIST_RESOURCES` /
 
 ## Content
 
-Dreist ships no samples. Content comes from the original vendor's v2 packs (the
+Dreist ships no samples. Content comes from the original's packs (the
 factory/starter content). The browser reads `DREIST_CONTENT`, else
-`Content` in the documents folder (default `~/Documents/the original vendor/v2`,
-option `LocalDocumentsPath`). Many tests use the factory content when it is
+`Content` in the documents folder (default `dreist_formats::legacy::DOCUMENTS_DIR`
+under the home folder, option `LocalDocumentsPath`). Many tests use the factory content when it is
 installed and skip quietly when it is not (CI has none).
 
 Keep the content outside iCloud-synced folders, or mark it "Keep
@@ -43,11 +43,14 @@ editor suite's seconds into many minutes.
 
 ## Tests
 
-    cargo test --workspace
-    cargo test -p dreist-engine --test realtime     # no heap use on the audio path
-    cargo test -p dreist-dsp --test fx_harness      # effect fingerprints
+The shared crates (and their goldens) are tested in dreist-commons
+(`../dreist-commons`); this repository tests the plugin and CLI:
 
-Golden fingerprints live in `crates/*/tests/golden/` (`fx.txt`,
+    cargo test --workspace
+    (cd ../dreist-commons && cargo test -p dreist-engine --test realtime)  # no heap use on the audio path
+    (cd ../dreist-commons && cargo test -p dreist-dsp --test fx_harness)   # effect fingerprints
+
+Golden fingerprints live in dreist-commons' `crates/*/tests/golden/` (`fx.txt`,
 `engine.txt`, `screens.txt`). After an intended change to audio or rendering,
 regenerate them and review the diff:
 

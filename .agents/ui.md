@@ -29,5 +29,5 @@ or `assets/ui`.
 `editorshot` also takes `DREIST_MODAL=about|preferences|export|filefind|metadata`,
 `DREIST_CLICK=Ctrl/Name`, `DREIST_MENU=...` and more (see the top of
 `crates/dreist-editor/examples/editorshot.rs`). UI changes usually move the
-screen fingerprints: regenerate `crates/dreist-editor/tests/golden/screens.txt`
+screen fingerprints: regenerate dreist-commons' `crates/dreist-editor/tests/golden/screens.txt`
 (see building.md).
