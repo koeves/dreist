@@ -22,6 +22,7 @@ EXTRA = [
 def rows():
     meta = json.loads(subprocess.check_output(["cargo", "metadata", "--format-version", "1", "--locked", "--filter-platform", "aarch64-apple-darwin"], cwd=ROOT))
     pk = {p["id"]: p for p in meta["packages"]}
+    # The dreist-* crates (dreist-commons) are this project's own code.
     ws = set(meta["workspace_members"])
     nodes = {n["id"]: n for n in meta["resolve"]["nodes"]}
     stack = [i for i in ws if pk[i]["name"] in ("dreist-plugin",)]
@@ -34,7 +35,7 @@ def rows():
         for d in nodes[i]["deps"]:
             if any(k["kind"] in (None, "build") for k in d["dep_kinds"]):
                 stack.append(d["pkg"])
-    return sorted({(pk[i]["name"], pk[i]["version"], pk[i]["license"] or "see repository", pk[i].get("repository") or "") for i in seen if i not in ws})
+    return sorted({(pk[i]["name"], pk[i]["version"], pk[i]["license"] or "see repository", pk[i].get("repository") or "") for i in seen if i not in ws and not pk[i]["name"].startswith("dreist-")})
 
 
 def render():
