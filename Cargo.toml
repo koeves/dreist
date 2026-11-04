@@ -49,6 +49,11 @@ opt-level = 2
 [patch."https://github.com/RustAudio/baseview.git"]
 baseview = { path = "commons/vendor/baseview" }
 
+# nih-plug whose CLAP state load survives corrupt state and asks the host
+# to rescan the parameter values (dreist-commons vendor/nih-plug).
+[patch."https://github.com/robbert-vdh/nih-plug.git"]
+nih_plug = { path = "commons/vendor/nih-plug" }
+
 # signalsmith-stretch with a fixed phase-randomisation seed
 # (dreist-commons vendor/signalsmith-stretch) for reproducible renders.
 [patch.crates-io]
