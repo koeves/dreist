@@ -1078,6 +1078,7 @@ dependencies = [
 name = "dreist-plugin"
 version = "0.1.0"
 dependencies = [
+ "clap-sys",
  "cpal",
  "dreist-dsp",
  "dreist-editor",
