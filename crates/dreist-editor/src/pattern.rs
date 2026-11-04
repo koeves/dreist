@@ -2419,7 +2419,12 @@ pub fn set_shading_mode(name: &str) {
 /// cycle table; `None` (−1, no alternation) for Off and coarse
 /// resolutions.
 pub fn shading_group(resolution: usize) -> Option<usize> {
-    let g = match SHADING_MODE.load(std::sync::atomic::Ordering::Relaxed) {
+    shading_group_in(SHADING_MODE.load(std::sync::atomic::Ordering::Relaxed), resolution)
+}
+
+/// [`shading_group`] for shading mode `mode` (the index into `SHADING`).
+fn shading_group_in(mode: u8, resolution: usize) -> Option<usize> {
+    let g = match mode {
         0 => 4,
         1 => dreist_engine::pattern::resolution_beats(resolution),
         2 => dreist_engine::pattern::resolution_cycles(resolution),
@@ -2508,15 +2513,15 @@ mod shading_tests {
 
     #[test]
     fn shading_modes() {
-        set_shading_mode("Adaptive");
-        assert_eq!(shading_group(10), Some(8), "1/32: 8 steps a beat");
-        assert_eq!(shading_group(2), None, "1/2 is coarser than a beat");
-        set_shading_mode("Cyclic");
-        assert_eq!(shading_group(8), Some(16));
-        set_shading_mode("Off");
-        assert!(!shaded(8, 5));
-        set_shading_mode("Fixed");
-        assert_eq!(shading_group(10), Some(4));
+        // The pure form: the global mode is shared with the renderer in
+        // parallel tests (screen fingerprints), so it is not changed here.
+        let (fixed, adaptive, cyclic, off) = (0, 1, 2, 3);
+        assert_eq!(shading_group_in(adaptive, 10), Some(8), "1/32: 8 steps a beat");
+        assert_eq!(shading_group_in(adaptive, 2), None, "1/2 is coarser than a beat");
+        assert_eq!(shading_group_in(cyclic, 8), Some(16));
+        assert_eq!(shading_group_in(off, 8), None);
+        assert_eq!(shading_group_in(fixed, 10), Some(4));
+        assert_eq!(crate::modal::SHADING.iter().position(|s| *s == "Cyclic"), Some(2));
         assert!(shaded(8, 4) && !shaded(8, 3) && !shaded(8, 8));
     }
 }
