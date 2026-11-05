@@ -134,11 +134,13 @@ pub(crate) fn set_lock(n: &mut Node, on: bool) {
     }
 }
 
-/// `e_deallocatePadSamples`: the pad's layers lose their samples.
-pub(crate) fn clear_samples(pad: &mut Node) {
-    for l in pad.children.iter_mut().filter(|c| c.class == "Layer") {
-        clear_layer(l);
-    }
+/// `e_deallocatePadSamples` ([re:2e5fb5]): the pad is reset to a new
+/// one: samples, layers, effects, mix, sends, output, lock, pad
+/// parameters, layer mode and name (back to the default, shown as the pad
+/// number). Only the colour label and the velocity-split links survive.
+pub(crate) fn reset_pad(pad: &mut Node) {
+    pad.attrs.retain(|(k, _)| k == "PadColour" || k.strip_prefix("Link").is_some_and(|j| j.parse::<usize>().is_ok()));
+    pad.children.clear();
 }
 
 fn clear_layer(l: &mut Node) {
@@ -399,7 +401,7 @@ impl PadMenu {
                 clip.track = if track { Some(track_node(model, e, p).cloned().unwrap_or_else(|| Node::new("Track", Some(&format!("Track{p}"))))) } else { None };
                 clip.pad = Some(pad_or_empty(model, e, p));
                 if matches!(a, PadAction::Cut { .. }) {
-                    clear_samples(model.pad_mut(e, p));
+                    reset_pad(model.pad_mut(e, p));
                     if track {
                         track_mut(model, e, p).children.retain(|c| c.class != "Step");
                     }
@@ -419,14 +421,15 @@ impl PadMenu {
                 done
             }
             PadAction::ClearPad => {
-                clear_samples(model.pad_mut(e, p));
+                reset_pad(model.pad_mut(e, p));
                 rebuild(model, out);
                 done
             }
+            // Locked pads are skipped ([re:2e5fb5]).
             PadAction::ClearAll => {
                 for q in 0..PADS {
-                    if model.pad_node(e, q).is_some() {
-                        clear_samples(model.pad_mut(e, q));
+                    if model.pad_node(e, q).is_some() && !pad_locked(model, e, q) {
+                        reset_pad(model.pad_mut(e, q));
                     }
                 }
                 rebuild(model, out);
@@ -479,12 +482,13 @@ impl PadMenu {
                 rebuild(model, out);
                 done
             }
-            // 0x56 `e_setPad` [e, q] with a copy; Move also clears the source (0xe3).
+            // 0x56 `e_setPad` [e, q] with a copy; Move then resets the source
+            // (0xe3, [re:2e5fb5]).
             PadAction::CopyTo(q) | PadAction::MoveTo(q) => {
                 let node = pad_or_empty(model, e, p);
                 put_pad(model, e, q, node);
                 if matches!(a, PadAction::MoveTo(_)) {
-                    clear_samples(model.pad_mut(e, p));
+                    reset_pad(model.pad_mut(e, p));
                 }
                 rebuild(model, out);
                 done
@@ -594,7 +598,7 @@ mod tests {
 /// menu items (16 pads of bank `b`).
 pub const BANK_ITEMS: [&str; 10] = ["Cut", "Copy", "Paste", "", "Mute all", "Solo all", "", "Unmute all", "Unsolo all", "Clear all mute and solo"];
 
-/// A bank menu pick: Cut ([re:835158]: copy, then clear the non-empty pads),
+/// A bank menu pick: Cut ([re:835158]: copy, then reset the unlocked pads),
 /// Copy ([re:7b5ea8]), Paste ([re:4a3521]: all 16 pads, 0x56), mute / solo all
 /// and their clears (0x4c / 0x4d per pad). True when the document changed.
 pub fn bank_action(model: &mut Model, clip: &mut Clipboard, b: usize, index: usize, out: &mut Vec<Command>) -> bool {
@@ -614,8 +618,8 @@ pub fn bank_action(model: &mut Model, clip: &mut Clipboard, b: usize, index: usi
             clip.bank = Some(pads.iter().map(|&p| pad_or_empty(model, e, p)).collect());
             if index == 0 {
                 for &p in &pads {
-                    if model.pad_node(e, p).is_some() {
-                        clear_samples(model.pad_mut(e, p));
+                    if model.pad_node(e, p).is_some() && !pad_locked(model, e, p) {
+                        reset_pad(model.pad_mut(e, p));
                     }
                 }
                 rebuild(model, out);

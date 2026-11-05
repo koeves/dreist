@@ -104,7 +104,8 @@ impl TriggerPanel {
         if let Some(m) = o.find_mut("Matrix") {
             for (p, b) in m.children.iter_mut().enumerate() {
                 b.on = n.bool(&format!("PadTrig{e}-{p}")).unwrap_or(false);
-                b.text = model.pad_name(e, p).unwrap_or_else(|| (p + 1).to_string());
+                // [re:20a1ed]: the default name shows as the number.
+                b.text = model.pad_name(e, p).filter(|n| *n != format!("Pad {}", p + 1)).unwrap_or_else(|| (p + 1).to_string());
             }
         }
     }

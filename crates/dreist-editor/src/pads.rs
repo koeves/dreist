@@ -304,7 +304,8 @@ impl Pads {
                     8..16 => format!("{} Solo", idx - 7),
                     _ => String::new(),
                 },
-                _ => name.unwrap_or_else(|| format!("{}", idx + 1)),
+                // [re:20a1ed]: the default name ("Pad n") shows as the number.
+                _ => name.filter(|n| *n != format!("Pad {}", idx + 1)).unwrap_or_else(|| format!("{}", idx + 1)),
             };
             let sel = idx == selected || sel_mask & (1u64 << idx.min(63)) != 0;
             let x0x = mode == PadMode::X0x;
