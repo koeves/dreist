@@ -3636,3 +3636,15 @@ fn typed_non_numbers_are_ignored() {
     assert_eq!(ed.model.tempo(), 97.5);
     assert_eq!(crate::conv::number("1e99"), None, "overflows to infinity");
 }
+
+/// The memory readout shows the engine's sample memory ([re:74a677]).
+#[test]
+fn memory_readout_shows_sample_memory() {
+    let Ok(mut ed) = Editor::new(dreist_gui::skin::default_theme(), Model::new(project::new_document())) else { return };
+    let text = |ed: &Editor| ed.app.root.find("MemoryUsageBox").map(|c| c.text.clone()).unwrap_or_default();
+    ed.sync();
+    assert_eq!(text(&ed), "", "nothing before the plugin reports");
+    ed.model.memory = Some(20_656_947);
+    ed.sync();
+    assert_eq!(text(&ed), "19.7MB");
+}

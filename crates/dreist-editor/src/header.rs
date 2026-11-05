@@ -254,7 +254,8 @@ impl Header {
         set_text(app, "PresetLabel", preset.or_else(|| model.name.clone()).unwrap_or_default());
         set_text(app, "KitLabel", model.engine_node(model.engine).and_then(|n| n.attr("KitName")).unwrap_or("").to_string());
         set_text(app, "BPMTextBox", format!("{tempo:.2}"));
-        set_text(app, "MemoryUsageBox", String::new());
+        // The memory readout ([re:74a677]): the engine's sample memory.
+        set_text(app, "MemoryUsageBox", model.memory.map(dreist_engine::memory::bytes_label).unwrap_or_default());
         let song = song_of(model);
         let gain = master_gain(model);
         let host_loop = model.host_loop;
