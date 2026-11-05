@@ -1255,7 +1255,7 @@ impl PatternPanel {
             UiEvent::MenuSelected { anchor, name, index } if name == "GraphCombo" => {
                 if !self.lane_menu_fx && *index == CORE_LANES {
                     self.lane_menu_fx = true;
-                    let items = (CORE_LANES..dreist_engine::pattern::LANES).map(lane_label).collect();
+                    let items = (CORE_LANES..dreist_formats::STEP_LANES.len()).map(lane_label).collect();
                     app.open_menu(anchor, items, None);
                     return false;
                 }
@@ -1792,7 +1792,7 @@ impl PatternPanel {
         }
         match name {
             "AddButton" => {
-                let next = (0..dreist_engine::pattern::LANES).find(|l| !lanes.contains(l)).unwrap_or(0);
+                let next = (0..dreist_formats::STEP_LANES.len()).find(|l| !lanes.contains(l)).unwrap_or(0);
                 lanes.insert((slot + 1).min(lanes.len()), next);
                 Some(true)
             }
