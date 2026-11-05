@@ -95,6 +95,10 @@ pub struct PatternPanel {
     graph_menu: Option<bool>,
     /// Copied lane values (graph menu Copy).
     lane_clip: Vec<f32>,
+    /// The step context menu while open.
+    event_menu: Option<EventMenu>,
+    /// A drag of the selection.
+    sel_drag: Option<SelDrag>,
     /// Toolbar Options menu open: the actions of its items, or the Drag
     /// Edits lanes when the submenu / DragEdit popup is open.
     toolbar_menu: Option<Vec<ToolbarAction>>,
@@ -151,6 +155,48 @@ enum ToolbarAction {
     Gated,
     Restart,
     None,
+}
+
+/// Items of the step (event) context menu: Alt-right-click on the step
+/// grid, or a plain right-click with the "Pattern editor right-click
+/// opens menu" preference.
+#[derive(Clone, Copy, Debug, PartialEq)]
+enum EventAction {
+    Cut,
+    Copy,
+    Paste,
+    Duplicate,
+    Delete,
+    QuantizeTrack,
+    ResetTrackVelocity,
+    InsertMenu,
+    Insert(usize),
+    None,
+}
+
+/// An open step context menu: its grid, the clicked track and step, and
+/// the actions of its items.
+struct EventMenu {
+    anchor: Vec<usize>,
+    track: usize,
+    step: usize,
+    actions: Vec<EventAction>,
+}
+
+/// A press on a selected step: dragging across steps or tracks moves the
+/// selection (Alt copies it), dragging up or down changes the selected
+/// steps' Drag Edits lane.
+#[derive(Clone, Debug, PartialEq)]
+struct SelDrag {
+    from: (usize, usize),
+    to: (usize, usize),
+    y: f32,
+    copy: bool,
+    /// The selected steps' Drag Edits lane values when the press began.
+    base: Vec<((usize, usize), f32)>,
+    /// None until the drag declares itself: Some(true) moves, Some(false)
+    /// edits values.
+    moving: Option<bool>,
 }
 
 /// Lanes offered by "Drag Edits..." ([re:4120dd] 0..0x27 without
@@ -645,6 +691,8 @@ impl PatternPanel {
             clipboard: Vec::new(),
             graph_menu: None,
             lane_clip: Vec::new(),
+            event_menu: None,
+            sel_drag: None,
             toolbar_menu: None,
             resources: dreist_formats::paths::skin_dir(),
             swing_menu: None,
@@ -1192,6 +1240,11 @@ impl PatternPanel {
                 out.push(Command::SwingTemplate(e, Box::new(n), Box::new(sw)));
                 true
             }
+            UiEvent::MenuSelected { anchor, index, .. } if self.event_menu.as_ref().is_some_and(|m| &m.anchor == anchor) => {
+                let m = self.event_menu.take().unwrap();
+                let Some(&a) = m.actions.get(*index) else { return false };
+                self.event_action(app, model, m, a, out)
+            }
             UiEvent::MenuSelected { anchor, index, .. } if self.toolbar_menu.is_some() => {
                 let actions = self.toolbar_menu.take().unwrap();
                 let Some(&a) = actions.get(*index) else { return false };
@@ -1337,6 +1390,15 @@ impl PatternPanel {
                 let drag_lane = model.pattern_view[e].drag_lane;
                 // [re:f32484] multi tool (tool 3).
                 let ctx = StepCtx { e, cur, drag_lane, pat: &pat, lay: &lay };
+                if let Some(r) = self.selection_drag(app, model, &ctx, *kind, track, step, *y, on_now, out) {
+                    return r;
+                }
+                // The step context menu: Alt-right-click, or a plain right
+                // click when the preference swaps them.
+                if *kind == MouseKind::RightDown && crate::options::Options::load().bool("PatternEditorRightClickMode", false) != app.mods.alt {
+                    self.open_event_menu(app, path, &pat, track, step);
+                    return false;
+                }
                 match kind {
                     // Left press [re:12e437] / multi-tool press [re:e6464c]:
                     // with editor-selected steps a click elsewhere only clears
@@ -1866,6 +1928,185 @@ impl PatternPanel {
                 true
             }
             ToolbarAction::None => false,
+        }
+    }
+
+    /// A press, drag or release on the step grid that belongs to a
+    /// selection drag: a press on a selected step (without Shift) starts
+    /// one; moving to another step or track moves the selection there on
+    /// release (with Alt it is copied, graph data travels with the
+    /// events); moving up or down first changes the selected steps' Drag
+    /// Edits lane together. None: not a selection drag.
+    #[allow(clippy::too_many_arguments)]
+    fn selection_drag(&mut self, app: &App, model: &Model, ctx: &StepCtx, kind: MouseKind, track: usize, step: usize, y: f32, on_now: bool, out: &mut Vec<Command>) -> Option<bool> {
+        match kind {
+            MouseKind::Down if on_now && !app.mods.shift && self.selection.contains(&(track, step)) => {
+                let lane = ctx.drag_lane;
+                let base = self.selection.iter().map(|&(t, s)| ((t, s), ctx.pat.tracks.get(t).and_then(|tr| tr.steps.get(s)).and_then(|st| st.lanes.get(lane).copied()).unwrap_or(0.0))).collect();
+                self.sel_drag = Some(SelDrag { from: (track, step), to: (track, step), y, copy: app.mods.alt, base, moving: None });
+                Some(true)
+            }
+            MouseKind::Drag => {
+                let d = self.sel_drag.as_mut()?;
+                d.copy |= app.mods.alt;
+                if d.moving.is_none() {
+                    if (track, step) != d.from {
+                        d.moving = Some(true);
+                    } else if (y - d.y).abs() > 3.0 && ctx.drag_lane != 4 {
+                        d.moving = Some(false);
+                    }
+                }
+                match d.moving {
+                    Some(true) => d.to = (track, step),
+                    Some(false) => {
+                        let dv = (y - d.y) * -0.005;
+                        for &((t, s), v) in &d.base {
+                            ctx.lane_set(out, t, s, v + dv);
+                        }
+                    }
+                    None => {}
+                }
+                Some(true)
+            }
+            MouseKind::Up => {
+                let d = self.sel_drag.take()?;
+                if d.moving == Some(true) {
+                    self.move_selection(model, d.to.0 as isize - d.from.0 as isize, d.to.1 as isize - d.from.1 as isize, d.copy, out);
+                }
+                Some(true)
+            }
+            _ => None,
+        }
+    }
+
+    /// Moves (or copies) the selected steps by (tracks, steps): steps that
+    /// would leave the pattern stay behind; the selection follows the
+    /// moved steps.
+    fn move_selection(&mut self, model: &Model, dt: isize, ds: isize, copy: bool, out: &mut Vec<Command>) {
+        if dt == 0 && ds == 0 {
+            return;
+        }
+        let e = model.engine;
+        let cur = model.current_pattern(e);
+        let pat = model.pattern(e, cur);
+        let (tracks, steps) = (pat.tracks.len() as isize, pat.steps as isize);
+        let locked = |t: usize| crate::padmenu::track_node(model, e, t).is_some_and(|n| n.locked());
+        let moves: Vec<((usize, usize), (usize, usize), dreist_engine::pattern::StepData)> = self
+            .selection
+            .iter()
+            .filter_map(|&(t, s)| {
+                let (t2, s2) = (t as isize + dt, s as isize + ds);
+                if !(0..tracks).contains(&t2) || !(0..steps).contains(&s2) || locked(t) || locked(t2 as usize) {
+                    return None;
+                }
+                Some(((t, s), (t2 as usize, s2 as usize), pat.tracks.get(t)?.steps.get(s)?.clone()))
+            })
+            .collect();
+        if moves.is_empty() {
+            return;
+        }
+        if !copy {
+            for (from, _, _) in &moves {
+                write_step(out, e, cur as i32, from.0, from.1, &dreist_engine::pattern::StepData::off());
+            }
+        }
+        for (from, to, d) in &moves {
+            write_step(out, e, cur as i32, to.0, to.1, d);
+            self.selection.remove(from);
+        }
+        for (_, to, _) in moves {
+            self.selection.insert(to);
+        }
+    }
+
+    /// Opens the step context menu for (track, step).
+    fn open_event_menu(&mut self, app: &mut App, anchor: &[usize], pat: &PatternData, track: usize, step: usize) {
+        let any = !self.selection.is_empty();
+        let on = pat.tracks.get(track).and_then(|t| t.steps.get(step)).is_some_and(|s| s.on);
+        let items = [
+            ("Cut", EventAction::Cut, any || on),
+            ("Copy", EventAction::Copy, any || on),
+            ("Paste", EventAction::Paste, !self.clipboard.is_empty()),
+            ("", EventAction::None, true),
+            (if any { "Duplicate selected steps" } else { "Duplicate pattern" }, EventAction::Duplicate, true),
+            ("Delete", EventAction::Delete, any || on),
+            ("", EventAction::None, true),
+            ("Quantize track timing", EventAction::QuantizeTrack, true),
+            ("Reset track velocity", EventAction::ResetTrackVelocity, true),
+            ("", EventAction::None, true),
+            ("Insert ▸", EventAction::InsertMenu, true),
+        ];
+        let labels = items.iter().map(|(t, _, ok)| if t.is_empty() { String::new() } else { dreist_gui::menu::item(*t, *ok) }).collect();
+        self.event_menu = Some(EventMenu { anchor: anchor.to_vec(), track, step, actions: items.iter().map(|i| if i.2 { i.1 } else { EventAction::None }).collect() });
+        app.open_menu(anchor, labels, None);
+    }
+
+    fn event_action(&mut self, app: &mut App, model: &mut Model, m: EventMenu, a: EventAction, out: &mut Vec<Command>) -> bool {
+        let e = model.engine;
+        let cur = model.current_pattern(e);
+        let pat = model.pattern(e, cur);
+        let (track, step) = (m.track, m.step);
+        // Without a selection the clicked event is what Cut, Copy and
+        // Delete act on.
+        let on = pat.tracks.get(track).and_then(|t| t.steps.get(step)).is_some_and(|s| s.on);
+        if self.selection.is_empty() && on && matches!(a, EventAction::Cut | EventAction::Copy | EventAction::Delete) {
+            self.selection.insert((track, step));
+        }
+        let clear_lane = |out: &mut Vec<Command>, l: usize| {
+            let d = dreist_formats::params::step_lane_default(l);
+            for st in 0..pat.steps as usize {
+                out.push(msg(id::SET_STEP_GRAPH_STATE, &[e as i32, track as i32, -1, cur as i32, track as i32, st as i32], &[l as f32, d, 0.0]));
+            }
+        };
+        match a {
+            EventAction::Cut => self.shortcut(model, "x", true, out),
+            EventAction::Copy => self.shortcut(model, "c", true, out),
+            EventAction::Paste => {
+                // At the clicked step of the clicked track.
+                model.pad[e] = track;
+                self.selection.clear();
+                self.selection.insert((track, step));
+                self.shortcut(model, "v", true, out)
+            }
+            EventAction::Delete => self.shortcut(model, "delete", false, out),
+            EventAction::Duplicate => {
+                self.selection = duplicate(&pat, &self.selection, e, cur as i32, out);
+                true
+            }
+            EventAction::QuantizeTrack => {
+                clear_lane(out, lane::SHIFT);
+                true
+            }
+            EventAction::ResetTrackVelocity => {
+                clear_lane(out, lane::VELOCITY);
+                true
+            }
+            EventAction::InsertMenu => {
+                let templates = crate::patmenu::pattern_templates(&self.resources);
+                let labels = templates.iter().map(|(n, _)| n.clone()).collect();
+                self.event_menu = Some(EventMenu { anchor: m.anchor.clone(), track, step, actions: (0..templates.len()).map(EventAction::Insert).collect() });
+                app.open_menu(&m.anchor, labels, None);
+                false
+            }
+            // The template repeats from the clicked step to the end of the
+            // track.
+            EventAction::Insert(k) => {
+                let Some((_, bits)) = crate::patmenu::pattern_templates(&self.resources).into_iter().nth(k) else { return false };
+                if bits.is_empty() {
+                    return false;
+                }
+                let len = pat.tracks.get(track).map(|t| t.length).filter(|l| *l > 0).unwrap_or(pat.steps) as usize;
+                for (i, st) in (step..len).enumerate() {
+                    let index = [e as i32, track as i32, -1, cur as i32, track as i32, st as i32];
+                    if bits[i % bits.len()] {
+                        out.push(msg(id::SET_STEP_ON, &index, &[1.0, 1.0, 0.0]));
+                    } else {
+                        out.push(msg(id::SET_STEP_OFF, &index, &[0.0]));
+                    }
+                }
+                true
+            }
+            EventAction::None => false,
         }
     }
 

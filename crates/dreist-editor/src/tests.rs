@@ -3648,3 +3648,102 @@ fn memory_readout_shows_sample_memory() {
     ed.sync();
     assert_eq!(text(&ed), "19.7MB");
 }
+
+/// An editor on an empty document (no content needed).
+fn blank_editor() -> Option<Editor> {
+    Editor::new(dreist_gui::skin::default_theme(), Model::new(dreist_formats::Node::new("root", None))).ok()
+}
+
+#[test]
+fn selection_drags_move_and_alt_copies() {
+    use dreist_gui::app::MouseKind;
+    let Some(mut ed) = blank_editor() else { return };
+    let grid = ed.app.root.path_of("PatternGrid").unwrap();
+    let lay = ed.pattern.as_ref().unwrap().layout(&ed.app, &ed.model).unwrap();
+    let e = ed.model.engine;
+    let cur = ed.model.current_pattern(e);
+    let mouse = |ed: &mut Editor, kind: MouseKind, t: usize, s: usize| {
+        let (x, y) = (lay.step_x(s) + 2.0, lay.row_y(t) + 2.0);
+        ed.handle(&UiEvent::Mouse { path: grid.clone(), overload: "PatternGrid".into(), kind, x, y })
+    };
+    let on = |ed: &Editor| -> Vec<(usize, usize)> {
+        let pat = ed.model.pattern(e, cur);
+        (0..4).flat_map(|t| (0..pat.steps as usize).map(move |s| (t, s))).filter(|&(t, s)| pat.tracks[t].steps[s].on).collect()
+    };
+    // Two events on track 0.
+    for s in [0, 2] {
+        mouse(&mut ed, MouseKind::Down, 0, s);
+        mouse(&mut ed, MouseKind::Up, 0, s);
+    }
+    assert_eq!(on(&ed), vec![(0, 0), (0, 2)]);
+    // Shift-drag a band over both.
+    ed.app.mods.shift = true;
+    mouse(&mut ed, MouseKind::Down, 0, 0);
+    mouse(&mut ed, MouseKind::Drag, 0, 3);
+    mouse(&mut ed, MouseKind::Up, 0, 3);
+    ed.app.mods.shift = false;
+    // Drag the selection one track down and one step right: it moves.
+    mouse(&mut ed, MouseKind::Down, 0, 2);
+    mouse(&mut ed, MouseKind::Drag, 1, 3);
+    mouse(&mut ed, MouseKind::Up, 1, 3);
+    assert_eq!(on(&ed), vec![(1, 1), (1, 3)]);
+    // Alt-drag copies it back to track 0.
+    ed.app.mods.alt = true;
+    mouse(&mut ed, MouseKind::Down, 1, 1);
+    mouse(&mut ed, MouseKind::Drag, 0, 0);
+    mouse(&mut ed, MouseKind::Up, 0, 0);
+    ed.app.mods.alt = false;
+    assert_eq!(on(&ed), vec![(0, 0), (0, 2), (1, 1), (1, 3)]);
+}
+
+#[test]
+fn step_context_menu() {
+    use dreist_gui::app::MouseKind;
+    let Some(mut ed) = blank_editor() else { return };
+    let grid = ed.app.root.path_of("PatternGrid").unwrap();
+    let lay = ed.pattern.as_ref().unwrap().layout(&ed.app, &ed.model).unwrap();
+    let e = ed.model.engine;
+    let cur = ed.model.current_pattern(e);
+    let mouse = |ed: &mut Editor, kind: MouseKind, t: usize, s: usize| {
+        let (x, y) = (lay.step_x(s) + 2.0, lay.row_y(t) + 2.0);
+        ed.handle(&UiEvent::Mouse { path: grid.clone(), overload: "PatternGrid".into(), kind, x, y })
+    };
+    mouse(&mut ed, MouseKind::Down, 0, 4);
+    mouse(&mut ed, MouseKind::Up, 0, 4);
+    // Alt-right-click opens the menu instead of deleting.
+    ed.app.mods.alt = true;
+    mouse(&mut ed, MouseKind::RightDown, 0, 4);
+    ed.app.mods.alt = false;
+    let items = ed.app.menu.as_ref().expect("menu").items.clone();
+    let at = |items: &[String], label: &str| items.iter().position(|i| i.trim_start_matches('\u{2}').trim_end_matches('▸').trim_end() == label).unwrap_or_else(|| panic!("{label} in {items:?}"));
+    assert!(ed.model.pattern(e, cur).tracks[0].steps[4].on);
+    // Copy the event, paste it at step 8 of track 2.
+    ed.handle(&UiEvent::MenuSelected { anchor: grid.clone(), name: "PatternGrid".into(), index: at(&items, "Copy") });
+    ed.app.mods.alt = true;
+    mouse(&mut ed, MouseKind::RightDown, 2, 8);
+    ed.app.mods.alt = false;
+    let items = ed.app.menu.as_ref().expect("menu").items.clone();
+    ed.handle(&UiEvent::MenuSelected { anchor: grid.clone(), name: "PatternGrid".into(), index: at(&items, "Paste") });
+    assert!(ed.model.pattern(e, cur).tracks[2].steps[8].on);
+    // Delete the clicked event.
+    ed.pattern.as_mut().unwrap().selection.clear();
+    ed.app.mods.alt = true;
+    mouse(&mut ed, MouseKind::RightDown, 0, 4);
+    ed.app.mods.alt = false;
+    let items = ed.app.menu.as_ref().expect("menu").items.clone();
+    ed.handle(&UiEvent::MenuSelected { anchor: grid.clone(), name: "PatternGrid".into(), index: at(&items, "Delete") });
+    assert!(!ed.model.pattern(e, cur).tracks[0].steps[4].on);
+    // Insert ▸ the first template from step 4 of track 1.
+    ed.app.mods.alt = true;
+    mouse(&mut ed, MouseKind::RightDown, 1, 4);
+    ed.app.mods.alt = false;
+    let items = ed.app.menu.as_ref().expect("menu").items.clone();
+    ed.handle(&UiEvent::MenuSelected { anchor: grid.clone(), name: "PatternGrid".into(), index: at(&items, "Insert") });
+    let templates = crate::patmenu::pattern_templates(&dreist_formats::paths::skin_dir());
+    if let Some((_, bits)) = templates.first() {
+        ed.handle(&UiEvent::MenuSelected { anchor: grid.clone(), name: "PatternGrid".into(), index: 0 });
+        let pat = ed.model.pattern(e, cur);
+        assert!((0..4).all(|s| !pat.tracks[1].steps[s].on), "nothing before the clicked step");
+        assert_eq!(pat.tracks[1].steps[4].on, bits[0]);
+    }
+}
