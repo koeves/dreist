@@ -2,7 +2,7 @@
 <root>
     <CtrlPanel name="CtrlPanel" rect="0, 0, 300, 80" ARLeft="FNear 0.0000" ARRight="FNear 0.0000" ARTop="FNear 0.0000" ARBottom="FNear 0.0000" style="BasicPanelStyle">
         <CtrlLabeller rect="0, 0, 300, 80" ARLeft="FNear 0.0000" ARRight="FNear 0.0000" ARTop="FNear 0.0000" ARBottom="FNear 0.0000" enumTextPosition="Below" intTextOffset="1" style="SmallControlLabellerStyle">
-            <CtrlSlider name="InputGain" rect="4, 3, 15, 62" ARTop="FNear 3.0000" ARBottom="FNear 15.0000" displayName="In" id="100001" realTrackInset="0.3000" style="SliderStyle" />
+            <CtrlSlider name="InputGain" rect="4, 3, 15, 62" ARTop="FNear 3.0000" ARBottom="FNear 15.0000" displayName="Input" id="100001" realTrackInset="0.3000" style="SliderStyle" />
             <CtrlMultiChannelDBMeter name="VUMeter" rect="21, 3, 14, 62" ARTop="FNear 3.0000" ARBottom="FNear 15.0000" id="100003" optIsLinear="true" style="DefaultVUMeterStyle" />
             <CtrlPanel rect="40, 3, 24, 42" style="InvisibleStyle">
                 <CtrlButton name="MonoButton" rect="2, 0, 20, 20" displayName="Recording channels" id="100028" optIsMomentary="true" overloadClass="FlashingButton" style="DefaultButtonStyle" text="M" />

@@ -37,7 +37,7 @@ use crate::command::Command;
 use crate::model::Model;
 use crate::{EditorError, err};
 
-pub const MODES: [&str; 2] = ["Transient", "Chop"];
+pub const MODES: [&str; 2] = ["Transient", "Divide"];
 const BUCKET: usize = 64;
 const SLATE: Colour = Colour::rgba(112, 128, 144, 255);
 const YELLOW: Colour = Colour::rgba(255, 255, 0, 255);

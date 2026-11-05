@@ -12,7 +12,7 @@
                     <CtrlButton name="PlusButton" rect="38, 0, 16, 10" displayName="More steps" id="100001" optIsMomentary="true" style="SmallIconButtonStyle" text="" />
                     <CtrlButton name="MinusButton" rect="38, 10, 16, 10" displayName="Fewer steps" id="100000" optIsMomentary="true" style="SmallIconButtonStyle" text="" />
                 </CtrlPanel>
-                <CtrlPopupButton name="StepLengthCombo" rect="58, 0, 52, 20" displayName="Step" id="100004" style="DefaultPopupButtonStyle" />
+                <CtrlPopupButton name="StepLengthCombo" rect="58, 0, 52, 20" displayName="Step Length" id="100004" style="DefaultPopupButtonStyle" />
                 <CtrlPanel rect="114, 0, 106, 20" displayName="Playback" style="InvisibleStyle">
                     <CtrlButton name="Gated" rect="0, 0, 52, 20" displayName="Play only while the note is held" style="DefaultButtonStyle" text="Gated" />
                     <CtrlButton name="Restart" rect="54, 0, 52, 20" displayName="Start from the top on every trigger" style="DefaultButtonStyle" text="Restart" />
@@ -29,10 +29,10 @@
             <CtrlPopupButton name="DragEdit" rect="514, 6, 90, 20" displayName="Drag edits" style="DefaultPopupButtonStyle" />
             <CtrlTextBox name="PatternNameBox" rect="610, 6, 150, 20" displayName="Pattern name" id="100000" style="DefaultEditBoxStyle" />
             <CtrlLabeller name="EngineControls" rect="1006, 6, 164, 38" ARLeft="FFar 170.0000" ARRight="FFar 164.0000" enumTextPosition="Below" style="SmallControlLabellerStyle">
-                <CtrlPanel rect="10, 0, 48, 20" displayName="Tempo ratio" style="DefaultButtonStyle">
-                    <CtrlValueBox name="TempoNum" rect="2, 0, 18, 20" displayName="Tempo ratio" optSingleClickEdit="false" placeholder="1" realIncDecRange="1" realMaxValue="16" realMinValue="1" style="InvisibleCenteredEditBoxStyle" />
+                <CtrlPanel rect="10, 0, 48, 20" displayName="Tempo Modifier" style="DefaultButtonStyle">
+                    <CtrlValueBox name="TempoNum" rect="2, 0, 18, 20" displayName="Tempo Modifier" optSingleClickEdit="false" placeholder="1" realIncDecRange="1" realMaxValue="16" realMinValue="1" style="InvisibleCenteredEditBoxStyle" />
                     <CtrlLabel rect="20, 0, 8, 20" style="SmallControlLabellerStyle" text="/" />
-                    <CtrlValueBox name="TempoDenom" rect="28, 0, 18, 20" displayName="Tempo ratio" optSingleClickEdit="false" placeholder="1" realIncDecRange="1" realMaxValue="16" realMinValue="1" style="InvisibleCenteredEditBoxStyle" />
+                    <CtrlValueBox name="TempoDenom" rect="28, 0, 18, 20" displayName="Tempo Modifier" optSingleClickEdit="false" placeholder="1" realIncDecRange="1" realMaxValue="16" realMinValue="1" style="InvisibleCenteredEditBoxStyle" />
                 </CtrlPanel>
                 <CtrlKnob name="SwingKnob" rect="80, 0, 20, 20" displayName="Swing" realDialThickness="0.3000" style="KnobStyle" />
                 <CtrlButton name="SwingDrop" rect="102, 6, 10, 10" optIsMomentary="true" style="HeaderBarMenuDropButtonStyle" text="▾" />

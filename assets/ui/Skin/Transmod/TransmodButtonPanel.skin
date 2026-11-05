@@ -4,10 +4,10 @@
         <CtrlPanel rect="0, 0, 960, 35" ARLeft="FNear 0.0000" ARRight="FNear 190.0000" ARTop="FNear 0.0000" ARBottom="FNear 0.0000" style="InvisibleStyle">
             <CtrlButton name="Src0" rect="2, 7, 38, 20" ARTop="Center 0.0000" displayName="Edit base values" style="TransmodButtonStyle" text="Base" />
             <CtrlLayoutBox rect="46, 7, 914, 20" ARLeft="FNear 46.0000" ARRight="FNear 0.0000" ARTop="Center 0.0000" intBottomSpacing="0" intLeftSpacing="0" intRightSpacing="0" intTopSpacing="0" optIsVertical="false" style="InvisibleStyle">
-                <CtrlButton name="Src1" rect="0, 0, 30, 20" style="TransmodButtonStyle" text="A-Env" />
-                <CtrlButton name="Src2" rect="32, 0, 30, 20" style="TransmodButtonStyle" text="F-Env" />
+                <CtrlButton name="Src1" rect="0, 0, 30, 20" style="TransmodButtonStyle" text="A Env" />
+                <CtrlButton name="Src2" rect="32, 0, 30, 20" style="TransmodButtonStyle" text="F Env" />
                 <CtrlButton name="Src3" rect="64, 0, 30, 20" style="TransmodButtonStyle" text="Vel" />
-                <CtrlButton name="Src4" rect="96, 0, 30, 20" style="TransmodButtonStyle" text="Rand" />
+                <CtrlButton name="Src4" rect="96, 0, 30, 20" style="TransmodButtonStyle" text="Rnd" />
                 <CtrlButton name="Src5" rect="128, 0, 30, 20" style="TransmodButtonStyle" text="S1" />
                 <CtrlButton name="Src6" rect="160, 0, 30, 20" style="TransmodButtonStyle" text="S2" />
                 <CtrlButton name="Src7" rect="192, 0, 30, 20" style="TransmodButtonStyle" text="S3" />
@@ -28,10 +28,10 @@
                 <CtrlButton name="Src22" rect="672, 0, 30, 20" style="TransmodButtonStyle" text="M2" />
                 <CtrlButton name="Src23" rect="704, 0, 30, 20" style="TransmodButtonStyle" text="M3" />
                 <CtrlButton name="Src24" rect="736, 0, 30, 20" style="TransmodButtonStyle" text="M4" />
-                <CtrlButton name="Src25" rect="768, 0, 30, 20" style="TransmodButtonStyle" text="Wheel" />
-                <CtrlButton name="Src26" rect="800, 0, 30, 20" style="TransmodButtonStyle" text="Bend" />
-                <CtrlButton name="Src27" rect="832, 0, 30, 20" style="TransmodButtonStyle" text="Press" />
-                <CtrlButton name="Src28" rect="864, 0, 30, 20" style="TransmodButtonStyle" text="Trans" />
+                <CtrlButton name="Src25" rect="768, 0, 30, 20" style="TransmodButtonStyle" text="Mod" />
+                <CtrlButton name="Src26" rect="800, 0, 30, 20" style="TransmodButtonStyle" text="Pch" />
+                <CtrlButton name="Src27" rect="832, 0, 30, 20" style="TransmodButtonStyle" text="Pres" />
+                <CtrlButton name="Src28" rect="864, 0, 30, 20" style="TransmodButtonStyle" text="Tpt" />
             </CtrlLayoutBox>
             <CtrlLayoutBox rect="46, 29, 914, 3" ARLeft="FNear 46.0000" ARRight="FNear 0.0000" intBottomSpacing="0" intLeftSpacing="0" intRightSpacing="0" intTopSpacing="0" optIsVertical="false" style="InvisibleStyle">
                 <CtrlButton name="FlashSrc1" rect="0, 0, 30, 20" style="TransmodFlashButtonStyle" />

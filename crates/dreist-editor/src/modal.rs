@@ -52,6 +52,12 @@ pub const TOGGLES: [(&str, &str, bool); 12] = [
 ];
 pub const SHADING: [&str; 4] = ["Fixed", "Adaptive", "Cyclic", "Off"];
 pub const REMOVE_BEHAVIOUR: [&str; 4] = ["Prompt", "AlwaysClear", "NeverClear", "ClearOnModifier"];
+/// How the menu names them (the manual's wording).
+pub const REMOVE_BEHAVIOUR_LABELS: [&str; 4] = ["Always prompt", "Always remove depths", "Never remove depths", "Remove depths with Alt"];
+
+fn remove_label(stored: &str) -> String {
+    REMOVE_BEHAVIOUR.iter().position(|v| *v == stored).map(|i| REMOVE_BEHAVIOUR_LABELS[i].to_string()).unwrap_or_else(|| camel(stored))
+}
 pub const SCALINGS: [f32; 11] = [1.0, 1.1, 1.2, 1.25, 1.35, 1.5, 1.75, 2.0, 2.25, 2.5, 3.0];
 pub const UNDO_DEFAULT: i64 = 20;
 
@@ -371,7 +377,7 @@ impl Modals {
                 }
                 "MetroType" => c.text = s.string("MetronomeSound", "Default"),
                 "ShadingMode" => c.text = s.string("PatternEditorShadingMode", SHADING[0]),
-                "RemMod" => c.text = camel(&s.string("RemoveModBehavour", REMOVE_BEHAVIOUR[0])),
+                "RemMod" => c.text = remove_label(&s.string("RemoveModBehavour", REMOVE_BEHAVIOUR[0])),
                 "UIScaling" => c.text = format!("{} %", s.int("LastEditorScaleFactor", 100)),
                 "UIStyle" => c.text = style_label(&s.string("StyleSheet", styles.iter().find(|n| n.as_str() == dreist_gui::skin::default_theme()).map(String::as_str).unwrap_or(""))).to_string(),
                 "UndoStages" => {
@@ -465,7 +471,7 @@ impl Modals {
         Some(match name {
             "MetroType" => self.metronomes(),
             "ShadingMode" => SHADING.iter().map(|s| s.to_string()).collect(),
-            "RemMod" => REMOVE_BEHAVIOUR.iter().map(|s| camel(s)).collect(),
+            "RemMod" => REMOVE_BEHAVIOUR_LABELS.iter().map(|s| s.to_string()).collect(),
             "UIScaling" => SCALINGS.iter().map(|f| format!("{} %", (f * 100.0).floor() as i32)).collect(),
             "UIStyle" => self.styles().iter().map(|n| style_label(n).to_string()).collect(),
             _ => return None,

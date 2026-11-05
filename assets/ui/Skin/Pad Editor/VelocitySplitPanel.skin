@@ -3,8 +3,8 @@
     <CtrlPanel rect="0, 0, 800, 350" ARLeft="FNear 0.0000" ARRight="FNear 0.0000" ARTop="FNear 0.0000" ARBottom="FNear 0.0000" style="LayerPanelStyle">
         <CtrlLabeller rect="5, 5, 790, 56" ARLeft="FNear 5.0000" ARRight="FNear 5.0000" enumTextPosition="Below" intTextOffset="1" style="SmallControlLabellerStyle">
             <CtrlPopupButton name="SelModeCombo" rect="0, 10, 128, 20" ARLeft="FNear 0.0000" displayName="Layer play mode" style="DefaultPopupButtonStyle" />
-            <CtrlButton name="Insert" rect="136, 10, 54, 20" displayName="Auto split" optIsMomentary="true" style="DefaultPopupButtonStyle" text="Auto" />
-            <CtrlKnob name="v2a" rect="204, 6, 26, 26" displayName="Vel &gt; Amp" realDialThickness="0.3000" style="KnobStyle" />
+            <CtrlButton name="Insert" rect="136, 10, 54, 20" displayName="Auto V Split" optIsMomentary="true" style="DefaultPopupButtonStyle" text="Auto" />
+            <CtrlKnob name="v2a" rect="204, 6, 26, 26" displayName="V-to-A" realDialThickness="0.3000" style="KnobStyle" />
             <CtrlMatrix name="LinkMatrix" rect="280, 2, 510, 38" ARLeft="FFar 510.0000" ARRight="FFar 510.0000" displayName="Linked pads" intBottomSpacing="0" intLeftSpacing="0" intNumberOfCols="32" intNumberOfRows="2" intRightSpacing="0" intTopSpacing="0" style="InvisibleStyle">
                 <CtrlButton name="LinkButton1" rect="0, 0, 14, 18" displayName="Link to pad 1" style="DefaultSmallButtonStyle" text="1" />
                 <CtrlButton name="LinkButton2" rect="16, 0, 14, 18" displayName="Link to pad 2" style="DefaultSmallButtonStyle" text="2" />
