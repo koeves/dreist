@@ -82,6 +82,8 @@ pub struct Slicer {
     multi_layer: bool,
     tool: usize,
     selected: Option<usize>,
+    /// The slice context menu while open: the wave's path and the slice.
+    slice_menu: Option<(Vec<usize>, usize)>,
     drag: Option<usize>,
     /// Visible frames.
     view: (u32, u32),
@@ -142,6 +144,7 @@ impl Slicer {
             multi_layer: false,
             tool: 0,
             selected: None,
+            slice_menu: None,
             drag: None,
             view: (0, 0),
             zoom_drag: None,
@@ -447,6 +450,31 @@ impl Slicer {
         (frame as f64 - a as f64) as f32 / (b - a).max(1) as f32 * w
     }
 
+    /// The live slice point at or to the left of `frame`.
+    fn point_left_of(&self, frame: u32) -> Option<usize> {
+        self.slices.iter().enumerate().filter(|(_, s)| !s.deleted && s.start <= frame).max_by_key(|(_, s)| s.start).map(|(i, _)| i)
+    }
+
+    /// Runs an entry of the slice context menu opened on slice `i`.
+    fn slice_menu_action(&mut self, i: usize, index: usize) -> bool {
+        if i >= self.slices.len() {
+            return false;
+        }
+        match index {
+            0 => self.slices[i].locked = !self.slices[i].locked,
+            1 => {
+                self.slices.remove(i);
+            }
+            3 | 4 => self.slices.iter_mut().for_each(|s| s.locked = index == 3),
+            6 => self.slices.retain(|s| s.locked),
+            7 => self.slices.clear(),
+            _ => return false,
+        }
+        self.selected = None;
+        self.update_pattern();
+        true
+    }
+
     /// Slice whose marker is within 4 px of x.
     fn marker_at(&self, x: f32, w: f32) -> Option<usize> {
         self.slices.iter().enumerate().filter(|(_, s)| !s.deleted).map(|(i, s)| (i, (self.x_of(s.start, w) - x).abs())).filter(|(_, d)| *d <= 4.0).min_by(|a, b| a.1.total_cmp(&b.1)).map(|(i, _)| i)
@@ -530,6 +558,10 @@ impl Slicer {
                 }
                 true
             }
+            UiEvent::MenuSelected { anchor, index, .. } if self.slice_menu.as_ref().is_some_and(|m| &m.0 == anchor) => {
+                let (_, i) = self.slice_menu.take().unwrap();
+                self.slice_menu_action(i, *index)
+            }
             UiEvent::MenuSelected { anchor, name, index } if self.mine(anchor) && name == "SliceMode" => {
                 self.mode = (*index).min(1);
                 self.reslice();
@@ -589,19 +621,36 @@ impl Slicer {
                 match kind {
                     MouseKind::Down => {
                         let hit = self.marker_at(*x, w);
-                        match (self.tool, hit) {
-                            // Insert: a manual slice at the click.
+                        let f = self.frame_at(*x, w);
+                        // Alt swaps the Insert and Delete tools: Alt-click
+                        // with Insert deletes the slice point to the left,
+                        // with Delete inserts one.
+                        let tool = match (self.tool, app.mods.alt) {
+                            (0, true) => 1,
+                            (1, true) => 0,
+                            (t, _) => t,
+                        };
+                        match (tool, hit) {
+                            // Insert: a manual slice at the click, locked
+                            // so sensitivity changes keep it.
                             (0, None) => {
-                                let f = self.frame_at(*x, w);
-                                self.slices.push(SlicePoint::manual(f, false));
+                                self.slices.push(SlicePoint::manual(f, true));
                                 self.slices.sort_by_key(|s| s.start);
                                 self.selected = self.slices.iter().position(|s| s.start == f);
                             }
-                            (1, Some(i)) => {
-                                self.slices.remove(i);
-                                self.selected = None;
+                            (1, h) => {
+                                if let Some(i) = h.or_else(|| self.point_left_of(f)) {
+                                    self.slices.remove(i);
+                                    self.selected = None;
+                                }
                             }
-                            (2, Some(i)) => self.slices[i].locked = !self.slices[i].locked,
+                            // Lock: a click on a marker or anywhere in a
+                            // slice toggles the lock of its point.
+                            (2, h) => {
+                                if let Some(i) = h.or_else(|| self.point_left_of(f)) {
+                                    self.slices[i].locked = !self.slices[i].locked;
+                                }
+                            }
                             (_, Some(i)) => {
                                 self.selected = Some(i);
                                 self.drag = Some(i);
@@ -626,6 +675,15 @@ impl Slicer {
                             self.update_pattern();
                         }
                         true
+                    }
+                    // Right press on a slice point: its context menu.
+                    MouseKind::RightDown if self.marker_at(*x, w).is_some() => {
+                        let i = self.marker_at(*x, w).unwrap();
+                        let lock = if self.slices[i].locked { "Unlock slice" } else { "Lock slice" };
+                        let items = [lock, "Delete slice", "", "Lock all slices", "Unlock all slices", "", "Delete all unlocked slices", "Delete all slices"];
+                        self.slice_menu = Some((path.clone(), i));
+                        app.open_menu(path, items.iter().map(|s| s.to_string()).collect(), None);
+                        false
                     }
                     // Right press in a zone [re:d538e0]: audition the slice.
                     MouseKind::RightDown => {
@@ -968,9 +1026,8 @@ mod tests {
         assert_eq!(zoom_view(99.0, 1.0, 100.0, 1000, 0.064), (936, 1000));
     }
 
-    #[test]
-    fn reslice_modes_keep_locked() {
-        let mut s = Slicer {
+    fn blank() -> Slicer {
+        Slicer {
             overlay: None,
             main: None,
             shown: false,
@@ -987,6 +1044,7 @@ mod tests {
             multi_layer: false,
             tool: 0,
             selected: None,
+            slice_menu: None,
             drag: None,
             view: (0, 44100),
             zoom_drag: None,
@@ -996,7 +1054,36 @@ mod tests {
             previewing: false,
             loop_preview: false,
             rex: false,
-        };
+        }
+    }
+
+    #[test]
+    fn slice_context_menu() {
+        let mut s = blank();
+        s.divisions = 4;
+        s.reslice();
+        assert_eq!(s.point_left_of(30000), Some(2), "{:?}", s.slices);
+        assert!(s.slice_menu_action(1, 0));
+        assert!(s.slices[1].locked);
+        assert!(s.slice_menu_action(1, 0));
+        assert!(!s.slices[1].locked);
+        assert!(s.slice_menu_action(2, 1));
+        assert_eq!(s.slices.len(), 3);
+        assert!(s.slice_menu_action(0, 3));
+        assert!(s.slices.iter().all(|p| p.locked));
+        assert!(s.slice_menu_action(0, 4));
+        assert!(s.slice_menu_action(1, 0));
+        assert!(s.slice_menu_action(0, 6));
+        assert_eq!(s.slices.len(), 1);
+        assert!(s.slices[0].locked);
+        assert!(s.slice_menu_action(0, 7));
+        assert!(s.slices.is_empty());
+        assert!(!s.slice_menu_action(0, 0), "stale menu on a removed slice");
+    }
+
+    #[test]
+    fn reslice_modes_keep_locked() {
+        let mut s = blank();
         assert_eq!(s.slice_span(500), Some((0, 44100)), "no slices: whole region");
         s.reslice();
         assert_eq!(s.slices.len(), 4);
