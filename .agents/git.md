@@ -54,3 +54,12 @@ GitHub Actions minutes are limited, so:
 - Until a release, the apps' `commons` submodule may point at dreist-commons `dev` commits. At
   release: merge dreist-commons `dev` into its `main` first, then point the apps at that commit
   and merge them.
+
+## Shared code (dreist-commons)
+
+Einst and Dreist share dreist-commons, and each project's agents may be changing it. Read
+`commons/.agents/coordination.md` before touching commons and append an entry to it after every
+commons push (what changed, for which app, whether the other app is affected, the commit, any
+action needed on its side). Before changing commons: `git fetch` and rebase on its `dev`; never
+force-push it; keep one app's behaviour behind that app's profile, rules or hooks; run the other
+app's tests and goldens, and if its output would change, agree it with that project first.
