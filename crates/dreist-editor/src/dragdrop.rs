@@ -58,6 +58,8 @@ enum Source {
     Pad(usize),
     Pattern(usize),
     Files(Vec<PathBuf>),
+    /// A slice dragged from the slicer with its Drag tool.
+    Slice,
 }
 
 /// What it was dropped on.
@@ -91,6 +93,7 @@ impl Editor {
         match c.overload.as_str() {
             "EditorPad" => c.attr("padIndex")?.parse().ok().map(Source::Pad),
             "PatternSelector" => c.name.strip_prefix("Key")?.parse().ok().map(Source::Pattern),
+            "SliceWaveEditor" => self.slicer.drag_slice.map(|_| Source::Slice),
             "BrowserFileList" => {
                 let b = self.browser.as_ref()?;
                 let items = b.drag_items();
@@ -137,6 +140,8 @@ impl Editor {
         let kits = |f: &[PathBuf]| !f.is_empty() && f.iter().all(|p| doc_kind(&ext(p)) == Some(DocKind::Kit));
         let what = match self.drag_source(from) {
             Some(Source::Pad(_)) => pads::DragFlash::AtPosition,
+            Some(Source::Slice) if alt => pads::DragFlash::AtPosition,
+            Some(Source::Slice) => pads::DragFlash::Files(1),
             Some(Source::Files(f)) if !from.is_empty() && kits(&f) => pads::DragFlash::All,
             Some(Source::Files(_)) if alt => pads::DragFlash::AtPosition,
             Some(Source::Files(f)) => pads::DragFlash::Files(f.len()),
@@ -214,7 +219,7 @@ impl Editor {
         match (self.drag_source(from), self.drop_target(to)) {
             (Some(Source::Pad(p)), Some(Target::Pad(q))) => p != q && !padmenu::pad_locked(&self.model, e, q),
             (Some(Source::Pattern(p)), Some(Target::Pattern(q))) => p != q,
-            (Some(Source::Files(_)), Some(Target::Pad(q))) => !padmenu::pad_locked(&self.model, e, q),
+            (Some(Source::Files(_) | Source::Slice), Some(Target::Pad(q))) => !padmenu::pad_locked(&self.model, e, q),
             (Some(Source::Files(f)), Some(Target::Layer(_) | Target::PadHeader)) => all_audio(&f) && !padmenu::pad_locked(&self.model, e, self.model.pad[e]),
             (Some(Source::Files(f)), Some(Target::Pattern(_))) => f.len() == 1 && crate::search::is_pattern(&ext(&f[0])),
             (Some(Source::Files(f)), Some(Target::Engine(_))) => f.len() == 1 && matches!(doc_kind(&ext(&f[0])), Some(DocKind::Engine | DocKind::Kit)),
@@ -312,6 +317,18 @@ impl Editor {
                 self.rebuild();
                 self.outbox.push(msg(id::SELECT_PATTERN, &[e as i32, -1, -1, q as i32], &[0.0]));
                 crate::pattern::set_current_pattern(&mut self.model, e, q);
+                true
+            }
+            // The slicer's Drag tool: the slice replaces the pad's layers
+            // (Alt: goes to the next free layer).
+            (Source::Slice, Target::Pad(q)) => {
+                if padmenu::pad_locked(&self.model, e, q) {
+                    return false;
+                }
+                if !self.slicer.drop_slice(&mut self.model, q, m.alt, &mut self.outbox) && m.alt {
+                    let anchor = to.clone();
+                    self.drop_alert(&anchor, "No available layers on selected pad!");
+                }
                 true
             }
             (Source::Files(files), Target::Pad(q)) => {

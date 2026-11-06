@@ -140,7 +140,7 @@ def slicer():
                   for i, (g, tip, st) in enumerate([("", "Insert tool (Alt-click deletes the slice point to the left)", "ExExLargeIconRadioButtonLeft"),
                                                     ("", "Delete tool (Alt-click inserts a slice point)", "ExExLargeIconRadioButtonCenter"),
                                                     ("", "Lock tool: click in a slice to lock its point", "ExExLargeIconRadioButtonCenter"),
-                                                    ("", "Drag tool: drag slice points", "ExExLargeIconRadioButtonRight")])])
+                                                    ("", "Drag tool: drag a slice onto a pad (Alt adds a layer)", "ExExLargeIconRadioButtonRight")])])
     box = lambda n, x, cap, i_d: N("TextBox", n, (x, 8, 48, 20), displayName=cap, id=i_d, style="DefaultEditBoxStyle")
     extract = N("Panel", None, (W - 206, 8, 198, 20), pin="r", style="InvisibleStyle", kids=[
         btn("BothButton", (0, 0, 64, 20), "Audio+Ptn", "Extract the slices to pads and the pattern"),

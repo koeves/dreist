@@ -3747,3 +3747,114 @@ fn step_context_menu() {
         assert_eq!(pat.tracks[1].steps[4].on, bits[0]);
     }
 }
+
+/// The path of the first control with overload `ov` (and `attr` = `val`).
+fn find_overload(c: &Ctrl, ov: &str, attr: Option<(&str, &str)>, path: &mut Vec<usize>) -> Option<Vec<usize>> {
+    if c.overload == ov && attr.is_none_or(|(a, v)| c.attr(a) == Some(v)) {
+        return Some(path.clone());
+    }
+    for (i, k) in c.children.iter().enumerate() {
+        path.push(i);
+        if let Some(p) = find_overload(k, ov, attr, path) {
+            return Some(p);
+        }
+        path.pop();
+    }
+    None
+}
+
+/// A slicer open on a one-second WAV with a hit every quarter second.
+fn slicer_on_hits(name: &str) -> Option<(Editor, Vec<usize>, std::path::PathBuf)> {
+    let dir = std::env::temp_dir().join(format!("dreist-{name}-{}", std::process::id()));
+    let _ = std::fs::remove_dir_all(&dir);
+    std::fs::create_dir_all(&dir).unwrap();
+    let f = dir.join("hits.wav");
+    let v: Vec<f32> = (0..44100).map(|i| if i % 11025 < 400 { 0.8 * (-((i % 11025) as f32) / 80.0).exp() * if i % 2 == 0 { 1.0 } else { -1.0 } } else { 0.0 }).collect();
+    dreist_engine::write_wav(&f, 44100, &v, &v).unwrap();
+    let mut ed = Editor::new(dreist_gui::skin::default_theme(), Model::new(project::new_document())).ok()?;
+    if !ed.open_slicer(&f) {
+        return None;
+    }
+    let wave = find_overload(&ed.app.root, "SliceWaveEditor", None, &mut Vec::new())?;
+    Some((ed, wave, dir))
+}
+
+fn wave_event(ed: &mut Editor, wave: &[usize], kind: dreist_gui::app::MouseKind, x: f32, y: f32) {
+    ed.handle(&UiEvent::Mouse { path: wave.to_vec(), overload: "SliceWaveEditor".into(), kind, x, y });
+}
+
+#[test]
+fn slicer_has_its_own_undo() {
+    use dreist_gui::app::MouseKind;
+    let Some((mut ed, wave, dir)) = slicer_on_hits("slicer-undo") else { return };
+    let before = ed.slicer.slices.clone();
+    // Insert tool: a click below the ruler adds a slice point.
+    wave_event(&mut ed, &wave, MouseKind::Down, 40.0, 60.0);
+    wave_event(&mut ed, &wave, MouseKind::Up, 40.0, 60.0);
+    assert_eq!(ed.slicer.slices.len(), before.len() + 1);
+    assert!(ed.step_undo(false));
+    assert_eq!(ed.slicer.slices, before);
+    assert!(ed.step_undo(true));
+    assert_eq!(ed.slicer.slices.len(), before.len() + 1);
+    assert!(!ed.step_undo(true), "nothing left to redo");
+    let _ = std::fs::remove_dir_all(dir);
+}
+
+#[test]
+fn slicer_ruler_units_and_region_markers() {
+    use dreist_gui::app::MouseKind;
+    let Some((mut ed, wave, dir)) = slicer_on_hits("slicer-ruler") else { return };
+    // Right click on the ruler: Time / Beats.
+    wave_event(&mut ed, &wave, MouseKind::RightDown, 50.0, 5.0);
+    assert!(ed.app.menu.is_some());
+    ed.app.menu = None;
+    ed.handle(&UiEvent::MenuSelected { anchor: wave.clone(), name: "SliceWaveEditor".into(), index: 1 });
+    assert!(ed.slicer.timeline_beats);
+    // The Start marker (at x 0) dragged right in the marker strip.
+    let w = ed.app.ctrl(&wave).unwrap().rect.w as f32;
+    wave_event(&mut ed, &wave, MouseKind::Down, 1.0, 20.0);
+    wave_event(&mut ed, &wave, MouseKind::Drag, w / 2.0, 20.0);
+    wave_event(&mut ed, &wave, MouseKind::Up, w / 2.0, 20.0);
+    let start = ed.slicer.analysis.start;
+    assert!((20000..24000).contains(&start), "{start}");
+    // One undo step for the whole drag.
+    assert!(ed.step_undo(false));
+    assert_eq!(ed.slicer.analysis.start, 0);
+    let _ = std::fs::remove_dir_all(dir);
+}
+
+#[test]
+fn slicer_drag_tool_loads_a_slice_onto_a_pad() {
+    use dreist_gui::app::MouseKind;
+    let Some((mut ed, wave, dir)) = slicer_on_hits("slicer-drag") else { return };
+    assert!(!ed.slicer.auto_load);
+    ed.slicer.tool = 3;
+    let w = ed.app.ctrl(&wave).unwrap().rect.w as f32;
+    // The second slice.
+    wave_event(&mut ed, &wave, MouseKind::Down, w * 0.3, 60.0);
+    assert!(ed.slicer.drag_slice.is_some());
+    let Some(pad) = find_overload(&ed.app.root, "EditorPad", Some(("padIndex", "5")), &mut Vec::new()) else { return };
+    assert!(ed.accepts_drop(&wave, &pad));
+    ed.handle(&UiEvent::Dropped { from: wave.clone(), to: pad.clone(), x: 0.0, y: 0.0 });
+    wave_event(&mut ed, &wave, MouseKind::Up, w * 0.3, 60.0);
+    let l = ed.model.layer(0, 5, 0);
+    assert!(l.valid);
+    let n = ed.model.layer_node(0, 5, 0).unwrap();
+    assert_eq!(n.child("FixedString", "LayerName").and_then(|c| c.attr("string")), Some("hits 2"));
+    let m = n.child("AudioFileMarkers", "StartEndMarkers").unwrap();
+    assert!((10000..12000).contains(&m.attr("StartSample").unwrap().parse::<u32>().unwrap()), "{m:?}");
+    let _ = std::fs::remove_dir_all(dir);
+}
+
+#[test]
+fn slicer_auto_load_extracts_every_change() {
+    use dreist_gui::app::MouseKind;
+    let Some((mut ed, wave, dir)) = slicer_on_hits("slicer-auto") else { return };
+    ed.browser.as_mut().unwrap().auto_load = true;
+    ed.take_commands();
+    wave_event(&mut ed, &wave, MouseKind::Down, 40.0, 60.0);
+    wave_event(&mut ed, &wave, MouseKind::Up, 40.0, 60.0);
+    assert!((0..4).all(|p| ed.model.layer(0, p, 0).valid), "the slices are on the pads");
+    assert!(!ed.take_commands().is_empty());
+    let _ = std::fs::remove_dir_all(dir);
+}

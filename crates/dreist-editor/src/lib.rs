@@ -543,7 +543,9 @@ impl Editor {
 
     /// Open the slicer on an audio file ([re:b73f33]).
     pub fn open_slicer(&mut self, file: &std::path::Path) -> bool {
+        self.slicer.auto_load = self.browser.as_ref().is_some_and(|b| b.auto_load());
         let ok = self.slicer.start(&self.model, file);
+        self.slicer.flush(&mut self.model, &mut self.outbox);
         self.sync();
         ok
     }

@@ -6,7 +6,7 @@
                 <CtrlButton rect="0, 0, 20, 20" displayName="Insert tool (Alt-click deletes the slice point to the left)" style="ExExLargeIconRadioButtonLeft" text="" />
                 <CtrlButton rect="21, 0, 20, 20" displayName="Delete tool (Alt-click inserts a slice point)" style="ExExLargeIconRadioButtonCenter" text="" />
                 <CtrlButton rect="42, 0, 20, 20" displayName="Lock tool: click in a slice to lock its point" style="ExExLargeIconRadioButtonCenter" text="" />
-                <CtrlButton rect="63, 0, 20, 20" displayName="Drag tool: drag slice points" style="ExExLargeIconRadioButtonRight" text="" />
+                <CtrlButton rect="63, 0, 20, 20" displayName="Drag tool: drag a slice onto a pad (Alt adds a layer)" style="ExExLargeIconRadioButtonRight" text="" />
             </CtrlButtonGroup>
             <CtrlButton name="AutoDetect" rect="104, 10, 16, 16" displayName="Auto" style="DefaultCheckboxButtonStyle" />
             <CtrlTextBox name="BPMBox" rect="128, 8, 48, 20" displayName="BPM" id="100014" style="DefaultEditBoxStyle" />

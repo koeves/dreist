@@ -72,7 +72,7 @@ pub struct Slicer {
     file: Option<PathBuf>,
     audio: Option<Audio>,
     /// All analysed slices (the `.gsa` / detector output).
-    analysis: SliceFile,
+    pub(crate) analysis: SliceFile,
     /// Slices in use (after mode / sensitivity, plus user edits).
     pub slices: Vec<SlicePoint>,
     pub mode: usize,
@@ -80,7 +80,7 @@ pub struct Slicer {
     pub divisions: u32,
     auto_tempo: bool,
     multi_layer: bool,
-    tool: usize,
+    pub(crate) tool: usize,
     selected: Option<usize>,
     /// The slice context menu while open: the wave's path and the slice.
     slice_menu: Option<(Vec<usize>, usize)>,
@@ -101,7 +101,42 @@ pub struct Slicer {
     /// [re:4cb63d] / meta data from the file
     /// [re:17c579]).
     rex: bool,
+    /// The browser's Auto load mode when the panel opened: every change
+    /// extracts the slices and the pattern at once, the Extract buttons and
+    /// the Drag tool are hidden.
+    pub auto_load: bool,
+    /// Slices or settings changed since the last extraction.
+    dirty: bool,
+    /// Undo and redo stacks of the session, and the gesture the newest undo
+    /// state came from (a drag or a slider move is one step).
+    undo: Vec<SliceState>,
+    redo: Vec<SliceState>,
+    gesture: Option<String>,
+    /// Ruler in Beats (option `SlicerWaveDisplayTimelineMode`) and its menu.
+    pub(crate) timeline_beats: bool,
+    timeline_menu: Option<Vec<usize>>,
+    /// A Start (false) / End (true) marker drag.
+    region_drag: Option<bool>,
+    /// The slice the Drag tool is dragging: its frames and number.
+    pub drag_slice: Option<(u32, u32, usize)>,
 }
+
+/// What the slicer's undo restores.
+#[derive(Clone, PartialEq)]
+struct SliceState {
+    slices: Vec<SlicePoint>,
+    region: (u32, u32),
+    mode: usize,
+    sensitivity: f32,
+    divisions: u32,
+    meta: (f32, f32, f32),
+    multi_layer: bool,
+}
+
+/// Grab distance of the Start and End markers, in pixels.
+const REGION_GRAB: f32 = 6.0;
+/// The smallest region, in frames.
+const MIN_REGION: u32 = 64;
 
 /// Preference "Quantize REX" (`AllocatorQuantizeREX`): extracted steps get
 /// no timing offset (pattern extraction [re:150941] sets lane 3 to
@@ -154,6 +189,15 @@ impl Slicer {
             previewing: false,
             loop_preview: false,
             rex: false,
+            auto_load: false,
+            dirty: false,
+            undo: Vec::new(),
+            redo: Vec::new(),
+            gesture: None,
+            timeline_beats: false,
+            timeline_menu: None,
+            region_drag: None,
+            drag_slice: None,
         };
         let Some(mut p) = panel else { return Ok(out) };
         p.name = "SlicePanel".into();
@@ -240,6 +284,12 @@ impl Slicer {
         self.snapshot = Some(model.doc.clone());
         self.extracted = false;
         self.open = true;
+        self.undo.clear();
+        self.redo.clear();
+        self.gesture = None;
+        self.region_drag = None;
+        self.drag_slice = None;
+        self.timeline_beats = crate::timeline::beats_mode("Slicer");
         if self.auto_tempo {
             self.tempo_from_bars();
         }
@@ -292,6 +342,7 @@ impl Slicer {
     }
 
     fn update_pattern(&mut self) {
+        self.dirty = true;
         let (start, end) = self.region();
         self.pattern = slice::extract_pattern(&self.slices, start, end, self.analysis.bars, self.analysis.beats, self.multi_layer, quantize_rex());
     }
@@ -355,7 +406,10 @@ impl Slicer {
             self.shown = self.open;
         }
         let open = self.shown;
-        let (mode, tool, auto, multi) = (self.mode, self.tool, self.auto_tempo, self.multi_layer);
+        if self.auto_load && self.tool == 3 {
+            self.tool = 0;
+        }
+        let (mode, tool, auto, multi, auto_load) = (self.mode, self.tool, self.auto_tempo, self.multi_layer, self.auto_load);
         let (sens, bpm, bars, beats, rex) = (self.sensitivity, self.analysis.bpm, self.analysis.bars, self.analysis.beats, self.rex);
         let Some(o) = app.ctrl_mut(&op) else { return };
         o.visible = open;
@@ -366,8 +420,11 @@ impl Slicer {
             "ToolsButton" => {
                 for (i, b) in c.children.iter_mut().enumerate() {
                     b.on = i == tool;
+                    // The Drag tool works with Auto load off only.
+                    b.enabled = i != 3 || !auto_load;
                 }
             }
+            "BothButton" | "AudioButton" | "PatternButton" => c.visible = !auto_load,
             "AutoDetect" => c.on = auto,
             "SliceMode" => c.text = MODES[mode].into(),
             "Sensitivity" => {
@@ -446,8 +503,12 @@ impl Slicer {
     }
 
     fn x_of(&self, frame: u32, w: f32) -> f32 {
+        self.x_of_f(frame as f64, w)
+    }
+
+    fn x_of_f(&self, frame: f64, w: f32) -> f32 {
         let (a, b) = self.view;
-        (frame as f64 - a as f64) as f32 / (b - a).max(1) as f32 * w
+        (frame - a as f64) as f32 / (b - a).max(1) as f32 * w
     }
 
     /// The live slice point at or to the left of `frame`.
@@ -480,7 +541,111 @@ impl Slicer {
         self.slices.iter().enumerate().filter(|(_, s)| !s.deleted).map(|(i, s)| (i, (self.x_of(s.start, w) - x).abs())).filter(|(_, d)| *d <= 4.0).min_by(|a, b| a.1.total_cmp(&b.1)).map(|(i, _)| i)
     }
 
+    /// Handle `ev`; a change becomes an undo step, and with Auto load the
+    /// slices and the pattern are extracted again.
     pub fn handle(&mut self, app: &mut App, model: &mut Model, ev: &UiEvent, out: &mut Vec<Command>) -> bool {
+        // A new press starts a new undo step.
+        if matches!(ev, UiEvent::Mouse { kind: MouseKind::Down | MouseKind::RightDown, .. }) {
+            self.gesture = None;
+        }
+        let before = self.open.then(|| self.state());
+        let r = self.handle_inner(app, model, ev, out);
+        if let Some(b) = before.filter(|b| self.open && *b != self.state()) {
+            // Drags and slider moves after the first change are one step.
+            let key = match ev {
+                UiEvent::Mouse { kind: MouseKind::Drag | MouseKind::Up, .. } => Some("drag".to_string()),
+                UiEvent::ValueChanged { name, .. } => Some(format!("value:{name}")),
+                UiEvent::Wheel { overload, .. } => Some(format!("wheel:{overload}")),
+                _ => None,
+            };
+            if key.is_none() || key != self.gesture {
+                self.undo.push(b);
+                self.redo.clear();
+            }
+            self.gesture = match ev {
+                UiEvent::Mouse { kind: MouseKind::Down, .. } => Some("drag".into()),
+                _ => key,
+            };
+        }
+        self.flush(model, out);
+        r
+    }
+
+    /// With Auto load, extract what changed to the pads and the pattern.
+    pub fn flush(&mut self, model: &mut Model, out: &mut Vec<Command>) {
+        if self.open && self.auto_load && std::mem::take(&mut self.dirty) {
+            self.extract(model, Extract::Both, out);
+        }
+    }
+
+    fn state(&self) -> SliceState {
+        SliceState {
+            slices: self.slices.clone(),
+            region: self.region(),
+            mode: self.mode,
+            sensitivity: self.sensitivity,
+            divisions: self.divisions,
+            meta: (self.analysis.bpm, self.analysis.bars, self.analysis.beats),
+            multi_layer: self.multi_layer,
+        }
+    }
+
+    fn restore(&mut self, s: SliceState) {
+        self.slices = s.slices;
+        (self.analysis.start, self.analysis.end) = s.region;
+        self.mode = s.mode;
+        self.sensitivity = s.sensitivity;
+        self.divisions = s.divisions;
+        (self.analysis.bpm, self.analysis.bars, self.analysis.beats) = s.meta;
+        self.multi_layer = s.multi_layer;
+        self.selected = None;
+        self.update_pattern();
+    }
+
+    /// The header's Undo / Redo while the slicer is open: one step of the
+    /// slicing session. False when there is nothing to undo (or redo).
+    pub fn undo_step(&mut self, model: &mut Model, redo: bool, out: &mut Vec<Command>) -> bool {
+        let Some(s) = (if redo { self.redo.pop() } else { self.undo.pop() }) else { return false };
+        let now = self.state();
+        if redo {
+            self.undo.push(now);
+        } else {
+            self.redo.push(now);
+        }
+        self.gesture = None;
+        self.restore(s);
+        self.flush(model, out);
+        true
+    }
+
+    /// Load the dragged slice onto pad `q` of the current engine: its first
+    /// layer, clearing the others, or with `alt` the first free layer.
+    /// False when the pad is locked or has no free layer.
+    pub fn drop_slice(&mut self, model: &mut Model, q: usize, alt: bool, out: &mut Vec<Command>) -> bool {
+        let (Some((s0, s1, n)), Some(file)) = (self.drag_slice, self.file.clone()) else { return false };
+        let e = model.engine;
+        if model.pad_node(e, q).is_some_and(|n| n.locked()) {
+            return false;
+        }
+        let layer = if alt { (0..crate::model::LAYERS).find(|&l| !model.layer(e, q, l).valid) } else { Some(0) };
+        let Some(l) = layer else { return false };
+        if !alt {
+            for k in 1..crate::model::LAYERS {
+                clear_layer(model, e, q, k);
+            }
+        }
+        let frames = self.frames();
+        let sr = self.audio.as_ref().map(|a| a.data.sample_rate).unwrap_or(44100.0);
+        let stem = file.file_stem().map(|s| s.to_string_lossy().into_owned()).unwrap_or_default();
+        if !load_region(model, e, q, l, &file, s0, s1, frames, sr, &format!("{stem} {}", n + 1)) {
+            return false;
+        }
+        self.extracted = true;
+        Self::rebuild(model, out);
+        true
+    }
+
+    fn handle_inner(&mut self, app: &mut App, model: &mut Model, ev: &UiEvent, out: &mut Vec<Command>) -> bool {
         if let (UiEvent::Animated { path, tag: SLIDE_OUT }, Some(op)) = (ev, self.overlay.as_ref()) {
             if self.closing && path.starts_with(op) {
                 self.closing = false;
@@ -558,6 +723,12 @@ impl Slicer {
                 }
                 true
             }
+            UiEvent::MenuSelected { anchor, index, .. } if self.timeline_menu.as_ref() == Some(anchor) => {
+                self.timeline_menu = None;
+                self.timeline_beats = *index == 1;
+                crate::timeline::save_mode("Slicer", self.timeline_beats);
+                true
+            }
             UiEvent::MenuSelected { anchor, index, .. } if self.slice_menu.as_ref().is_some_and(|m| &m.0 == anchor) => {
                 let (_, i) = self.slice_menu.take().unwrap();
                 self.slice_menu_action(i, *index)
@@ -616,8 +787,59 @@ impl Slicer {
                 self.reslice();
                 true
             }
-            UiEvent::Mouse { path, overload, kind, x, .. } if self.mine(path) && overload == "SliceWaveEditor" => {
+            UiEvent::Mouse { path, overload, kind, x, y } if self.mine(path) && overload == "SliceWaveEditor" => {
                 let w = app.ctrl(path).map(|c| c.rect.w as f32).unwrap_or(1.0);
+                // Right click on the ruler: Time or Beats units.
+                if *kind == MouseKind::RightDown && *y < crate::timeline::STRIP {
+                    let items = ["Time", "Beats"].iter().enumerate().map(|(i, t)| if (i == 1) == self.timeline_beats { format!("✓ {t}") } else { t.to_string() }).collect();
+                    app.open_menu(path, items, None);
+                    self.timeline_menu = Some(path.clone());
+                    return false;
+                }
+                // The Start and End markers in the strip under the ruler.
+                if *kind == MouseKind::Down && *y < crate::timeline::WAVE_TOP {
+                    let (a, b) = self.region();
+                    let (da, db) = ((self.x_of(a, w) - *x).abs(), (self.x_of(b, w) - *x).abs());
+                    if da.min(db) <= REGION_GRAB {
+                        self.region_drag = Some(db < da);
+                    }
+                    return true;
+                }
+                if let Some(end) = self.region_drag {
+                    match kind {
+                        MouseKind::Drag => {
+                            let f = self.frame_at(*x, w).min(self.frames());
+                            let (a, b) = self.region();
+                            if end {
+                                self.analysis.end = f.max(a + MIN_REGION).min(self.frames());
+                            } else {
+                                self.analysis.start = f.min(b.saturating_sub(MIN_REGION));
+                            }
+                            if self.auto_tempo {
+                                self.tempo_from_bars();
+                            }
+                            if self.mode == 1 {
+                                self.reslice();
+                            } else {
+                                self.update_pattern();
+                            }
+                        }
+                        MouseKind::Up => self.region_drag = None,
+                        _ => {}
+                    }
+                    return true;
+                }
+                // The Drag tool (Auto load off): a slice dragged onto a pad.
+                if self.tool == 3 && !self.auto_load && *kind != MouseKind::RightDown {
+                    if *kind == MouseKind::Down {
+                        let f = self.frame_at(*x, w);
+                        let n = self.slices.iter().filter(|s| !s.deleted && s.start <= f).count().saturating_sub(1);
+                        self.drag_slice = self.slice_span(f).map(|(s0, s1)| (s0, s1, n));
+                    } else if *kind == MouseKind::Up {
+                        self.drag_slice = None;
+                    }
+                    return true;
+                }
                 match kind {
                     MouseKind::Down => {
                         let hit = self.marker_at(*x, w);
@@ -795,21 +1017,7 @@ impl Slicer {
         let usable: Vec<SlicePoint> = self.slices.iter().filter(|s| !s.deleted).copied().collect();
         // Load `file` with region (s0, s1) into (p, l), reset its envelopes.
         let load = |model: &mut Model, p: usize, l: usize, s0: u32, s1: u32, name: &str| {
-            if !crate::browser::load_sample_into_layer(model, e, p, l, &file) {
-                return;
-            }
-            let layer = model.layer_mut(e, p, l);
-            layer.children.retain(|c| c.class != "AudioFileMarkers");
-            for nm in ["StartEndMarkers", "LoopMarkers"] {
-                let mut m = Node::new("AudioFileMarkers", Some(nm));
-                m.set("StartSample", s0).set("EndSample", s1).set("SampleLength", frames);
-                layer.children.push(m);
-            }
-            reset_envelopes(layer, (s1 - s0) as f64, frames as f64, sr);
-            layer.set(dreist_formats::params::LayerParam::AmpEnvAttack.name(), 0.1);
-            if !name.is_empty() {
-                model.set_layer_name(e, p, l, name);
-            }
+            load_region(model, e, p, l, &file, s0, s1, frames, sr, name);
         };
         if what != Extract::Pattern {
             if usable.len() < 2 {
@@ -886,7 +1094,8 @@ impl Slicer {
                 p.fill_rect(RectF::new(0.0, 0.0, w, h), back);
                 let Some(a) = &self.audio else { return true };
                 let (v0, v1) = self.view;
-                let mid = h / 2.0;
+                let top = crate::timeline::WAVE_TOP;
+                let (wh, mid) = (h - top, top + (h - top) / 2.0);
                 let per = (v1 - v0) as f32 / w.max(1.0);
                 for px in 0..w as usize {
                     let f0 = (v0 as f32 + px as f32 * per) as usize;
@@ -897,7 +1106,8 @@ impl Slicer {
                         a.data.left[f0.min(a.data.left.len() - 1)..f1.max(f0.min(a.data.left.len() - 1) + 1)].iter().fold((f32::MAX, f32::MIN), |(l, hh), &x| (l.min(x), hh.max(x)))
                     };
                     if lo <= hi {
-                        let (y0, y1) = (mid - hi * mid * 0.95, mid - lo * mid * 0.95);
+                        let half = wh / 2.0 * 0.95;
+                        let (y0, y1) = (mid - hi * half, mid - lo * half);
                         p.fill_rect(RectF::new(px as f32, y0, 1.0, (y1 - y0).max(1.0)), wave);
                     }
                 }
@@ -905,7 +1115,31 @@ impl Slicer {
                 if let Some(i) = self.selected.filter(|&i| i < self.slices.len()) {
                     let (s0, s1) = slice::slice_markers(&self.slices, i, self.analysis.end);
                     let (x0, x1) = (self.x_of(s0, w), self.x_of(s1, w));
-                    p.fill_rect(RectF::new(x0, 0.0, (x1 - x0).max(0.0), h), YELLOW.with_alpha(0.15));
+                    p.fill_rect(RectF::new(x0, top, (x1 - x0).max(0.0), wh), YELLOW.with_alpha(0.15));
+                }
+                // Outside the Start/End region: dimmed.
+                let (r0, r1) = self.region();
+                let shade = Colour::rgba(0, 0, 0, 40);
+                let (rx0, rx1) = (self.x_of(r0, w).clamp(0.0, w), self.x_of(r1, w).clamp(0.0, w));
+                p.fill_rect(RectF::new(0.0, top, rx0, wh), shade);
+                p.fill_rect(RectF::new(rx1, top, (w - rx1).max(0.0), wh), shade);
+                // Ruler (seconds or beats from the Start marker) and the
+                // marker strip, as in the layer waveform.
+                let rate = a.data.sample_rate.max(1.0) as f64;
+                let x_of = |t: f64| self.x_of_f(t * rate, w);
+                let (start_s, len_s) = (v0 as f64 / rate, (v1 - v0) as f64 / rate);
+                crate::timeline::draw(p, s, "WaveDisplayStyle", w, wh, start_s, len_s, r0 as f64 / rate, self.timeline_beats, self.analysis.bpm as f64, &x_of);
+                let purple = Colour::rgba(128, 0, 128, 255);
+                for (f, key) in [(r0, "colStartMarker"), (r1, "colEndMarker")] {
+                    let x = self.x_of(f, w).round();
+                    if x < -6.0 || x > w + 6.0 {
+                        continue;
+                    }
+                    let col = s.colour("WaveDisplayStyle", key, purple);
+                    let st = crate::timeline::STRIP;
+                    p.fill_rect(RectF::new(x - 1.0, st, 2.0, h - st), col);
+                    p.fill_ellipse(RectF::new(x - 6.0, st, 12.0, 12.0), col);
+                    p.fill_ellipse(RectF::new(x - 4.0, st + 2.0, 8.0, 8.0), Colour::BLACK);
                 }
                 let line = s.colour("WaveDisplayStyle", "colBorder", Colour::rgba(40, 40, 40, 255));
                 for (i, sl) in self.slices.iter().enumerate() {
@@ -913,9 +1147,9 @@ impl Slicer {
                         continue;
                     }
                     let x = self.x_of(sl.start, w).floor() + 0.5;
-                    p.line(x, 0.0, x, h, line, 1.0);
+                    p.line(x, top, x, h, line, 1.0);
                     let head = if self.selected == Some(i) { YELLOW } else { SLATE };
-                    let (hx, hy) = (x - 6.0, 0.0);
+                    let (hx, hy) = (x - 6.0, top);
                     if sl.locked {
                         p.fill_rect(RectF::new(hx + 1.5, hy + 5.0, 9.0, 6.0), head);
                         p.stroke_rect(RectF::new(hx + 3.5, hy + 1.0, 5.0, 5.0), head, 1.0);
@@ -1014,6 +1248,28 @@ fn clear_layer(model: &mut Model, e: usize, p: usize, l: usize) {
     layer.children.retain(|c| c.class != "AudioFileMarkers");
 }
 
+/// Load `file` with the region `s0..s1` into layer `l` of pad `p` and reset
+/// its envelopes to the region; `name` (if any) names the layer.
+#[allow(clippy::too_many_arguments)]
+fn load_region(model: &mut Model, e: usize, p: usize, l: usize, file: &Path, s0: u32, s1: u32, frames: u32, sr: f32, name: &str) -> bool {
+    if !crate::browser::load_sample_into_layer(model, e, p, l, file) {
+        return false;
+    }
+    let layer = model.layer_mut(e, p, l);
+    layer.children.retain(|c| c.class != "AudioFileMarkers");
+    for nm in ["StartEndMarkers", "LoopMarkers"] {
+        let mut m = Node::new("AudioFileMarkers", Some(nm));
+        m.set("StartSample", s0).set("EndSample", s1).set("SampleLength", frames);
+        layer.children.push(m);
+    }
+    reset_envelopes(layer, (s1 - s0) as f64, frames as f64, sr);
+    layer.set(dreist_formats::params::LayerParam::AmpEnvAttack.name(), 0.1);
+    if !name.is_empty() {
+        model.set_layer_name(e, p, l, name);
+    }
+    true
+}
+
 #[cfg(test)]
 mod tests {
     use super::*;
@@ -1054,6 +1310,15 @@ mod tests {
             previewing: false,
             loop_preview: false,
             rex: false,
+            auto_load: false,
+            dirty: false,
+            undo: Vec::new(),
+            redo: Vec::new(),
+            gesture: None,
+            timeline_beats: false,
+            timeline_menu: None,
+            region_drag: None,
+            drag_slice: None,
         }
     }
 

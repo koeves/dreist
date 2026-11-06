@@ -171,6 +171,13 @@ impl Editor {
                 h.restart(&self.model.doc, self.model.samples.as_deref());
             }
         }
+        if self.slicer.open {
+            let auto = self.browser.as_ref().is_some_and(|b| b.auto_load());
+            if auto != self.slicer.auto_load {
+                self.slicer.auto_load = auto;
+                self.slicer.sync(&mut self.app);
+            }
+        }
         let slicer_hit = dev_hit || ff_hit || mc_hit || self.modals.handle(&mut self.app, ev) || self.slicer.handle(&mut self.app, &mut self.model, ev, &mut self.outbox);
         if let Some(theme) = self.modals.style_changed.take() {
             self.app.set_theme(&theme);
@@ -268,7 +275,9 @@ impl Editor {
             changed |= self.tools_help_menu(ev);
             changed |= self.text_commit(ev);
             if let Some(f) = self.browser.as_mut().and_then(|b| b.slice_request.take()) {
+                self.slicer.auto_load = self.browser.as_ref().is_some_and(|b| b.auto_load());
                 changed |= self.slicer.start(&self.model, &f);
+                self.slicer.flush(&mut self.model, &mut self.outbox);
             }
             if let Some((name, fav)) = self.browser.as_mut().and_then(|b| b.export_request.take()) {
                 if let Some(dir) = self.dialog(Dialog::ExportFolder) {

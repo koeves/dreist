@@ -89,7 +89,7 @@ pub struct Browser {
     scroll: usize,
     history: Vec<PathBuf>,
     future: Vec<PathBuf>,
-    auto_load: bool,
+    pub(crate) auto_load: bool,
     /// `SliceModeButton`: audio files open the slicer instead of loading.
     slice_mode: bool,
     /// Audio file the slicer should open (taken by the editor).
@@ -1423,6 +1423,11 @@ impl Browser {
     }
 
     /// The press became a drag: keep the multiple selection.
+    /// The Auto load toggle (the slicer extracts live with it on).
+    pub fn auto_load(&self) -> bool {
+        self.auto_load
+    }
+
     pub fn drag_started(&mut self) {
         self.collapse = None;
         self.pending_open = None;

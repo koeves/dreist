@@ -56,6 +56,10 @@ impl Editor {
 
     /// One undo (or redo) step: restore the snapshot and rebuild the engine.
     pub(crate) fn step_undo(&mut self, redo: bool) -> bool {
+        // The slicer keeps its own history while it is open.
+        if self.slicer.open {
+            return self.slicer.undo_step(&mut self.model, redo, &mut self.outbox);
+        }
         let current = std::mem::replace(&mut self.model.doc, dreist_formats::Node::new("root", None));
         // The metronome settings are not undone.
         match self.history.step(redo, current, header::carry_metronome) {
