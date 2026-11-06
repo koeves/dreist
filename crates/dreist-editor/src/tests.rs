@@ -3934,3 +3934,18 @@ fn browser_column_headings_sort_filter_and_columns() {
     assert!(ed.app.ctrl(&list).is_some());
     let _ = std::fs::remove_dir_all(dir);
 }
+
+#[test]
+fn tools_menu_toggles_save_samples_with_presets() {
+    let Ok(mut ed) = Editor::new(dreist_gui::skin::default_theme(), Model::new(project::new_document())) else { return };
+    let tb = ed.app.root.path_of("ToolButton").unwrap();
+    let open = |ed: &mut Editor| {
+        ed.handle(&UiEvent::Clicked { path: tb.clone(), name: "ToolButton".into(), id: 0, on: false });
+        ed.app.menu.take().unwrap().items
+    };
+    let items = open(&mut ed);
+    assert_eq!(items.last().map(String::as_str), Some("✓ Save samples with presets"));
+    ed.handle(&UiEvent::MenuSelected { anchor: tb.clone(), name: "ToolButton".into(), index: items.len() - 1 });
+    assert!(!project::embed_samples());
+    assert_eq!(open(&mut ed).last().map(String::as_str), Some("Save samples with presets"));
+}

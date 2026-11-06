@@ -7,7 +7,10 @@ impl Editor {
     /// menus.
     pub(crate) fn tools_help_menu(&mut self, ev: &UiEvent) -> bool {
         let reset = format!("Reset {}", crate::product());
-        let tools: [&str; 9] = ["Preferences", "", &reset, "Save as default preset", "Clear default preset", "", "Find missing files...", "", "Export as audio..."];
+        // [re:4139f8]: the last item is the check for option
+        // `SaveSamplesWithChunks`.
+        let embed = if project::embed_samples() { format!("{}Save samples with presets", dreist_gui::menu::CHECK) } else { "Save samples with presets".into() };
+        let tools: [&str; 11] = ["Preferences", "", &reset, "Save as default preset", "Clear default preset", "", "Find missing files...", "", "Export as audio...", "", &embed];
         const HELP: [&str; 5] = ["About", "", "Reset UI size to default", "Reset UI scale to 100%", "Show MIDI Console"];
         match ev {
             UiEvent::Clicked { path, name, .. } if (name == "ToolButton" || name == "HelpButton") && !self.browser.as_ref().is_some_and(|b| path.starts_with(b.page())) => {
@@ -34,7 +37,7 @@ impl Editor {
                             if let Some(d) = p.parent() {
                                 let _ = std::fs::create_dir_all(d);
                             }
-                            let _ = project::save(&self.model.doc, self.model.samples.as_deref(), &p);
+                            let _ = project::save(&self.model.doc, self.model.samples.as_deref(), &p, project::embed_samples());
                         }
                     }
                     4 => {
@@ -47,6 +50,11 @@ impl Editor {
                     6 => self.filefind.show(filefind::missing_files(&self.model)),
                     // [re:c7a8f1].
                     8 => self.modals.show(&mut self.app, modal::Kind::Export),
+                    10 => {
+                        let mut o = options::Options::load();
+                        o.set("SaveSamplesWithChunks", !project::embed_samples());
+                        o.save();
+                    }
                     _ => {}
                 }
                 true

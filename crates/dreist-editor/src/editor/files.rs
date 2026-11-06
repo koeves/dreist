@@ -117,7 +117,7 @@ impl Editor {
                 let target = if as_new { None } else { self.part_paths.get(&key).cloned() };
                 let Some(f) = target.or_else(|| self.dialog(Dialog::SavePart(part))) else { return false };
                 let f = if f.extension().is_none() { f.with_extension(ext) } else { f };
-                if project::save_part(&self.model.doc, self.model.samples.as_deref(), part, &f).is_ok() {
+                if project::save_part(&self.model.doc, self.model.samples.as_deref(), part, &f, project::embed_samples()).is_ok() {
                     self.part_paths.insert(key, f);
                 }
             }
@@ -312,7 +312,7 @@ impl Editor {
 
     /// Save the document (collecting samples) and adopt the saved copy.
     pub fn save_to(&mut self, path: &std::path::Path) -> bool {
-        match project::save(&self.model.doc, self.model.samples.as_deref(), path) {
+        match project::save(&self.model.doc, self.model.samples.as_deref(), path, project::embed_samples()) {
             Ok((doc, _errors)) => {
                 self.model.doc = doc;
                 self.model.samples = Some(dreist_formats::model::samples_dir(path));

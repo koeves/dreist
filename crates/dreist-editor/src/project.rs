@@ -3,20 +3,30 @@
 //! A `.geist` file keeps its samples in `<stem>.samples/` with
 //! `AudioFileName`s relative to it (backslash separated). Samples loaded
 //! from elsewhere (absolute paths) or belonging to another project's
-//! folder are copied in on save, as v2's "save with samples" does.
+//! folder are copied in on save, as v2's "save with samples" does. With
+//! Tools › Save samples with presets off (option `SaveSamplesWithChunks`,
+//! [re:4139f8]) nothing is copied and `AudioFileName`s are full paths.
 
 use std::path::{Path, PathBuf};
 
 use dreist_formats::Node;
 
-/// Rewrite every `AudioFileName` under `n` relative to `dest_samples`,
-/// copying files that live elsewhere. `src_samples` resolves relative names.
-fn collect(n: &mut Node, src_samples: Option<&Path>, dest_samples: &Path, errors: &mut Vec<String>) {
+/// Option `SaveSamplesWithChunks` (Tools › Save samples with presets; on
+/// unless turned off, which keeps the samples where they are).
+pub fn embed_samples() -> bool {
+    crate::options::Options::load().bool("SaveSamplesWithChunks", true)
+}
+
+/// Rewrite every `AudioFileName` under `n`: relative to `dest_samples`
+/// (copying files that live elsewhere) when `embed`, else as full paths.
+/// `src_samples` resolves relative names.
+fn collect(n: &mut Node, src_samples: Option<&Path>, dest_samples: &Path, embed: bool, errors: &mut Vec<String>) {
     if let Some((_, v)) = n.attrs.iter_mut().find(|(k, _)| k == "AudioFileName") {
         let rel = v.replace('\\', "/");
         let path = Path::new(&rel);
         let abs = if path.is_absolute() { path.to_path_buf() } else { src_samples.map(|s| dreist_formats::model::resolve_sample(s, &rel)).unwrap_or_else(|| path.to_path_buf()) };
         let new_rel: PathBuf = match abs.strip_prefix(dest_samples) {
+            _ if !embed => abs.clone(),
             Ok(r) => r.to_path_buf(),
             Err(_) => {
                 // Keep the relative layout when it came from a samples folder.
@@ -35,21 +45,21 @@ fn collect(n: &mut Node, src_samples: Option<&Path>, dest_samples: &Path, errors
                 target_rel
             }
         };
-        *v = new_rel.to_string_lossy().replace('/', "\\");
+        *v = if embed { new_rel.to_string_lossy().replace('/', "\\") } else { new_rel.to_string_lossy().into_owned() };
     }
     for c in &mut n.children {
-        collect(c, src_samples, dest_samples, errors);
+        collect(c, src_samples, dest_samples, embed, errors);
     }
 }
 
 /// Write `doc` to `path`, collecting samples into `path`'s `.samples`
-/// folder. Returns the saved document (with the rewritten sample paths) and
-/// any copy errors.
-pub fn save(doc: &Node, src_samples: Option<&Path>, path: &Path) -> std::io::Result<(Node, Vec<String>)> {
+/// folder when `embed`. Returns the saved document (with the rewritten
+/// sample paths) and any copy errors.
+pub fn save(doc: &Node, src_samples: Option<&Path>, path: &Path, embed: bool) -> std::io::Result<(Node, Vec<String>)> {
     let dest = dreist_formats::model::samples_dir(path);
     let mut out = doc.clone();
     let mut errors = Vec::new();
-    collect(&mut out, src_samples, &dest, &mut errors);
+    collect(&mut out, src_samples, &dest, embed, &mut errors);
     dreist_formats::file::write_atomic(path, out.to_xml())?;
     Ok((out, errors))
 }
@@ -122,11 +132,11 @@ pub fn part_root(doc: &Node, part: Part) -> Node {
 }
 
 /// Write `part` of `doc` to `path`, its samples collected into `path`'s
-/// `.samples` folder. Returns copy errors.
-pub fn save_part(doc: &Node, src_samples: Option<&Path>, part: Part, path: &Path) -> std::io::Result<Vec<String>> {
+/// `.samples` folder when `embed`. Returns copy errors.
+pub fn save_part(doc: &Node, src_samples: Option<&Path>, part: Part, path: &Path, embed: bool) -> std::io::Result<Vec<String>> {
     let mut root = part_root(doc, part);
     let mut errors = Vec::new();
-    collect(&mut root, src_samples, &dreist_formats::model::samples_dir(path), &mut errors);
+    collect(&mut root, src_samples, &dreist_formats::model::samples_dir(path), embed, &mut errors);
     dreist_formats::file::write_atomic(path, root.to_xml())?;
     Ok(errors)
 }
@@ -240,11 +250,18 @@ mod tests {
         eng.children.push(pad);
         doc.children.push(eng);
         let out = dir.join("Song.geist");
-        let (saved, errors) = save(&doc, None, &out).unwrap();
+        let (saved, errors) = save(&doc, None, &out, true).unwrap();
         assert!(errors.is_empty(), "{errors:?}");
         assert!(dir.join("Song.samples/hit.wav").exists());
         let l = &saved.children[0].children[0].children[0];
         assert_eq!(l.attr("AudioFileName"), Some("hit.wav"));
+        // Save samples with presets off: nothing copied, full paths.
+        let other = dir.join("Other.geist");
+        let (saved, errors) = save(&saved, Some(&dir.join("Song.samples")), &other, false).unwrap();
+        assert!(errors.is_empty(), "{errors:?}");
+        assert!(!dir.join("Other.samples").exists());
+        let l = &saved.children[0].children[0].children[0];
+        assert_eq!(l.attr("AudioFileName").map(std::path::PathBuf::from), Some(dir.join("Song.samples/hit.wav")));
         std::fs::remove_dir_all(&dir).ok();
     }
 }
