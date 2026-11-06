@@ -22,8 +22,9 @@
 //! device, one MIDI input and one MIDI output, chosen when audio starts.
 //! The settings are kept in the options (`Standalone*`); closing a panel
 //! after a change restarts the app's audio (the app relaunches with the
-//! current document). The channel table shows the pair in use; MIDI clock
-//! sync is not available.
+//! current document). The channel table shows the pair in use. Sync to
+//! clock (option `StandaloneMidiClockSync`) follows the enabled MIDI
+//! input's clock, switched at once.
 
 use dreist_gui::app::{App, MouseKind, UiEvent};
 use dreist_gui::paint::{Painter, RectF};
@@ -67,7 +68,13 @@ pub trait DeviceHost: Send {
     fn midi(&self) -> MidiSetup;
     /// Restart audio with the stored settings, keeping the document.
     fn restart(&self, doc: &dreist_formats::Node, samples: Option<&std::path::Path>);
+    /// Follow the MIDI clock of input `port` (Sync to clock), or stop.
+    fn clock_sync(&self, _port: &str, _on: bool) {}
 }
+
+/// Option: Sync to clock (the standalone follows the enabled MIDI input's
+/// clock: tempo, start, stop, continue and song position).
+pub const CLOCK_SYNC: &str = "StandaloneMidiClockSync";
 
 /// The stored choices.
 #[derive(Clone, Debug, PartialEq, Eq)]
@@ -236,9 +243,11 @@ impl Devices {
         }
         if let Some(o) = self.midi_overlay.clone().and_then(|p| app.ctrl_mut(&p)) {
             o.visible = midi;
-            // No MIDI clock sync in the port.
+            // Sync to clock needs an enabled input to carry the clock.
+            let sync = Options::load().bool(CLOCK_SYNC, false);
             if let Some(b) = o.find_mut("Sync") {
-                b.enabled = false;
+                b.enabled = !self.settings.midi_in.is_empty();
+                b.on = sync && b.enabled;
             }
         }
     }
@@ -305,6 +314,17 @@ impl Devices {
                     ("IOGroup", _) => self.io_tab = *path.last().unwrap_or(&0),
                     (_, "Close") => self.close(),
                     (_, "Refresh") => self.refresh(),
+                    // Sync to clock: applied at once, kept in the options.
+                    (_, "Sync") => {
+                        let mut o = Options::load();
+                        let on = !o.bool(CLOCK_SYNC, false) && !self.settings.midi_in.is_empty();
+                        o.set(CLOCK_SYNC, on);
+                        o.save();
+                        if let Some(h) = &self.host {
+                            h.clock_sync(&self.settings.midi_in, on);
+                        }
+                        self.sync(app);
+                    }
                     (_, n @ ("SampleRate" | "BufferSize" | "InDevice" | "OutDevice")) => {
                         let items = self.popup_items(n);
                         if !items.is_empty() {

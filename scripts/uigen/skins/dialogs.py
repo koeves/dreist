@@ -171,7 +171,8 @@ def midi_options():
         card("MIDI IN", (10, 10, half, 350), [tbl("InputTable")], pin="ltb"),
         card("MIDI OUT", (20 + half, 10, half, 350), [tbl("OutputTable")], pin="rtb"),
         btn("Refresh", (10, H - 30, 80, 20), "Rescan", None, pin="lb"),
-        N("Button", "Sync", (96, H - 30, 90, 20), pin="lb", style="DefaultButtonStyle", text="Send Clock"),
+        N("Button", "Sync", (96, H - 30, 100, 20), pin="lb", style="DefaultButtonStyle", text="Sync to clock",
+          displayName="Follow the MIDI clock of the enabled input", optIsMomentary=True),
         N("Button", "Close", (W - 80, H - 30, 70, 20), pin="rb", style="DefaultButtonStyle", text="Close"),
         N("Button", "CheckBox", (200, H - 28, 16, 16), style="DefaultCheckboxButtonStyle"),
     ])

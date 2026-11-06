@@ -14,7 +14,7 @@
             </CtrlPanel>
         </CtrlPanel>
         <CtrlButton name="Refresh" rect="10, 370, 80, 20" ARLeft="FNear 10.0000" ARTop="FFar 30.0000" ARBottom="FFar 20.0000" optIsMomentary="true" style="DefaultButtonStyle" text="Rescan" />
-        <CtrlButton name="Sync" rect="96, 370, 90, 20" ARLeft="FNear 96.0000" ARTop="FFar 30.0000" ARBottom="FFar 20.0000" style="DefaultButtonStyle" text="Send Clock" />
+        <CtrlButton name="Sync" rect="96, 370, 100, 20" ARLeft="FNear 96.0000" ARTop="FFar 30.0000" ARBottom="FFar 20.0000" displayName="Follow the MIDI clock of the enabled input" optIsMomentary="true" style="DefaultButtonStyle" text="Sync to clock" />
         <CtrlButton name="Close" rect="520, 370, 70, 20" ARLeft="FFar 80.0000" ARRight="FFar 70.0000" ARTop="FFar 30.0000" ARBottom="FFar 20.0000" style="DefaultButtonStyle" text="Close" />
         <CtrlButton name="CheckBox" rect="200, 372, 16, 16" style="DefaultCheckboxButtonStyle" />
     </CtrlPanel>

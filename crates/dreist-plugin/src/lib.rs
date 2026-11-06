@@ -84,6 +84,9 @@ pub struct DreistPlugin {
     live_take: dreist_editor::model::LiveTake,
     /// Editor window size shared with the open editor (see `DreistEditor`).
     editor_size: Arc<std::sync::atomic::AtomicU64>,
+    /// The standalone following an external MIDI clock.
+    #[cfg(feature = "standalone")]
+    clock: standalone::clock::ClockFollow,
 }
 
 impl Default for DreistPlugin {
@@ -104,6 +107,8 @@ impl Default for DreistPlugin {
             bridge: Arc::new(editor::Bridge::default()),
             live_take: Default::default(),
             editor_size: Default::default(),
+            #[cfg(feature = "standalone")]
+            clock: Default::default(),
         }
     }
 }
@@ -271,6 +276,12 @@ impl Plugin for DreistPlugin {
                 *cur = Some(s);
             }
         }
+        // Sync to clock, as last set.
+        #[cfg(feature = "standalone")]
+        {
+            let o = dreist_editor::options::Options::load();
+            standalone::clock::set(&o.string("StandaloneMidiInput", ""), o.bool(dreist_editor::devices::CLOCK_SYNC, false));
+        }
         // Samples decode into the cache later rebuilds share.
         let cache_handle = self.bridge.cache.clone();
         let mut cache = editor::lock(&cache_handle);
@@ -368,6 +379,12 @@ impl Plugin for DreistPlugin {
                     engine.set_time_signature(n as u32, d as u32);
                 }
             }
+        }
+        // Sync to clock: the external clock drives the transport as a host
+        // would.
+        #[cfg(feature = "standalone")]
+        if let Some((playing, tempo, at)) = self.clock.block(buffer.samples(), engine.sample_rate() as f64) {
+            engine.set_transport(playing, tempo, at);
         }
         // Editor commands: applied here, handed back to be freed by the GUI.
         if let Ok(mut q) = self.bridge.commands.try_lock() {
