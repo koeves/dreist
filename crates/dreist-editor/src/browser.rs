@@ -53,9 +53,190 @@ struct Source {
 
 #[derive(Clone, Debug)]
 pub struct Entry {
-    name: String,
+    pub(crate) name: String,
     path: PathBuf,
     dir: bool,
+}
+
+/// File kinds the column headings' View menu shows or hides, and their
+/// Type column names.
+const VIEW_KINDS: [(&str, &str); 11] = [
+    ("Audio", "Audio"),
+    ("Presets", "Preset"),
+    ("Engines", "Engine"),
+    ("Kits", "Kit"),
+    ("Patterns", "Pattern"),
+    ("Pattern Banks", "Pattern Bank"),
+    ("MIDI", "MIDI"),
+    ("Guru Kit", "Guru Kit"),
+    ("Guru Pattern", "Guru Pattern"),
+    ("Guru Pattern Bank", "Guru Pattern Bank"),
+    ("Folders", "Folder"),
+];
+
+/// The column headings bar's sort columns.
+const SORT_COLUMNS: [&str; 3] = ["Name", "Type", "Size"];
+/// Widths of the Type and Size columns.
+const TYPE_W: f32 = 70.0;
+const SIZE_W: f32 = 52.0;
+
+/// The [`VIEW_KINDS`] index of an entry (none: always shown).
+fn view_kind(en: &Entry) -> Option<usize> {
+    use dreist_formats::profile::{DocKind, doc_kind};
+    if en.dir {
+        return Some(10);
+    }
+    let ext = en.path.extension().map(|e| e.to_string_lossy().into_owned()).unwrap_or_default();
+    if crate::search::is_audio(&ext) {
+        return Some(0);
+    }
+    if let Some(k) = crate::guru::kind(&en.path) {
+        return Some(match k {
+            crate::guru::Kind::Kit => 7,
+            crate::guru::Kind::Pattern => 8,
+            crate::guru::Kind::Bank => 9,
+            crate::guru::Kind::Preset => 1,
+        });
+    }
+    if ext.eq_ignore_ascii_case("mid") || ext.eq_ignore_ascii_case("midi") {
+        return Some(6);
+    }
+    if ext.eq_ignore_ascii_case("patterntemplate") {
+        return Some(4);
+    }
+    match doc_kind(&ext)? {
+        DocKind::Project => Some(1),
+        DocKind::Engine => Some(2),
+        DocKind::Kit => Some(3),
+        DocKind::Pattern => Some(4),
+        DocKind::Bank => Some(5),
+        _ => None,
+    }
+}
+
+/// The Type column's text.
+fn type_text(en: &Entry) -> String {
+    match view_kind(en) {
+        Some(k) => VIEW_KINDS[k].1.to_string(),
+        None => en.path.extension().map(|e| e.to_string_lossy().to_uppercase()).unwrap_or_default(),
+    }
+}
+
+fn file_size(en: &Entry) -> u64 {
+    if en.dir { 0 } else { std::fs::metadata(&en.path).map(|m| m.len()).unwrap_or(0) }
+}
+
+/// The Size column's text.
+fn size_text(n: u64) -> String {
+    match n {
+        n if n < 1024 => format!("{n} B"),
+        n if n < 1024 * 1024 => format!("{} KB", n.div_ceil(1024)),
+        n => format!("{:.1} MB", n as f64 / (1024.0 * 1024.0)),
+    }
+}
+
+/// The listing's order: folders first, then by the sort column
+/// (0 name, 1 type, 2 size; names break ties).
+fn sort_entries(v: &mut [Entry], column: usize, descending: bool) {
+    let sizes: std::collections::HashMap<PathBuf, u64> = if column == 2 { v.iter().map(|e| (e.path.clone(), file_size(e))).collect() } else { Default::default() };
+    let name = |e: &Entry| e.name.to_lowercase();
+    v.sort_by(|a, b| {
+        let key = match column {
+            1 => type_text(a).cmp(&type_text(b)).then_with(|| name(a).cmp(&name(b))),
+            2 => sizes[&a.path].cmp(&sizes[&b.path]).then_with(|| name(a).cmp(&name(b))),
+            _ => name(a).cmp(&name(b)),
+        };
+        b.dir.cmp(&a.dir).then(if descending { key.reverse() } else { key })
+    });
+}
+
+/// What the column headings bar shows: hidden kinds (bits of
+/// [`VIEW_KINDS`]), the Type and Size columns, the sort column and
+/// direction. Kept in the options.
+#[derive(Clone, Copy, Debug, PartialEq)]
+pub struct ListView {
+    pub hidden: u32,
+    pub type_column: bool,
+    pub size_column: bool,
+    pub sort: usize,
+    pub descending: bool,
+}
+
+impl ListView {
+    fn load() -> ListView {
+        let o = crate::options::Options::load();
+        ListView {
+            hidden: o.int("BrowserHiddenTypes", 0) as u32,
+            type_column: o.bool("BrowserTypeColumn", false),
+            size_column: o.bool("BrowserSizeColumn", false),
+            sort: (o.int("BrowserSortColumn", 0) as usize).min(2),
+            descending: o.bool("BrowserSortDescending", false),
+        }
+    }
+
+    fn save(&self) {
+        let mut o = crate::options::Options::load();
+        o.set("BrowserHiddenTypes", self.hidden);
+        o.set("BrowserTypeColumn", self.type_column);
+        o.set("BrowserSizeColumn", self.size_column);
+        o.set("BrowserSortColumn", self.sort);
+        o.set("BrowserSortDescending", self.descending);
+        o.save();
+    }
+
+    fn shows(&self, en: &Entry) -> bool {
+        view_kind(en).is_none_or(|k| self.hidden & (1 << k) == 0)
+    }
+
+    /// The headings menu: View, Columns and Sort by sections.
+    fn menu(&self) -> Vec<String> {
+        let check = |on: bool, t: &str| if on { format!("✓ {t}") } else { t.to_string() };
+        let header = |t: &str| format!("{}{t}", dreist_gui::menu::DISABLED);
+        let mut v = vec![header("View")];
+        v.extend(VIEW_KINDS.iter().enumerate().map(|(k, (t, _))| check(self.hidden & (1 << k) == 0, t)));
+        v.extend(["".into(), header("Columns"), check(self.type_column, "Type"), check(self.size_column, "Size"), "".into(), header("Sort by")]);
+        v.extend(SORT_COLUMNS.iter().enumerate().map(|(k, t)| check(self.sort == k, t)));
+        v
+    }
+
+    /// Apply headings menu item `i`; false for headers and separators.
+    fn pick(&mut self, i: usize) -> bool {
+        let n = VIEW_KINDS.len();
+        match i {
+            i if (1..=n).contains(&i) => self.hidden ^= 1 << (i - 1),
+            i if i == n + 3 => self.type_column = !self.type_column,
+            i if i == n + 4 => self.size_column = !self.size_column,
+            i if (n + 7..n + 10).contains(&i) => self.sort = i - n - 7,
+            _ => return false,
+        }
+        true
+    }
+
+    /// A click on column `k`'s heading: sort by it, again to reverse.
+    fn click(&mut self, k: usize) {
+        if self.sort == k {
+            self.descending = !self.descending;
+        } else {
+            (self.sort, self.descending) = (k, false);
+        }
+    }
+
+    /// The headings' columns: (sort column, x, width) for width `w`.
+    fn columns(&self, w: f32) -> Vec<(usize, f32, f32)> {
+        let mut x = w;
+        let mut v = Vec::new();
+        if self.size_column {
+            x -= SIZE_W;
+            v.push((2, x, SIZE_W));
+        }
+        if self.type_column {
+            x -= TYPE_W;
+            v.push((1, x, TYPE_W));
+        }
+        v.push((0, 0.0, x.max(0.0)));
+        v.reverse();
+        v
+    }
 }
 
 /// Back-button places kept.
@@ -70,7 +251,13 @@ pub struct Browser {
     page: Vec<usize>,
     sources: Vec<Source>,
     dir: Option<PathBuf>,
-    entries: Vec<Entry>,
+    pub(crate) entries: Vec<Entry>,
+    /// The listing before the View filter.
+    all: Vec<Entry>,
+    /// Column headings: filter, columns and order.
+    pub view: ListView,
+    /// The column headings menu's anchor while open.
+    headings_menu: Option<Vec<usize>>,
     selected: Option<usize>,
     /// Multiple selection (`CtrlTable` cmd / shift clicks); empty when
     /// only `selected` is.
@@ -683,6 +870,9 @@ impl Browser {
             sources: Vec::new(),
             dir: None,
             entries: Vec::new(),
+            all: Vec::new(),
+            view: ListView::load(),
+            headings_menu: None,
             selected: None,
             multi: Vec::new(),
             saved: false,
@@ -765,12 +955,13 @@ impl Browser {
         }
         if let Some(f) = dir.to_str().and_then(|s| s.strip_prefix("cache:")) {
             let text = std::fs::read_to_string(f).unwrap_or_default();
-            self.entries = text
+            let v = text
                 .lines()
                 .filter(|l| !l.is_empty())
                 .map(PathBuf::from)
                 .map(|p| Entry { name: p.file_name().map(|n| n.to_string_lossy().into_owned()).unwrap_or_default(), dir: p.is_dir(), path: p })
                 .collect();
+            self.set_entries(v);
             self.search = Path::new(f).file_stem().map(|s| s.to_string_lossy().into_owned());
             self.shortlist = None;
             self.saved = true;
@@ -787,7 +978,7 @@ impl Browser {
         self.shortlist = None;
         // A favourite file: open its folder with it selected.
         let (dir, select) = if dir.is_file() { (dir.parent().map(Path::to_path_buf).unwrap_or(dir.clone()), Some(dir)) } else { (dir, None) };
-        self.entries = list(&dir);
+        self.set_entries(list(&dir));
         self.dir = Some(dir);
         self.search = None;
         self.selected = select.and_then(|s| self.entries.iter().position(|e| e.path == s));
@@ -795,10 +986,27 @@ impl Browser {
         self.multi.clear();
     }
 
+    /// A new listing: filtered and ordered by the column headings.
+    fn set_entries(&mut self, v: Vec<Entry>) {
+        self.all = v;
+        self.arrange();
+    }
+
+    /// Re-apply the View filter and the sort order, keeping the selected
+    /// row's file selected.
+    fn arrange(&mut self) {
+        let keep = self.selected.and_then(|i| self.entries.get(i)).map(|e| e.path.clone());
+        let mut v: Vec<Entry> = self.all.iter().filter(|e| self.view.shows(e)).cloned().collect();
+        sort_entries(&mut v, self.view.sort, self.view.descending);
+        self.entries = v;
+        self.selected = keep.and_then(|p| self.entries.iter().position(|e| e.path == p));
+        self.multi.clear();
+    }
+
     /// [re:4f921b]: the shortlist's files.
     fn show_shortlist(&mut self, name: String) {
         let files = self.shortlists.iter().find(|(n, _)| *n == name).map(|(_, f)| f.clone()).unwrap_or_default();
-        self.entries = files.into_iter().map(|p| Entry { name: p.file_name().map(|n| n.to_string_lossy().into_owned()).unwrap_or_default(), dir: p.is_dir(), path: p }).collect();
+        self.set_entries(files.into_iter().map(|p| Entry { name: p.file_name().map(|n| n.to_string_lossy().into_owned()).unwrap_or_default(), dir: p.is_dir(), path: p }).collect());
         self.shortlist = Some(name);
         self.search = None;
         self.selected = None;
@@ -1008,7 +1216,7 @@ impl Browser {
                         save_shortlists(&self.shortlists);
                         if self.shortlist.as_deref() == Some(n.as_str()) {
                             self.shortlist = None;
-                            self.entries.clear();
+                            self.set_entries(Vec::new());
                         }
                     }
                     "Content" => hide_content(&path),
@@ -1327,7 +1535,8 @@ impl Browser {
     /// "File name Contains <text>" option over the current folder (sub
     /// folders and favourites as the search box menu sets them).
     fn run_search(&mut self, terms: &str) {
-        self.entries = self.scan(&[crate::search::SearchOption::name_contains(terms)], false);
+        let v = self.scan(&[crate::search::SearchOption::name_contains(terms)], false);
+        self.set_entries(v);
         self.search = Some(terms.to_string());
         self.saved = false;
         if !self.searches.iter().any(|s| s == terms) {
@@ -1355,7 +1564,8 @@ impl Browser {
 
     /// Advanced search pane "Search".
     fn run_advanced(&mut self, opts: &[crate::search::SearchOption], match_all: bool) {
-        self.entries = self.scan(opts, match_all);
+        let v = self.scan(opts, match_all);
+        self.set_entries(v);
         self.search = Some("Advanced search".into());
         self.saved = false;
         self.selected = None;
@@ -1599,6 +1809,35 @@ impl Browser {
             UiEvent::TextCommitted { path, name, text } if name == SOURCE_RENAME_EDIT => {
                 let (path, text) = (path.clone(), text.clone());
                 self.commit_source_name(app, &path, &text);
+                true
+            }
+            // Column headings: a click sorts by the column (again: the
+            // other direction); right click: View, Columns and Sort by.
+            UiEvent::Mouse { path, overload, kind, x, .. } if overload == "BrowserFileHeadings" => {
+                let w = app.ctrl(path).map(|c| c.rect.w as f32).unwrap_or(0.0);
+                match kind {
+                    MouseKind::Down => {
+                        let Some(&(k, ..)) = self.view.columns(w).iter().find(|(_, cx, cw)| *x >= *cx && *x < cx + cw) else { return false };
+                        self.view.click(k);
+                        self.view.save();
+                        self.arrange();
+                        true
+                    }
+                    MouseKind::RightDown => {
+                        self.headings_menu = Some(path.clone());
+                        app.open_menu(path, self.view.menu(), None);
+                        true
+                    }
+                    _ => false,
+                }
+            }
+            UiEvent::MenuSelected { anchor, index, .. } if self.headings_menu.as_ref() == Some(anchor) => {
+                self.headings_menu = None;
+                if !self.view.pick(*index) {
+                    return false;
+                }
+                self.view.save();
+                self.arrange();
                 true
             }
             // File list context menu.
@@ -1867,7 +2106,42 @@ impl Browser {
                         p.fill_rounded(RectF::new(4.0, y + 5.0, 12.0, 9.0), 1.5, [true; 4], col.with_alpha(0.6));
                         p.fill_rect(RectF::new(4.0, y + 3.5, 5.0, 2.0), col.with_alpha(0.6));
                     }
-                    p.text(RectF::new(22.0, y, w - 26.0, FILE_ROW), &en.name, col, &font, HAlign::Left, VAlign::Center);
+                    let cols = self.view.columns(w);
+                    let name_w = cols[0].2;
+                    p.text(RectF::new(22.0, y, name_w - 26.0, FILE_ROW), &en.name, col, &font, HAlign::Left, VAlign::Center);
+                    for &(k, cx, cw) in &cols[1..] {
+                        let t = if k == 1 {
+                            type_text(en)
+                        } else if en.dir {
+                            String::new()
+                        } else {
+                            size_text(file_size(en))
+                        };
+                        let align = if k == 2 { HAlign::Right } else { HAlign::Left };
+                        p.text(RectF::new(cx + 4.0, y, cw - 8.0, FILE_ROW), &t, col, &font, align, VAlign::Center);
+                    }
+                }
+                true
+            }
+            "BrowserFileHeadings" => {
+                let st = "BrowserPathNavStyle";
+                p.fill_rect(RectF::new(0.0, 0.0, w, h), s.colour(st, "colFill", Colour::rgba(220, 224, 228, 255)));
+                let border = s.colour(st, "colBorder", Colour::BLACK);
+                let text = s.colour(st, "colText", Colour::BLACK);
+                let font = s.font(ITEM_STYLE);
+                p.line(0.0, h - 0.5, w, h - 0.5, border, 1.0);
+                for (k, cx, cw) in self.view.columns(w) {
+                    if cx > 0.0 {
+                        p.line(cx + 0.5, 2.0, cx + 0.5, h - 2.0, border, 1.0);
+                    }
+                    let left = if k == 0 { 22.0 } else { 4.0 };
+                    p.text(RectF::new(cx + left, 0.0, (cw - left - 14.0).max(0.0), h), SORT_COLUMNS[k], text, &font, HAlign::Left, VAlign::Center);
+                    if self.view.sort == k {
+                        // Sort direction: a small triangle at the right.
+                        let (ax, ay) = (cx + cw - 10.0, h / 2.0);
+                        let tri = if self.view.descending { [(ax - 3.5, ay - 2.0), (ax + 3.5, ay - 2.0), (ax, ay + 2.5)] } else { [(ax - 3.5, ay + 2.0), (ax + 3.5, ay + 2.0), (ax, ay - 2.5)] };
+                        p.fill_polygon(&tri, text);
+                    }
                 }
                 true
             }

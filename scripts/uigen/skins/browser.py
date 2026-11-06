@@ -44,7 +44,10 @@ def file_list():
         N("Slider", "PreviewVolume", (88, 27, W - 92, 15), pin="lr", displayName="Preview volume", style="SliderStyle", realTrackInset=0.3),
     ])
     return N("Panel", None, (0, 0, W, H), pin="lrtb", style="InvisibleStyle", kids=[
-        bar, N("Panel", "FileList", (0, 46, W, H - 46), pin="lrtb", overloadClass="BrowserFileList", style="InvisibleStyle")])
+        bar,
+        N("Panel", "FileHeadings", (0, 46, W, 16), pin="lrt", overloadClass="BrowserFileHeadings", style="InvisibleStyle",
+          displayName="Click to sort; right-click for View, Columns and Sort by"),
+        N("Panel", "FileList", (0, 62, W, H - 62), pin="lrtb", overloadClass="BrowserFileList", style="InvisibleStyle")])
 
 
 def header():

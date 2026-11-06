@@ -13,6 +13,7 @@
             <CtrlButton name="StopButton" rect="44, 24, 40, 20" displayName="Stop audition" id="100001" optIsMomentary="true" style="ExExLargeIconButtonStyle" text="" />
             <CtrlSlider name="PreviewVolume" rect="88, 27, 118, 15" ARLeft="FNear 88.0000" ARRight="FNear 4.0000" displayName="Preview volume" realTrackInset="0.3000" style="SliderStyle" />
         </CtrlPanel>
-        <CtrlPanel name="FileList" rect="0, 46, 210, 572" ARLeft="FNear 0.0000" ARRight="FNear 0.0000" ARTop="FNear 46.0000" ARBottom="FNear 0.0000" overloadClass="BrowserFileList" style="InvisibleStyle" />
+        <CtrlPanel name="FileHeadings" rect="0, 46, 210, 16" ARLeft="FNear 0.0000" ARRight="FNear 0.0000" ARTop="FNear 46.0000" displayName="Click to sort; right-click for View, Columns and Sort by" overloadClass="BrowserFileHeadings" style="InvisibleStyle" />
+        <CtrlPanel name="FileList" rect="0, 62, 210, 556" ARLeft="FNear 0.0000" ARRight="FNear 0.0000" ARTop="FNear 62.0000" ARBottom="FNear 0.0000" overloadClass="BrowserFileList" style="InvisibleStyle" />
     </CtrlPanel>
 </root>

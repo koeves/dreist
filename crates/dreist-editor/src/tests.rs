@@ -3898,3 +3898,39 @@ fn right_clicks_while_drawing_cycle_the_insert_patterns() {
     assert_eq!(steps(&mut ed), [Some(true); 8]);
     mouse(&mut ed, MouseKind::Up, 7);
 }
+
+#[test]
+fn browser_column_headings_sort_filter_and_columns() {
+    use dreist_gui::app::MouseKind;
+    let Ok(mut ed) = Editor::new(dreist_gui::skin::default_theme(), Model::new(project::new_document())) else { return };
+    let dir = preview_files("headings");
+    std::fs::create_dir_all(dir.join("sub")).unwrap();
+    std::fs::write(dir.join("c.patterntemplate"), "<root/>").unwrap();
+    let Some(list) = browser_list(&mut ed, &dir) else { return };
+    let heads = find_overload(&ed.app.root, "BrowserFileHeadings", None, &mut Vec::new()).expect("column headings");
+    let names = |ed: &Editor| ed.browser.as_ref().unwrap().entries.iter().map(|e| e.name.clone()).collect::<Vec<_>>();
+    assert_eq!(names(&ed), ["sub", "a.wav", "b.wav", "c.patterntemplate"]);
+    // Right click: View, Columns and Sort by; `last` picks the Sort by
+    // item of a name both sections have.
+    let pick = |ed: &mut Editor, t: &str, last: bool| {
+        ed.handle(&UiEvent::Mouse { path: heads.clone(), overload: "BrowserFileHeadings".into(), kind: MouseKind::RightDown, x: 20.0, y: 5.0 });
+        let items = ed.app.menu.take().unwrap().items;
+        let mut hits = items.iter().enumerate().filter(|(_, s)| s.trim_start_matches("✓ ") == t).map(|(i, _)| i);
+        let i = if last { hits.next_back() } else { hits.next() }.unwrap();
+        ed.handle(&UiEvent::MenuSelected { anchor: heads.clone(), name: "FileHeadings".into(), index: i });
+    };
+    pick(&mut ed, "Size", false);
+    assert!(ed.browser.as_ref().unwrap().view.size_column);
+    pick(&mut ed, "Size", true);
+    assert_eq!(names(&ed), ["sub", "c.patterntemplate", "b.wav", "a.wav"]);
+    // A click on the sorted heading (Size, at the right) reverses it.
+    let w = ed.app.ctrl(&heads).unwrap().rect.w as f32;
+    ed.handle(&UiEvent::Mouse { path: heads.clone(), overload: "BrowserFileHeadings".into(), kind: MouseKind::Down, x: w - 5.0, y: 5.0 });
+    assert_eq!(names(&ed), ["sub", "a.wav", "b.wav", "c.patterntemplate"]);
+    // View: Audio and Folders off.
+    pick(&mut ed, "Audio", false);
+    pick(&mut ed, "Folders", false);
+    assert_eq!(names(&ed), ["c.patterntemplate"]);
+    assert!(ed.app.ctrl(&list).is_some());
+    let _ = std::fs::remove_dir_all(dir);
+}
