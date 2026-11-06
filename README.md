@@ -9,21 +9,11 @@
 - Settings: `~/Library/Application Support/Dreist` (Windows: `%APPDATA%\Dreist`).
 - Plugin IDs: CLAP `rs.dreist.dreist`, VST3 class `DreistRsDrumSmp1`.
 
-![Dreist with the Hollow demo project](docs/screenshot.png)
-
-### Screenshots
-
-Hollow and Blister are the two projects of Geist2's free demo library
-(`Geist2 Demo Factory`), opened in Dreist.
-
 | | |
 |---|---|
-| ![Blister: pattern editor and browser](docs/screenshots/blister-pattern.png) | ![Blister: song mode](docs/screenshots/blister-song.png) |
-| Blister: pattern editor and browser | Blister: song mode |
-| ![Blister: pad mixer](docs/screenshots/blister-pad-mixer.png) | ![Hollow: scenes](docs/screenshots/hollow-scenes.png) |
-| Blister: pad mixer | Hollow: scenes |
-| ![Hollow: global mixer](docs/screenshots/hollow-global-mixer.png) | |
-| Hollow: global mixer | |
+| ![Hollow: pattern editor](docs/screens/readme/hollow-pattern.png) | ![Blister: pattern editor](docs/screens/readme/blister-pattern.png) |
+| ![Hollow: scenes](docs/screens/readme/hollow-scenes.png) | ![Blister: song mode](docs/screens/readme/blister-song.png) |
+| ![Blister: pad mixer](docs/screens/readme/blister-pad-mixer.png) | ![Hollow: global mixer](docs/screens/readme/hollow-global-mixer.png) |
 
 ## Installation
 
