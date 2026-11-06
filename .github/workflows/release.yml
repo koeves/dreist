@@ -1,9 +1,10 @@
 name: Release
 
-# Pushing a tag `vX.Y.Z` builds Dreist (VST3, CLAP, standalone) on macOS
-# and Windows, tests it and publishes the GitHub release with the zips. A
-# manual run builds the checked-out ref and publishes to `tag` only when
-# `upload` is set.
+# Pushing a tag `vX.Y.Z` checks the commit subjects, runs the CI suite, builds Dreist (VST3,
+# CLAP, standalone) on macOS and Windows, tests it and publishes the GitHub
+# release with the zips. A manual run builds the checked-out ref and
+# publishes to `tag` only when `upload` is set. No workflow runs on branch
+# pushes (see .agents/git.md).
 on:
   push:
     tags: ["v*"]
@@ -27,12 +28,19 @@ env:
   UPLOAD: ${{ github.event_name == 'push' || inputs.upload }}
 
 jobs:
+  commits:
+    uses: ./.github/workflows/commits.yml
+
+  ci:
+    uses: ./.github/workflows/ci.yml
+
   build:
+    needs: [commits, ci]
     strategy:
       fail-fast: false
       matrix:
         include:
-          - os: macos-14
+          - os: macos-15
             name: macOS
           - os: windows-latest
             name: Windows

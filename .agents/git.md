@@ -8,7 +8,8 @@
   `style`, `revert`; `!` after the type (or a `BREAKING CHANGE:` footer) for a breaking change.
 - Scopes are optional and short: a crate or area (`dreist-plugin`, `dreist-cli`, `ui`, `notices`, `ci`).
 - A body only when the why is not obvious; wrap at 72 columns.
-- CI checks every new commit subject (`.github/workflows/commits.yml`).
+- The release workflow checks every commit subject since the previous tag
+  (`.github/workflows/commits.yml`).
 - No AI attribution of any kind: no `Co-Authored-By` for an assistant, no session trailers, no
   "Generated with ..." lines, in commits, PRs, tags or release notes. Author and committer are
   the repository's configured identity.
@@ -47,10 +48,13 @@ GitHub Actions minutes are limited, so:
 
 - All work goes to the `dev` branch; `main` only moves when the owner says a release is ready
   (merge `dev` into `main`, then tag).
-- CI runs on pushes to `main`, on tags and by hand (`workflow_dispatch`), never on `dev` and
-  no pull requests (they would run it). So run the checks locally before every push: tests,
-  clippy (with the standalone feature in the apps, with `dreist-gui/window` in commons) and
-  `cargo fmt --check`.
+- GitHub Actions run only when a release is made: pushing a `vX.Y.Z` tag runs the release workflow
+  (the commit-subject check and the CI suite, then the builds and tests on macOS and Windows, then
+  the release), and any workflow can be run by hand (`workflow_dispatch`). No workflow runs on a
+  push to any branch (`main` included) or on pull requests (none are opened). So run the checks
+  locally before every push: tests, clippy (with the standalone feature in the apps, with
+  `dreist-gui/window` in commons) and `cargo fmt --check`.
+- macOS jobs use the `macos-15` runner (GitHub no longer accepts `macos-14`).
 - Until a release, the apps' `commons` submodule may point at dreist-commons `dev` commits. At
   release: merge dreist-commons `dev` into its `main` first, then point the apps at that commit
   and merge them.
