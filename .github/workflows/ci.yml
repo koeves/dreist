@@ -1,20 +1,27 @@
 name: CI
 
+# Runs only as part of the tag-triggered release (release.yml) and by hand.
 on:
-  push:
-    branches: [main]
-  pull_request:
+  workflow_dispatch:
+  workflow_call:
 
 env:
   CARGO_TERM_COLOR: always
+  # Windows that tests open stay in the background (commons vendor/baseview).
+  DREIST_BACKGROUND_GUI: "1"
 
 jobs:
   checks:
-    # Engine, DSP, editor and GUI tests run headless on Linux (tests that
-    # need the Geist2 factory content skip when it is not installed).
+    # The CLI, the editor, the shared crates against Dreist's assets and the
+    # generated files check headless on Linux.
     runs-on: ubuntu-24.04
+    env:
+      DREIST_UI: ${{ github.workspace }}/assets/ui
+      DREIST_RESOURCES: ${{ github.workspace }}/assets/factory
     steps:
       - uses: actions/checkout@v4
+        with:
+          submodules: recursive
       - uses: dtolnay/rust-toolchain@stable
         with:
           components: rustfmt, clippy
@@ -22,14 +29,16 @@ jobs:
       - name: Format
         run: cargo fmt --all --check
       - name: Clippy
-        run: cargo clippy --locked -p geist-formats -p geist-dsp -p geist-engine -p geist-gui -p geist-editor -p geist-cli --all-targets -- -D warnings
+        run: cargo clippy --locked -p dreist-cli -p dreist-editor --all-targets -- -D warnings
       - name: Test
+        run: cargo test --locked -p dreist-cli -p dreist-editor
+      - name: Shared crates against Dreist's assets
         # The effect fingerprints hash float output, which differs between
-        # platforms (they match on macOS): checked separately, non-fatal.
-        run: cargo test --locked -p geist-formats -p geist-dsp -p geist-engine -p geist-gui -p geist-editor -p geist-cli -- --skip effects_match_fingerprints
+        # platforms (they match on macOS, checked there): non-fatal here.
+        run: cargo test --locked --manifest-path commons/Cargo.toml --workspace -- --skip effects_match_fingerprints
       - name: Effect fingerprints (platform-dependent)
         continue-on-error: true
-        run: cargo test --locked -p geist-dsp --test fx_harness effects_match_fingerprints
+        run: cargo test --locked --manifest-path commons/Cargo.toml -p dreist-dsp --test fx_harness effects_match_fingerprints
       - uses: actions/setup-python@v5
         with:
           python-version: "3.12"
@@ -42,13 +51,27 @@ jobs:
         run: python3 scripts/notices.py --check
 
   macos:
-    # The plugin and app link AppKit: build them on macOS.
-    runs-on: macos-14
+    # The plugin and app link AppKit: lint, test and build them on macOS,
+    # with the shared crates' tests against Dreist's assets.
+    runs-on: macos-15
+    env:
+      DREIST_UI: ${{ github.workspace }}/assets/ui
+      DREIST_RESOURCES: ${{ github.workspace }}/assets/factory
     steps:
       - uses: actions/checkout@v4
+        with:
+          submodules: recursive
       - uses: dtolnay/rust-toolchain@stable
+        with:
+          components: clippy
       - uses: Swatinem/rust-cache@v2
+      - name: Clippy
+        run: cargo clippy --locked --workspace --all-targets -- -D warnings
+      - name: Test
+        run: cargo test --locked --workspace
+      - name: Shared crates against Dreist's assets
+        run: cargo test --locked --manifest-path commons/Cargo.toml --workspace
       - name: Build plugin and standalone
         run: |
-          cargo build --locked -p geist-plugin --release
-          cargo build --locked -p geist-plugin --features standalone --bin geist-standalone --release
+          cargo build --locked -p dreist-plugin --release
+          cargo build --locked -p dreist-plugin --features standalone --bin dreist-standalone --release

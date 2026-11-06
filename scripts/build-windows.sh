@@ -7,7 +7,7 @@
 # Output: target/bundled/Dreist.vst3 (resources in Contents/Resources),
 # target/bundled/Dreist-CLAP/ (Dreist.clap + Resources/) and
 # target/bundled/Dreist-App/ (Dreist.exe + Resources/). The .clap and .exe
-# are bare files, so geist_formats::paths looks for `Resources/` next to them.
+# are bare files, so Dreist's profile looks for `Resources/` next to them.
 set -euo pipefail
 
 cd "$(dirname "$0")/.."
@@ -25,23 +25,23 @@ out=target/bundled
 mkdir -p "$out"
 
 echo "==> VST3 / CLAP ($profile)"
-cargo run --package xtask --release -- bundle geist-plugin $flag
+cargo run --package xtask --release -- bundle dreist-plugin $flag
 
 echo "==> Standalone app ($profile)"
-cargo build -p geist-plugin --features standalone --bin geist-standalone $flag
+cargo build -p dreist-plugin --features standalone --bin dreist-standalone $flag
 
 clap="$out/Dreist-CLAP"
 app="$out/Dreist-App"
 rm -rf "$clap" "$app"
 mkdir -p "$clap/Resources" "$app/Resources" "$out/Dreist.vst3/Contents/Resources"
 mv "$out/Dreist.clap" "$clap/Dreist.clap"
-cp "target/$profile/geist-standalone.exe" "$app/Dreist.exe"
+cp "target/$profile/dreist-standalone.exe" "$app/Dreist.exe"
 
 echo "==> Resources"
 for r in "$out/Dreist.vst3/Contents/Resources" "$clap/Resources" "$app/Resources"; do
-    rm -rf "$r/Geist2" "$r/Dreist"
-    cp -R assets/geist2 "$r/Geist2"
-    cp -R assets/dreist "$r/Dreist"
+    rm -rf "$r/Factory" "$r/Dreist"
+    cp -R assets/factory "$r/Factory"
+    cp -R assets/ui "$r/Dreist"
     rm -f "$r/Dreist/preview.png" "$r/Dreist/AppIcon.png" "$r/Dreist/AppIcon.icns"
 done
 for d in "$out/Dreist.vst3/Contents/Resources" "$clap" "$app"; do

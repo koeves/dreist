@@ -70,7 +70,7 @@ def scenes_page():
               kids=[N("Button", None, (i * 24, 0, 22, 20), displayName=f"Scene bank {i + 1}", style="DefaultButtonStyle",
                       text=str(i + 1)) for i in range(6)])
     bar = N("Panel", None, (0, 0, LW, BAR), pin="lrt", style="BasicPanelStyle", kids=[
-        btn("SnapshotToNextButton", (8, 5, 96, 20), "Snapshot", "Snapshot into the next free scene", flashing=True, pin="lt", id=100028),
+        btn("SnapshotToNextButton", (8, 5, 96, 20), "Snapshot next", "Snapshot into the next free scene", flashing=True, pin="lt", id=100028),
         btn("TriggerPrevSceneButton", (110, 5, 20, 20), "", "Play the previous scene", momentary=False, flashing=True,
             style="ExxLargeIconButtonStyle", pin="lt", id=100028),
         btn("TriggerNextSceneButton", (132, 5, 20, 20), "", "Play the next scene", momentary=False, flashing=True,
@@ -84,7 +84,7 @@ def scenes_page():
     left = N("Panel", None, (0, 0, LW, H), pin="lrtb", style="InvisibleStyle", kids=[bar, grid])
 
     RW = W - LW
-    start = N("ButtonGroup", "StartModeButtonGroup", (0, 0, 192, 23), pin="ct", displayName="When a scene starts",
+    start = N("ButtonGroup", "StartModeButtonGroup", (0, 0, 192, 23), pin="ct", displayName="Start mode",
               id=100003, optIsVertical=False, intLeftSpacing=0, intRightSpacing=0, intTopSpacing=0, intBottomSpacing=3,
               kids=[N("Button", n, (i * 64, 0, 62, 20), displayName=tip, overloadClass="FlashingButton", style="DefaultButtonStyle",
                       text=t, id=1 if i < 2 else None)
@@ -109,9 +109,9 @@ def mapping_page():
     W, H = 700, 500
     bar = N("Panel", "MapControls", (0, 0, W, 26), pin="lr", style="InvisibleStyle", kids=[
         btn("Clear", (3, 3, 62, 20), "Clear All", "Remove every mapping", pin="l", id=100016),
-        btn("Lock", (69, 3, 20, 20), "", "Lock the map", momentary=False, style="ExxLargeIconButtonStyle", pin="l", id=100017),
+        btn("Lock", (69, 3, 20, 20), "", "Lock mappings", momentary=False, style="ExxLargeIconButtonStyle", pin="l", id=100017),
         btn("AddButton", (91, 3, 20, 20), "", "Add a mapping", style="ExxLargeIconButtonStyle", pin="l"),
-        btn("Select", (115, 3, 76, 20), "Follow", "Select the mapping that receives MIDI", momentary=False, pin="l", id=10000),
+        btn("Select", (115, 3, 76, 20), "Auto Select", "Select the mapping that receives MIDI", momentary=False, pin="l", id=10000),
         btn("SendNotesButton", (W - 150, 3, 72, 20), "Send Notes", "Send note data to the host", momentary=False, pin="r", id=100000),
         btn("SendCCButton", (W - 75, 3, 72, 20), "Send CC", "Send CCs to the host as they change", momentary=False, pin="r", id=100001),
     ])

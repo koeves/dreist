@@ -1,5 +1,5 @@
 #!/usr/bin/env python3
-"""Generate Dreist's own UI graphics into assets/dreist.
+"""Generate Dreist's own UI graphics into assets/ui.
 
 Everything here is original drawing for this project (MIT OR Apache-2.0,
 like the rest of the workspace). It replaces the graphics that came with
@@ -8,16 +8,13 @@ the original plugin's resources:
 - Fonts/Dreist-Icons.ttf: the icon font. Same code points (U+E900..U+E92B)
   and meanings as the skins expect, so the .skin captions keep working.
 - Cursors/*.png and Cursors/Cursors.hotspots: the named image cursors.
-- AppIcon.icns (+ AppIcon.png, 1024 px): the macOS app icon, the header's
-  "D" mark on Apple's icon grid (824 px rounded square on a 1024 canvas,
-  continuous corners, drop shadow).
 - Metronomes/: synthesised click sets (scripts/uigen/sounds.py).
 - Skin/: the default stylesheets and colour theme (scripts/uigen/theme.py).
 - preview.png: a contact sheet of both, for review.
 
 Needs: python3, skia-python, fontTools.
 
-    python3 scripts/uigen/uigen.py            # writes assets/dreist
+    python3 scripts/uigen/uigen.py            # writes assets/ui
     python3 scripts/uigen/uigen.py --check    # fails if the output is stale
 
 Icons are drawn on a 16 x 16 grid (y down, centre 8,8, artwork mostly in
@@ -44,7 +41,7 @@ from fontTools.pens.reverseContourPen import ReverseContourPen
 from fontTools.pens.ttGlyphPen import TTGlyphPen
 
 ROOT = os.path.abspath(os.path.join(os.path.dirname(__file__), "..", ".."))
-OUT = os.path.join(ROOT, "assets", "dreist")
+OUT = os.path.join(ROOT, "assets", "ui")
 
 PEN = 2.0  # stroke width in grid units
 
@@ -718,7 +715,7 @@ def hotspots_xml(cur):
 
 # ---------------------------------------------------------------- app icon
 
-# The header logo (geist_gui::render, `geist_logo`) on its 50 x 50 grid.
+# The header logo (dreist_gui::render, `logo_meter`) on its 50 x 50 grid.
 LOGO_STEM = [(9.0, 9.0), (16.0, 9.0), (16.0, 41.0), (9.0, 41.0)]
 LOGO_BOWL = [(18.0, 9.0), (28.0, 9.0), (36.0, 13.0), (41.0, 20.0), (41.0, 30.0), (36.0, 37.0), (28.0, 41.0),
              (18.0, 41.0), (18.0, 34.0), (27.0, 34.0), (32.0, 31.0), (34.0, 27.0), (34.0, 23.0), (32.0, 19.0),
@@ -837,7 +834,6 @@ def outputs():
     files = {"Fonts/Dreist-Icons.ttf": font, "Cursors/Cursors.hotspots": hotspots_xml(cur).encode()}
     for name, (size, fn, _) in cur.items():
         files[f"Cursors/{name}.png"] = render_cursor(size, fn)
-    files["AppIcon.icns"], files["AppIcon.png"] = icns()
     files.update(theme.outputs())
     files.update(sounds.outputs())
     files.update(skins.outputs())

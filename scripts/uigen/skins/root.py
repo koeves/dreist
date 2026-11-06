@@ -55,7 +55,7 @@ def root():
                   N("TabPanel", "EditorTabPanel", (0, 20, MW, ed_h - 20), pin="lrtb", style="TabPanelStyle")]),
               N("Panel", "PadInspector", (0, ed_h + SPLIT, MW, IH - ed_h - SPLIT), pin="lrtb", displayName="SplitterPanel1",
                 overloadClass="PadInspector", style="InvisibleStyle")])])
-    return N("Panel", "BackPanel", (0, 0, W, H), pin="lrtb", id=100002, style="Geist2BackPanelStyle", kids=[
+    return N("Panel", "BackPanel", (0, 0, W, H), pin="lrtb", id=100002, style="BackPanelStyle", kids=[
         N("Panel", "Header", (5, 3, IW, 60), pin="lrt", overloadClass="HeaderBar", style="InvisibleStyle"),
         N("SplitterPanel", "UtilitySplitter", (5, 66, IW, IH), pin="lrtb", style="InvisibleStyle", SplitterPanelStyle="SplitterStyle",
           intSplitPosition=SIDE, intSplitterDim=SPLIT, intMinSize0=250, intMaxSize0=600, optIsVertical=False, optDbClkCollapse1=False,
@@ -107,7 +107,7 @@ def header():
     return N("Panel", "HeaderBar", (0, 0, W, HH), pin="lrt", id=100002, style="InvisibleStyle", kids=[
         menu,
         N("Labeller", None, (5, 5, 66, 50), pin="tb", enumTextPosition="Below", intTextOffset=-1, style="SmallControlLabellerStyle", kids=[
-            N("Panel", "MasterVU", (0, 0, 50, 50), overloadClass="GeistLogo", style="Geist2LogoStyle"),
+            N("Panel", "MasterVU", (0, 0, 50, 50), overloadClass="LogoMeter", style="LogoStyle"),
             N("Slider", "GlobalGain", (54, 0, 12, 50), displayName="Master level", style="SliderStyle", realTrackInset=0.3)]),
         console,
         N("LayoutBox", "EngineSelectors", ((W - sel_w) // 2, 5, sel_w, 50), pin="ctb", id=100002, overloadClass="EditorEngineSelectors",

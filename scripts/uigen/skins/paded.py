@@ -13,11 +13,11 @@ def pads_panel():
              kids=[N("Button", None, (i * 18, 0, 17 if t != "All" else 20, 20), style="TransmodButtonStyle", text=t)
                    for i, t in enumerate(["A", "B", "C", "D", "All"])])
     bar = N("Panel", "PadControl", (0, 0, W, 24), pin="lrt", style="InvisibleStyle", kids=[
-        N("PopupButton", "PadMode", (2, 2, 82, 20), displayName="What the pads play", style="HeaderBarPopupButtonStyle"),
+        N("PopupButton", "PadMode", (2, 2, 82, 20), displayName="Pad mode", style="HeaderBarPopupButtonStyle"),
         bank,
         N("Button", "EraseButton", (190, 2, 20, 20), displayName="Erase: hold a pad to clear its steps", id=100002,
           style="HeaderBarIconButtonStyle", text=""),
-        N("Button", "RepeatButton", (220, 2, 42, 20), displayName="Note repeat", id=100001, style="TransmodButtonStyle", text="Repeat"),
+        N("Button", "RepeatButton", (220, 2, 42, 20), displayName="Note repeat", id=100001, style="TransmodButtonStyle", text="Rpt"),
         btn("RepeatCount", (264, 2, 32, 20), "1/16", "Note repeat rate", style="TransmodButtonStyle", id=100000),
         N("Button", "FullLevelButton", (304, 2, 30, 20), displayName="Fixed velocity", id=100000, style="TransmodButtonStyle", text="Full"),
         N("Knob", "FullLevelKnob", (338, 2, 20, 20), displayName="Fixed velocity", id=100001, style="AltKnobStyle", realDialThickness=0.3),
@@ -77,7 +77,7 @@ def layer_button():
 def inspector():
     W, H = 800, 350
     LW = 120
-    side = N("Panel", None, (0, 0, LW, H), pin="ltb", style="Geist2BackPanelStyle", kids=[
+    side = N("Panel", None, (0, 0, LW, H), pin="ltb", style="BackPanelStyle", kids=[
         N("Panel", None, (0, -5, LW, 60), pin="t", style="InvisibleStyle", kids=[
             N("Panel", "PadSelButton", (0, 0, LW, 60), pin="lr", overloadClass="PadSelectionButton")]),
         N("Button", "ShowSplits", (0, 57, LW, 22), pin="lrt", displayName="Velocity splits and pad options",
@@ -86,7 +86,7 @@ def inspector():
           ScrollViewStyle="InvisibleStyle", TableHeaderPanelStyle="InvisibleStyle", TablePanelStyle="InspectorTableStyle",
           intHeaderHeight=0, intScrollBarDim=10),
     ])
-    return N("Panel", None, (0, 0, W, H), style="Geist2BackPanelStyle", kids=[
+    return N("Panel", None, (0, 0, W, H), style="BackPanelStyle", kids=[
         side,
         N("Panel", "LayerPanel", (LW, 0, W - LW, H), pin="lrtb", overloadClass="LayerPanel", style="LayerPanelStyle"),
         N("Panel", "VelocitySplitPanel", (LW, 0, W - LW, H), pin="lrtb", overloadClass="VelocitySplitPanel", style="InvisibleStyle"),
@@ -170,8 +170,8 @@ def velocity_splits():
                       displayName=f"Link to pad {i + 1}", style="DefaultSmallButtonStyle", text=str(i + 1)) for i in range(64)])
     top = N("Labeller", None, (5, 5, IW, 56), pin="lr", enumTextPosition="Below", intTextOffset=1, style="SmallControlLabellerStyle", kids=[
         N("PopupButton", "SelModeCombo", (0, 10, 128, 20), pin="l", displayName="Layer play mode", style="DefaultPopupButtonStyle"),
-        btn("Insert", (136, 10, 54, 20), "Auto", "Auto split", style="DefaultPopupButtonStyle"),
-        N("Knob", "v2a", (204, 6, 26, 26), displayName="Vel > Amp", style="KnobStyle", realDialThickness=0.3),
+        btn("Insert", (136, 10, 54, 20), "Auto", "Auto V Split", style="DefaultPopupButtonStyle"),
+        N("Knob", "v2a", (204, 6, 26, 26), displayName="V-to-A", style="KnobStyle", realDialThickness=0.3),
         links,
     ])
     return N("Panel", None, (0, 0, W, H), pin="lrtb", style="LayerPanelStyle", kids=[

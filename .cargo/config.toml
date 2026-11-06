@@ -1,2 +1,5 @@
-[alias]
-xtask = "run --package xtask --release --"
+# The editor's tests and examples run under the shared crates' reference
+# profile: point it at this repository's UI and factory data.
+[env]
+DREIST_UI = { value = "assets/ui", relative = true }
+DREIST_RESOURCES = { value = "assets/factory", relative = true }

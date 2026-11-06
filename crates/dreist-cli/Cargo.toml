@@ -1,0 +1,33 @@
+[package]
+name = "dreist-cli"
+edition.workspace = true
+version.workspace = true
+license.workspace = true
+
+[[bin]]
+name = "dreist-inspect"
+path = "src/main.rs"
+
+[dependencies]
+dreist-formats.workspace = true
+dreist-engine.workspace = true
+dreist-dsp.workspace = true
+
+[[bin]]
+name = "dreist-render"
+path = "src/render.rs"
+
+[[bin]]
+name = "dreist-nulltest"
+path = "src/nulltest.rs"
+
+[[bin]]
+name = "dreist-stemfit"
+path = "src/stemfit.rs"
+
+[[bin]]
+name = "dreist-bands"
+path = "src/bands.rs"
+
+[lints]
+workspace = true

@@ -1,10 +1,12 @@
 [workspace]
 resolver = "2"
-members = ["crates/geist-formats", "crates/geist-dsp", "crates/geist-engine", "crates/geist-cli", "crates/geist-plugin", "crates/geist-gui", "crates/geist-editor", "crates/geist-testkit", "xtask"]
+members = ["crates/dreist-cli", "crates/dreist-editor", "crates/dreist-plugin", "xtask"]
+# The commons submodule is its own workspace; its crates are dependencies here.
+exclude = ["commons"]
 
 [workspace.package]
 edition = "2024"
-version = "0.1.0"
+version = "0.1.1"
 license = "MIT OR Apache-2.0"
 
 # The DSP is transcribed from the decompiled original: constants as the
@@ -24,6 +26,13 @@ type_complexity = "allow"
 manual_range_contains = "allow"
 
 [workspace.dependencies]
+# The shared crates: the dreist-commons submodule at `commons`.
+dreist-formats = { path = "commons/crates/dreist-formats" }
+dreist-dsp = { path = "commons/crates/dreist-dsp" }
+dreist-engine = { path = "commons/crates/dreist-engine" }
+dreist-gui = { path = "commons/crates/dreist-gui" }
+dreist-editor = { path = "crates/dreist-editor" }
+dreist-testkit = { path = "commons/crates/dreist-testkit" }
 roxmltree = "0.20"
 thiserror = "2"
 
@@ -35,12 +44,21 @@ strip = false
 [profile.test]
 opt-level = 2
 
-# baseview with a re-entrancy guard (vendor/baseview/src/macos/window.rs):
+# baseview with a re-entrancy guard (dreist-commons vendor/baseview):
 # modal dialogs opened from a mouse event aborted the app.
 [patch."https://github.com/RustAudio/baseview.git"]
-baseview = { path = "vendor/baseview" }
+baseview = { path = "commons/vendor/baseview" }
+
+# nih-plug whose CLAP state load survives corrupt state and asks the host
+# to rescan the parameter values, and whose editor entry points catch
+# panics (dreist-commons vendor/nih-plug).
+[patch."https://github.com/robbert-vdh/nih-plug.git"]
+nih_plug = { path = "commons/vendor/nih-plug" }
 
 # signalsmith-stretch with a fixed phase-randomisation seed
-# (vendor/signalsmith-stretch/src/wrapper.cpp) for reproducible renders.
+# (dreist-commons vendor/signalsmith-stretch) for reproducible renders.
+# softbuffer whose macOS observer class is unique to each plugin binary:
+# two plugins in one host aborted it (dreist-commons vendor/softbuffer).
 [patch.crates-io]
-signalsmith-stretch = { path = "vendor/signalsmith-stretch" }
+signalsmith-stretch = { path = "commons/vendor/signalsmith-stretch" }
+softbuffer = { path = "commons/vendor/softbuffer" }

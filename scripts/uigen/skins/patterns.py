@@ -49,7 +49,7 @@ def toolbar():
         btn("Restart", (54, 0, 52, 20), "Restart", "Start from the top on every trigger", momentary=False)])
     pattern = N("Labeller", None, (58, 6, 222, 38), enumTextPosition="Below", style="SmallControlLabellerStyle", kids=[
         steps,
-        N("PopupButton", "StepLengthCombo", (58, 0, 52, 20), displayName="Step", id=100004, style="DefaultPopupButtonStyle"),
+        N("PopupButton", "StepLengthCombo", (58, 0, 52, 20), displayName="Step Length", id=100004, style="DefaultPopupButtonStyle"),
         play])
     edit = N("Labeller", "EditLabeller", (286, 6, 222, 38), enumTextPosition="Below", style="SmallControlLabellerStyle", kids=[
         sub("Edit", 0, 222, [
@@ -57,11 +57,11 @@ def toolbar():
             btn("RepeatButton", (56, 0, 56, 20), "Duplicate", "Repeat the pattern (or the selection)", id=100007),
             btn("Remix", (114, 0, 52, 20), "Remix", "Remix mode: one step sounds at a time", momentary=False),
             btn("CopyToNext", (168, 0, 54, 20), "Copy", "Copy to the next free pattern")])])
-    tempo = N("Panel", None, (10, 0, 48, 20), displayName="Tempo ratio", style="DefaultButtonStyle", kids=[
-        N("ValueBox", "TempoNum", (2, 0, 18, 20), displayName="Tempo ratio", placeholder="1", optSingleClickEdit=False,
+    tempo = N("Panel", None, (10, 0, 48, 20), displayName="Tempo Modifier", style="DefaultButtonStyle", kids=[
+        N("ValueBox", "TempoNum", (2, 0, 18, 20), displayName="Tempo Modifier", placeholder="1", optSingleClickEdit=False,
           realIncDecRange=1, realMinValue=1, realMaxValue=16, style="InvisibleCenteredEditBoxStyle"),
         N("Label", None, (20, 0, 8, 20), style="SmallControlLabellerStyle", text="/"),
-        N("ValueBox", "TempoDenom", (28, 0, 18, 20), displayName="Tempo ratio", placeholder="1", optSingleClickEdit=False,
+        N("ValueBox", "TempoDenom", (28, 0, 18, 20), displayName="Tempo Modifier", placeholder="1", optSingleClickEdit=False,
           realIncDecRange=1, realMinValue=1, realMaxValue=16, style="InvisibleCenteredEditBoxStyle")])
     engine = N("Labeller", "EngineControls", (W - SEL - 170, 6, 164, 38), pin="r", enumTextPosition="Below",
                style="SmallControlLabellerStyle", kids=[

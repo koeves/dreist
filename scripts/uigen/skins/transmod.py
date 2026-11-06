@@ -5,7 +5,7 @@ A modulator panel is a folding card: a header (menu at the left, the
 retrigger button at the right, any header switches before it), one row of
 knobs, then the modulator's graph filling the rest.  Knob names
 (Control0..) follow the modulator's parameter order in
-geist_formats::params::ModulatorType::params.
+dreist_formats::params::ModulatorType::params.
 """
 
 from . import N, skin
@@ -44,28 +44,28 @@ SYNC = ("Control0", 34, dict(style="DefaultButtonStyle", text="Sync", displayNam
 
 def panels():
     out = {}
-    out["LFO"] = card("LFO", 130, [("Control1", "Rate"), ("Control3", "Phase"), ("Control4", "Level")], header=[SYNC],
+    out["LFO"] = card("LFO", 130, [("Control1", "Freq"), ("Control3", "Phase"), ("Control4", "Level")], header=[SYNC],
                       extra=[N("PopupButton", "Control2", (W - 90, HEAD + 12, 84, 18), pin="r",
-                               style="DefaultPopupButtonStyle", displayName="Wave")])
-    out["MorphingLFO"] = card("MORPH LFO", 130, [("Control1", "Rate"), ("Control3", "Phase"), ("Control2", "Morph"),
+                               style="DefaultPopupButtonStyle", displayName="Shape")])
+    out["MorphingLFO"] = card("MORPHING LFO", 130, [("Control1", "Freq"), ("Control3", "Phase"), ("Control2", "Shape"),
                                                  ("Control4", "Swing"), ("Control5", "Level")], header=[SYNC])
-    out["SampleAndHold"] = card("SAMPLE + HOLD", 130, [("Control1", "Rate"), ("Control3", "Phase"), ("Control2", "Glide"),
+    out["SampleAndHold"] = card("SAMPLE AND HOLD", 130, [("Control1", "Freq"), ("Control3", "Phase"), ("Control2", "Slew"),
                                                        ("Control4", "Level")], header=[SYNC])
-    out["ADEnvelope"] = card("ENVELOPE", 130, [("Control0", "Attack"), ("Control2", "A Shape"), ("Control1", "Decay"),
-                                               ("Control3", "D Shape"), ("Control4", "Level")])
-    out["BouncingBall"] = card("BOUNCE", 130, [("Control0", "Gravity"), ("Control1", "Speed"), ("Control2", "Level")])
-    out["Constant"] = card("CONSTANT", 80, [("Control0", "Value"), ("Control1", "Level")], graph=None)
+    out["ADEnvelope"] = card("AD ENVELOPE", 130, [("Control0", "Attack"), ("Control2", "A Curve"), ("Control1", "Decay"),
+                                               ("Control3", "D Curve"), ("Control4", "Level")])
+    out["BouncingBall"] = card("BOUNCING BALL", 130, [("Control0", "Gravity"), ("Control1", "Speed"), ("Control2", "Level")])
+    out["Constant"] = card("CONSTANT", 80, [("Control0", "Constant"), ("Control1", "Level")], graph=None)
     # Constant has no graph: drop the empty panel the card adds.
     out["Constant"].kids.pop()
 
     # Maths: operator over two sources, gain at the right.
     ops = [N("PopupButton", "Control0", (6, HEAD + 6, W - 64, 18), pin="lr", style="DefaultPopupButtonStyle",
-             displayName="Operation"),
+             displayName="Argument"),
            N("Panel", None, (6, HEAD + 30, W - 64, 18), pin="lr", style="InvisibleStyle", kids=[
                N("PopupButton", "Control1", (0, 0, (W - 64) // 2 - 2, 18), style="DefaultPopupButtonStyle",
-                 displayName="Input A", ARLeft="FNear 0.0000", ARRight="Relative 0.4900"),
+                 displayName="Source 1", ARLeft="FNear 0.0000", ARRight="Relative 0.4900"),
                N("PopupButton", "Control2", ((W - 64) // 2 + 2, 0, (W - 64) // 2 - 2, 18), 
-                 style="DefaultPopupButtonStyle", displayName="Input B", ARLeft="Relative 0.5100", ARRight="FNear 0.0000")])]
+                 style="DefaultPopupButtonStyle", displayName="Source 2", ARLeft="Relative 0.5100", ARRight="FNear 0.0000")])]
     maths = card("MATHS", 130, [], extra=ops)
     lab = maths.kids[2]
     lab.rect = (W - 52, HEAD, 48, ROW_H)
@@ -73,8 +73,8 @@ def panels():
     lab.add(N("TransmodKnob", "Control3", (6, 4, KNOB, KNOB), displayName="Level", style="TransmodStyle"))
     out["Math"] = maths
 
-    seq = card("STEP SEQ", 150, [("Control1", "Steps"), ("Control0", "Rate"), ("Control2", "Glide"), ("Control22", "Level")],
-               header=[("Control5", 26, dict(style="DefaultButtonStyle", text="Trig", displayName="Steps send triggers")),
+    seq = card("MINI SEQUENCER", 150, [("Control1", "Steps"), ("Control0", "Rate"), ("Control2", "Slew"), ("Control22", "Level")],
+               header=[("Control5", 26, dict(style="DefaultButtonStyle", text="TR", displayName="Advance one step per trigger of the selected pads")),
                        ("OptionMenu", 16, dict(style="ExxLargeIconButtonStyle", text="", optIsMomentary=True,
                                                displayName="Step shapes"))],
                extra=[N("Button", "Control3", (W - 56, HEAD + 6, 50, 18), pin="r", style="DefaultButtonStyle", text="Drunk",
@@ -103,8 +103,8 @@ def side_panel():
     ])
 
 
-SOURCES = (["A-Env", "F-Env", "Vel", "Rand"] + [f"S{i}" for i in range(1, 17)] + [f"M{i}" for i in range(1, 5)]
-           + ["Wheel", "Bend", "Press", "Trans"])
+SOURCES = (["A Env", "F Env", "Vel", "Rnd"] + [f"S{i}" for i in range(1, 17)] + [f"M{i}" for i in range(1, 5)]
+           + ["Mod", "Pch", "Pres", "Tpt"])
 
 
 def source_bar():
@@ -140,14 +140,14 @@ def trigger_dialog():
     rows = N("Labeller", None, (20, 6, 320, 436), pin="lrtb", displayName="None", enumTextPosition="Above",
              style="DialogPanelLeftLabellerStyle", kids=[
                  N("Labeller", None, (0, 0, 320, 22), pin="lrt", enumTextPosition="Right", intTextOffset=6,
-                   style="DialogPanelLeftLabellerStyle", kids=[check("TStart", 0, "Restart when the transport starts")]),
-                 N("Labeller", None, (0, 34, 320, 24), pin="lr", displayName="Restart on engine pattern change",
+                   style="DialogPanelLeftLabellerStyle", kids=[check("TStart", 0, "Reset at transport start")]),
+                 N("Labeller", None, (0, 34, 320, 24), pin="lr", displayName="Reset on engine pattern change",
                    enumTextPosition="Right", intTextOffset=6, style="DialogPanelLeftLabellerStyle",
                    kids=[check(f"E{i + 1}", i * 32, str(i + 1)) for i in range(8)]),
                  N("Labeller", None, (0, 66, 320, 28), pin="lrt", enumTextPosition="Right", intTextOffset=6,
                    style="DialogPanelLeftLabellerStyle", kids=[
                        N("PopupButton", "ShowEng", (0, 4, 56, 18), displayName="Engine", style="DefaultPopupButtonStyle")]),
-                 N("Matrix", "Matrix", (0, 116, 320, 320), pin="lrtb", displayName="Pads that restart it",
+                 N("Matrix", "Matrix", (0, 116, 320, 320), pin="lrtb", displayName="Reset on pad(s) in an engine",
                    intNumberOfCols=4, intNumberOfRows=16, optLayoutFromTop=False, style="InvisibleStyle"),
              ])
     return N("AnchorPanel", "Anchor", (0, 0, 350, 450), enumAnchorEdge="ARLeft", intAnchorPoint=160,

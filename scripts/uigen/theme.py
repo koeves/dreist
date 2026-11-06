@@ -1,7 +1,7 @@
 """Dreist's colour palette, fonts and control styles.
 
-Writes assets/dreist/Skin/Styles/Dreist.style/{Colours,Fonts,Styles}.stylesheet
-and assets/dreist/Skin/project.gltinfo. Style and colour *names* are the
+Writes assets/ui/Skin/Styles/Dreist.style/{Colours,Fonts,Styles}.stylesheet
+and assets/ui/Skin/project.gltinfo. Style and colour *names* are the
 interface the skins and the editor code look up; every value is ours.
 
 The look: dark ink chrome around pale paper panels, a cool slate scale in
@@ -90,7 +90,7 @@ COLOURS = [
 
 # ---------------------------------------------------------------- fonts
 
-SANS = "Dreist Sans"  # geist_gui::text: Liberation Sans, sized to fit
+SANS = "Dreist Sans"  # dreist_gui::text: Liberation Sans, sized to fit
 ICONS = "Dreist-Icons"
 
 # name -> (family, size, bold)
@@ -158,12 +158,12 @@ S("TooltipStyle", "ShadowStyle", optDrawShadow="true", enumDisabledDrawMode="Nor
 S("MenuStyle", "CornerRounding5Style", "CtrlOptionMenuStyle", optDrawShadow="true", colFill="ToolTipPanelColour", colBorder="ToolTipBorderColour", colAltFill="EditorAltBrightest", colDivider="PanelMedium", colSubMenuArrow="ToolTipTextColour", colText="ToolTipTextColour", font="Standard")
 
 section("Logo")
-S("Geist2LogoStyle", optDrawBorder="false", enumDisabledDrawMode="NormalDrawing", colFill="EditorAltBrightestAlpha05", colAltFill="PanelBrightestAlpha05")
+S("LogoStyle", optDrawBorder="false", enumDisabledDrawMode="NormalDrawing", colFill="EditorAltBrightestAlpha05", colAltFill="PanelBrightestAlpha05")
 
 section("Panels")
-S("Geist2BackPanelStyle", "ShadowStyle", optDrawBorder="true", colFill="PanelDarkest", colBorder="PanelDarkest")
+S("BackPanelStyle", "ShadowStyle", optDrawBorder="true", colFill="PanelDarkest", colBorder="PanelDarkest")
 S("BasicPanelStyle", "ShadowStyle", optDrawBorder="true", colFill="PanelBrightest", colBorder="PanelBrightest")
-S("SplitterStyle", "Geist2BackPanelStyle", colAltBorder="PanelMedium")
+S("SplitterStyle", "BackPanelStyle", colAltBorder="PanelMedium")
 S("DarkPanelStyle", optDrawBorder="true", colFill="PanelDark", colBorder="PanelDark")
 S("LayerPanelStyle", "BasicPanelStyle", realCornerRounding=R_LARGE, **corners(tl=True))
 S("SidebarPanelStyle", "BasicPanelStyle", realCornerRounding=R_LARGE, **corners(br=True))
@@ -267,7 +267,7 @@ S("VSplitStyle", colFill="EditorAltDarkest", colBorder="PanelBright", colAltFill
 S("LinkPanelStyle", "LayerPanelStyle", colBorder="PanelDarkest")
 
 section("Main tabs")
-S("TabPanelStyle", "Geist2BackPanelStyle", optDrawBorder="true")
+S("TabPanelStyle", "BackPanelStyle", optDrawBorder="true")
 S("TabPanelHeaderStyle", "ShadowStyle", optDrawBorder="true", colFill="PanelDark", colBorder="PanelDark")
 S("TabPanelHeaderLeftStyle", "TabPanelHeaderStyle", realCornerRounding=R_LARGE, **corners(tr=True))
 S("TabPanelHeaderRightStyle", "TabPanelHeaderStyle", realCornerRounding=R_LARGE, **corners(tl=True))
