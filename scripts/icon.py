@@ -1,66 +1,64 @@
 #!/usr/bin/env python3
-"""Dreist's app icon: a geometric blue "D" on a dark rounded square (the same
-style as Einst's icon, which has an amber "E").
+"""Dreist's app icon, from the in-app logo: the header's logo mark (the "D"
+of `dreist_formats::profile::DREIST_LOGO_MARK`, a stem and a bowl, in its
+3 px square frame) in the logo's slate blue on the header's charcoal.
 
 Writes assets/ui/AppIcon.png (1024 px) and, on macOS, assets/ui/AppIcon.icns
-through `iconutil`. No third-party modules; the PNGs are written by hand.
+through `iconutil`. Needs Pillow (`pip install pillow`).
 
     python3 scripts/icon.py
 """
 import os
-import struct
 import subprocess
 import tempfile
-import zlib
+
+from PIL import Image, ImageDraw
 
 ROOT = os.path.join(os.path.dirname(os.path.abspath(__file__)), "..")
 OUT = os.path.join(ROOT, "assets", "ui")
 
-BG = (0x1d, 0x22, 0x2b)
-FG = (0x3d, 0x8b, 0xf0)
+# The header (charcoal) and the logo's colour (its accent at half alpha on it).
+BG = (37, 42, 44)
+MARK = (103, 135, 159)
+
+# DREIST_LOGO_MARK, in the logo's 50×50 box; the frame is 3 px inset 1.5.
+STEM = [(9.0, 9.0), (16.0, 9.0), (16.0, 41.0), (9.0, 41.0)]
+BOWL = [(18.0, 9.0), (28.0, 9.0), (36.0, 13.0), (41.0, 20.0), (41.0, 30.0), (36.0, 37.0), (28.0, 41.0), (18.0, 41.0),
+        (18.0, 34.0), (27.0, 34.0), (32.0, 31.0), (34.0, 27.0), (34.0, 23.0), (32.0, 19.0), (27.0, 16.0), (18.0, 16.0)]
+
+SS = 4  # supersampling
 
 
-def pixel(x, y, n):
-    """RGBA of pixel (x, y) in an n×n icon (coordinates scaled from 1024)."""
-    u, v = x * 1024.0 / n, y * 1024.0 / n
-    # Rounded square with a transparent margin.
-    m, r = 100.0, 180.0
-    cx = min(max(u, m + r), 1024 - m - r)
-    cy = min(max(v, m + r), 1024 - m - r)
-    if (u - cx) ** 2 + (v - cy) ** 2 > r * r:
-        return (0, 0, 0, 0)
-    # "D": a stem and a bowl (half-ellipse ring) of the same weight.
-    if not (280 <= v <= 744):
-        return BG + (255,)
-    if 330 <= u <= 430:
-        return FG + (255,)
-    cx, cy = 470.0, 512.0
-    outer = u <= cx or ((u - cx) / 230.0) ** 2 + ((v - cy) / 232.0) ** 2 <= 1.0
-    inner = 370 < v < 654 and (u <= cx or ((u - cx) / 140.0) ** 2 + ((v - cy) / 142.0) ** 2 < 1.0)
-    return FG + (255,) if 330 <= u and outer and not inner else BG + (255,)
+def icon(n):
+    s = n * SS
+    k = s / 1024.0
+    im = Image.new("RGBA", (s, s), (0, 0, 0, 0))
+    d = ImageDraw.Draw(im)
+    # macOS grid: an 824 px body at 100 px, corner radius 185.
+    d.rounded_rectangle([100 * k, 100 * k, 924 * k, 924 * k], radius=185 * k, fill=BG + (255,))
+    # The 50-unit logo box, 620 px wide, centred.
+    u = 620 * k / 50.0
+    ox = oy = (1024 * k - 50 * u) / 2
 
+    def pt(x, y):
+        return (ox + x * u, oy + y * u)
 
-def png(n):
-    rows = b"".join(b"\x00" + bytes(c for x in range(n) for c in pixel(x, y, n)) for y in range(n))
-
-    def chunk(kind, data):
-        return struct.pack(">I", len(data)) + kind + data + struct.pack(">I", zlib.crc32(kind + data) & 0xFFFFFFFF)
-
-    return b"\x89PNG\r\n\x1a\n" + chunk(b"IHDR", struct.pack(">IIBBBBB", n, n, 8, 6, 0, 0, 0)) + chunk(b"IDAT", zlib.compress(rows, 9)) + chunk(b"IEND", b"")
+    d.rectangle([pt(0, 0), pt(50, 50)], outline=MARK + (255,), width=round(3 * u))
+    d.polygon([pt(*p) for p in STEM], fill=MARK + (255,))
+    d.polygon([pt(*p) for p in BOWL], fill=MARK + (255,))
+    return im.resize((n, n), Image.LANCZOS)
 
 
 def main():
     os.makedirs(OUT, exist_ok=True)
-    with open(os.path.join(OUT, "AppIcon.png"), "wb") as f:
-        f.write(png(1024))
+    icon(1024).save(os.path.join(OUT, "AppIcon.png"))
     with tempfile.TemporaryDirectory() as tmp:
         iconset = os.path.join(tmp, "AppIcon.iconset")
         os.makedirs(iconset)
         for size in (16, 32, 128, 256, 512):
             for scale in (1, 2):
                 name = f"icon_{size}x{size}{'@2x' if scale == 2 else ''}.png"
-                with open(os.path.join(iconset, name), "wb") as f:
-                    f.write(png(size * scale))
+                icon(size * scale).save(os.path.join(iconset, name))
         subprocess.run(["iconutil", "-c", "icns", iconset, "-o", os.path.join(OUT, "AppIcon.icns")], check=True)
 
 
