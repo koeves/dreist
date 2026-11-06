@@ -74,6 +74,9 @@ fn main() {
     }
     if let Ok(f) = std::env::var("DREIST_SLICE") {
         ed.open_slicer(std::path::Path::new(&f));
+        // Let the panel slide in.
+        std::thread::sleep(std::time::Duration::from_millis(400));
+        ed.animate();
     }
     // DREIST_METER_SECS=t: play the project for t seconds and feed the meters.
     if let (Some(path), Some(secs)) = (args.get(1).filter(|s| !s.is_empty()), std::env::var("DREIST_METER_SECS").ok().and_then(|v| v.parse::<f32>().ok())) {
