@@ -1023,7 +1023,7 @@ dependencies = [
 
 [[package]]
 name = "dreist-dsp"
-version = "0.1.0"
+version = "0.1.1"
 dependencies = [
  "rustfft",
  "signalsmith-stretch",
@@ -1043,7 +1043,7 @@ dependencies = [
 
 [[package]]
 name = "dreist-engine"
-version = "0.1.0"
+version = "0.1.1"
 dependencies = [
  "dreist-dsp",
  "dreist-formats",
@@ -1053,7 +1053,7 @@ dependencies = [
 
 [[package]]
 name = "dreist-formats"
-version = "0.1.0"
+version = "0.1.1"
 dependencies = [
  "roxmltree",
  "thiserror 2.0.21",
@@ -1061,7 +1061,7 @@ dependencies = [
 
 [[package]]
 name = "dreist-gui"
-version = "0.1.0"
+version = "0.1.1"
 dependencies = [
  "baseview",
  "dreist-formats",
@@ -1093,7 +1093,7 @@ dependencies = [
 
 [[package]]
 name = "dreist-testkit"
-version = "0.1.0"
+version = "0.1.1"
 
 [[package]]
 name = "either"
