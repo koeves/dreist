@@ -59,6 +59,9 @@ pub struct PatternPanel {
     marker_drag: Option<(usize, f32, bool)>,
     /// Drag Edits value carried between presses (starts at 1).
     brush_value: f32,
+    /// The Insert pattern a right click picked while drawing a series
+    /// (none: every step on).
+    series: Option<(usize, Vec<bool>)>,
     /// Right-button erase: track and last erased step.
     erase: Option<(usize, usize)>,
     /// Presses drag a duration chain's end (kept between presses).
@@ -104,7 +107,7 @@ pub struct PatternPanel {
     toolbar_menu: Option<Vec<ToolbarAction>>,
     /// `dreist_formats::paths::skin_dir` (factory swing templates live
     /// beside it).
-    resources: std::path::PathBuf,
+    pub(crate) resources: std::path::PathBuf,
     /// Swing menu entries (template paths) while open.
     swing_menu: Option<Vec<std::path::PathBuf>>,
     /// Swing menu › Extract timing from current pattern: the pattern whose
@@ -673,6 +676,7 @@ impl PatternPanel {
             brush: None,
             marker_drag: None,
             brush_value: 1.0,
+            series: None,
             erase: None,
             dur_drag: true,
             grid_w: std::cell::Cell::new(626),
@@ -1393,6 +1397,14 @@ impl PatternPanel {
                 if let Some(r) = self.selection_drag(app, model, &ctx, *kind, track, step, *y, on_now, out) {
                     return r;
                 }
+                // Right clicks while drawing a series with the left button
+                // held cycle the Insert patterns over the drawn steps.
+                if *kind == MouseKind::RightDown {
+                    if let Some(b) = self.brush {
+                        self.cycle_series(&ctx, b, out);
+                        return true;
+                    }
+                }
                 // The step context menu: Alt-right-click, or a plain right
                 // click when the preference swaps them.
                 if *kind == MouseKind::RightDown && crate::options::Options::load().bool("PatternEditorRightClickMode", false) != app.mods.alt {
@@ -1405,6 +1417,7 @@ impl PatternPanel {
                     // the selection (0xc8); otherwise a brush press [re:bf6801].
                     MouseKind::Down => {
                         self.erase = None;
+                        self.series = None;
                         let selected_on = on_now && self.selection.contains(&(track, step));
                         if !self.selection.is_empty() && !selected_on {
                             self.selection.clear();
@@ -1504,6 +1517,9 @@ impl PatternPanel {
                             }
                             let (lo, hi) = (b.last, b.max);
                             self.brush_value = ctx.set_velocity_no_fade(out, track, *y, &mut b, lo, hi, v);
+                        }
+                        if self.series.is_some() {
+                            self.apply_series(&ctx, b, out);
                         }
                         self.brush = Some(b);
                         true
@@ -2107,6 +2123,33 @@ impl PatternPanel {
                 true
             }
             EventAction::None => false,
+        }
+    }
+
+    /// The next Insert pattern for the series being drawn: every step on,
+    /// then each template in turn, then every step on again.
+    fn cycle_series(&mut self, ctx: &StepCtx, b: Brush, out: &mut Vec<Command>) {
+        let templates = crate::patmenu::pattern_templates(&self.resources);
+        let next = match &self.series {
+            None => 0,
+            Some((k, _)) => k + 1,
+        };
+        self.series = templates.into_iter().nth(next).filter(|(_, bits)| !bits.is_empty()).map(|(_, bits)| (next, bits));
+        self.apply_series(ctx, b, out);
+    }
+
+    /// The drawn range `b.min..=b.max` set from the Insert pattern (from
+    /// its first step), or all on.
+    fn apply_series(&self, ctx: &StepCtx, b: Brush, out: &mut Vec<Command>) {
+        let last = (ctx.pat.steps as usize).saturating_sub(1);
+        for (i, k) in (b.min..=b.max.min(last)).enumerate() {
+            // Unconditional: this event's earlier commands are not in
+            // `ctx.pat` yet.
+            if self.series.as_ref().is_none_or(|(_, bits)| bits[i % bits.len()]) {
+                out.push(msg(id::SET_STEP_ON, &ctx.index(b.track, k), &[self.brush_value, 1.0, 0.0]));
+            } else {
+                ctx.note_off(out, b.track, k, false);
+            }
         }
     }
 

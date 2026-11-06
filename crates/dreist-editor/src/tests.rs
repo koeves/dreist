@@ -3858,3 +3858,43 @@ fn slicer_auto_load_extracts_every_change() {
     assert!(!ed.take_commands().is_empty());
     let _ = std::fs::remove_dir_all(dir);
 }
+
+#[test]
+fn right_clicks_while_drawing_cycle_the_insert_patterns() {
+    use dreist_gui::app::MouseKind;
+    let Ok(mut ed) = Editor::new(dreist_gui::skin::default_theme(), Model::new(project::new_document())) else { return };
+    let grid = ed.app.root.path_of("PatternGrid").unwrap();
+    let lay = ed.pattern.as_ref().and_then(|p| p.layout(&ed.app, &ed.model)).unwrap();
+    let templates = crate::patmenu::pattern_templates(&ed.pattern.as_ref().unwrap().resources);
+    assert!(!templates.is_empty());
+    let mouse =
+        |ed: &mut Editor, kind: MouseKind, step: usize| ed.handle(&UiEvent::Mouse { path: grid.clone(), overload: "PatternGrid".into(), kind, x: lay.step_x(step) + 2.0, y: lay.row_y(0) + 3.0 });
+    mouse(&mut ed, MouseKind::Down, 0);
+    mouse(&mut ed, MouseKind::Drag, 7);
+    ed.take_commands();
+    let steps = |ed: &mut Editor| {
+        let mut on = [None; 8];
+        for c in ed.take_commands() {
+            if let Command::Message(m) = c {
+                if m.index[5] < 8 && (m.kind == dreist_engine::binding::id::SET_STEP_ON || m.kind == dreist_engine::binding::id::SET_STEP_OFF) {
+                    on[m.index[5] as usize] = Some(m.kind == dreist_engine::binding::id::SET_STEP_ON);
+                }
+            }
+        }
+        on
+    };
+    // First right click: the first template over the drawn steps.
+    mouse(&mut ed, MouseKind::RightDown, 7);
+    let bits = &templates[0].1;
+    let want: Vec<Option<bool>> = (0..8).map(|i| Some(bits[i % bits.len()])).collect();
+    assert_eq!(steps(&mut ed).to_vec(), want);
+    assert!(ed.app.menu.is_none(), "no context menu while drawing");
+    // Past the last template: every step on again.
+    for _ in 1..templates.len() {
+        mouse(&mut ed, MouseKind::RightDown, 7);
+    }
+    ed.take_commands();
+    mouse(&mut ed, MouseKind::RightDown, 7);
+    assert_eq!(steps(&mut ed), [Some(true); 8]);
+    mouse(&mut ed, MouseKind::Up, 7);
+}
