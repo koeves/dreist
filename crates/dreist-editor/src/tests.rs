@@ -2727,6 +2727,74 @@ fn effect_panels_fold_on_header_double_click() {
 }
 
 #[test]
+fn effect_header_drag_moves_the_effect() {
+    let Ok(mut ed) = Editor::new(dreist_gui::skin::default_theme(), Model::new(project::new_document())) else { return };
+    // The engine's chain: a factory chain preset with two effects or more.
+    let res = dreist_formats::paths::skin_dir();
+    let Some(chain) = fxchain::chain_presets(&res).iter().filter_map(|p| fxchain::load_chain(p)).find(|c| c.children.iter().filter(|e| e.class == "Effect").count() >= 2) else { return };
+    let eng = ed.model.engine_mut(0);
+    eng.children.retain(|c| c.class != "EffectChain");
+    eng.children.push(chain);
+    // The global mixer in Effects mode shows the engine's chain.
+    ed.model.editor_tab = 5;
+    ed.sync();
+    fn find(c: &Ctrl, path: &mut Vec<usize>, f: &dyn Fn(&Ctrl) -> bool) -> bool {
+        for (i, k) in c.children.iter().enumerate() {
+            if !k.visible {
+                continue;
+            }
+            path.push(i);
+            if f(k) || find(k, path, f) {
+                return true;
+            }
+            path.pop();
+        }
+        false
+    }
+    let mut mg = Vec::new();
+    assert!(find(&ed.app.root, &mut mg, &|k| k.name == "ModeGroup"));
+    mg.push(ed.app.ctrl(&mg).unwrap().children.len() - 1);
+    ed.handle(&UiEvent::Clicked { path: mg, name: "x".into(), id: 0, on: true });
+    ed.sync();
+    fn panels(c: &Ctrl, path: &mut Vec<usize>, out: &mut Vec<Vec<usize>>) {
+        if c.attr("fxSlot").is_some() {
+            out.push(path.clone());
+            return;
+        }
+        for (i, k) in c.children.iter().enumerate() {
+            path.push(i);
+            panels(k, path, out);
+            path.pop();
+        }
+    }
+    let mut ps = Vec::new();
+    panels(&ed.app.root, &mut Vec::new(), &mut ps);
+    let visible = |ed: &Editor, p: &[usize]| (1..=p.len()).all(|n| ed.app.ctrl(&p[..n]).is_some_and(|c| c.visible));
+    ps.retain(|p| visible(&ed, p));
+    assert!(ps.len() >= 2, "the chain's panels");
+    let (p0, p1) = (ps[0].clone(), ps[1].clone());
+    let kinds = |ed: &Editor| fxchain::effects(&ed.model, fxchain::Target::Engine(0)).iter().map(|(_, k, _)| *k).collect::<Vec<_>>();
+    let before = kinds(&ed);
+    // Drag the first header onto the right half of the second panel.
+    let (ox, oy) = ed.app.origin(&p0);
+    let (qx, _) = ed.app.origin(&p1);
+    let w1 = ed.app.ctrl(&p1).unwrap().rect.w as f32;
+    ed.app.mouse_move(ox as f32 + 100.0, oy as f32 + 5.0);
+    for e in ed.app.mouse_down(dreist_gui::app::MouseButton::Left) {
+        ed.handle(&e);
+    }
+    for e in ed.app.mouse_move(qx as f32 + w1 - 20.0, oy as f32 + 60.0) {
+        ed.handle(&e);
+    }
+    for e in ed.app.mouse_up(dreist_gui::app::MouseButton::Left) {
+        ed.handle(&e);
+    }
+    let after = kinds(&ed);
+    assert_eq!(after[0], before[1]);
+    assert_eq!(after[1], before[0]);
+}
+
+#[test]
 fn scene_panel_pattern_selectors() {
     let p = demo("Presets/Hollow.geist");
     let Ok(proj) = dreist_formats::Project::load(&p) else { return };

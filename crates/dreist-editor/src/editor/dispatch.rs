@@ -450,6 +450,18 @@ impl Editor {
             self.collapse_notification(path, *iconic, *end);
             return;
         }
+        // An effect header's drag grip covers the panel header: a double
+        // click on it folds the panel as one on the header does.
+        if let UiEvent::DoubleClicked { path, .. } = ev {
+            if self.app.ctrl(path).is_some_and(|c| c.overload == "EffectHeaderGrip") {
+                let panel = path[..path.len() - 1].to_vec();
+                let iconic = self.app.ctrl(&panel).is_some_and(|c| !dreist_gui::collapse::is_iconic(c));
+                for e in self.app.fold(&panel, iconic) {
+                    self.handle(&e);
+                }
+                return;
+            }
+        }
         // Splitter moves are layout only; the finished position is saved
         // under the splitter's `strAutoSaveName`.
         if let UiEvent::Split { path, pos, end } = ev {

@@ -39,6 +39,9 @@ def card():
         N("Button", "EffectTypeCombo", (3, 3, 16, 16), pin="lt", text="", displayName="Choose effect", id=100002, **icon),
         N("Button", "LastPresetButton", (W - 30, 3, 13, 16), pin="lr", text="", displayName="Previous preset", id=100000, **icon),
         N("Button", "NextPresetButton", (W - 16, 3, 13, 16), pin="lr", text="", displayName="Next preset", id=100001, **icon),
+        # The header between the buttons: drag it left or right to move the
+        # effect in the chain.
+        N("Panel", "HeaderGrip", (21, 0, W - 53, 22), pin="lrt", overloadClass="EffectHeaderGrip", style="InvisibleStyle"),
         column,
         N("Panel", "EffectPanel", (41, 22, 210, Hc - 22), pin="lrtb", id=100012, style="InvisibleStyle"),
         N("Button", "ActiveButton", (3, Hc - 20, 34, 17), displayName="Effect on/off", id=100006, style="DefaultButtonStyle", text="On"),

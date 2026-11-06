@@ -4,6 +4,7 @@
         <CtrlButton name="EffectTypeCombo" rect="3, 3, 16, 16" ARLeft="FNear 3.0000" ARTop="FNear 3.0000" displayName="Choose effect" id="100002" optIsMomentary="true" style="DefaultIconButtonStyle" text="" />
         <CtrlButton name="LastPresetButton" rect="222, 3, 13, 16" ARLeft="FNear 222.0000" ARRight="FNear 17.0000" displayName="Previous preset" id="100000" optIsMomentary="true" style="DefaultIconButtonStyle" text="" />
         <CtrlButton name="NextPresetButton" rect="236, 3, 13, 16" ARLeft="FNear 236.0000" ARRight="FNear 3.0000" displayName="Next preset" id="100001" optIsMomentary="true" style="DefaultIconButtonStyle" text="" />
+        <CtrlPanel name="HeaderGrip" rect="21, 0, 199, 22" ARLeft="FNear 21.0000" ARRight="FNear 32.0000" ARTop="FNear 0.0000" overloadClass="EffectHeaderGrip" style="InvisibleStyle" />
         <CtrlLabeller name="SetupPanel" rect="0, 22, 40, 136" ARLeft="FNear 0.0000" ARTop="FNear 22.0000" ARBottom="FNear 24.0000" enumTextPosition="Below" id="100001" intTextOffset="0" style="SmallControlLabellerStyle">
             <CtrlTransmodKnob name="TrimKnob" rect="5, 2, 30, 30" displayName="In" id="100005" style="TransmodStyle" />
             <CtrlTransmodKnob name="MixKnob" rect="5, 46, 30, 30" displayName="Mix" id="100004" style="TransmodStyle" />

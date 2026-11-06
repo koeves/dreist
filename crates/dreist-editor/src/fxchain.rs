@@ -357,6 +357,30 @@ pub(crate) fn effects(model: &Model, t: Target) -> Vec<(usize, usize, Node)> {
     v
 }
 
+/// Move the effect at position `from` of `order` (the chain's slots in
+/// order) to before position `to`: the effects keep the slot numbers in
+/// order. False when nothing moves.
+fn move_effect(chain: &mut Node, order: &[usize], from: usize, to: usize) -> bool {
+    if from >= order.len() || to == from || to == from + 1 {
+        return false;
+    }
+    let mut moved: Vec<usize> = order.to_vec();
+    let s = moved.remove(from);
+    moved.insert(if to > from { to - 1 } else { to }, s);
+    // Effect `moved[i]` takes slot `order[i]`.
+    let name = |s: usize| format!("Effect{s}");
+    let mut nodes: Vec<Node> = moved.iter().filter_map(|s| chain.children.iter().find(|c| c.class == "Effect" && c.name.as_deref() == Some(&name(*s))).cloned()).collect();
+    if nodes.len() != order.len() {
+        return false;
+    }
+    chain.children.retain(|c| !(c.class == "Effect" && c.name.as_deref().is_some_and(|n| order.iter().any(|s| name(*s) == n))));
+    for (n, s) in nodes.iter_mut().zip(order) {
+        n.name = Some(name(*s));
+    }
+    chain.children.extend(nodes);
+    true
+}
+
 pub struct FxPanel {
     host: Vec<usize>,
     chain_tpl: Option<Ctrl>,
@@ -853,6 +877,32 @@ impl FxPanel {
                 }
                 return true;
             }
+            // An effect's header dragged left or right: the effect moves in
+            // the chain.
+            UiEvent::Dropped { from, to, x, .. } if from.starts_with(&self.host) && app.ctrl(from).is_some_and(|c| c.overload == "EffectHeaderGrip") => {
+                let Some((slot, _)) = self.slot_of(app, from) else { return false };
+                if !to.starts_with(&self.host) {
+                    return false;
+                }
+                // The panel dropped on: before it in its left half, after
+                // it in its right half; past the effects: the end.
+                let target = (self.host.len()..=to.len()).rev().find_map(|n| {
+                    let c = app.ctrl(&to[..n])?;
+                    let s: usize = c.attr("fxSlot")?.parse().ok()?;
+                    let (ox, _) = app.origin(&to[..n]);
+                    Some((s, *x >= ox as f32 + c.rect.w as f32 / 2.0))
+                });
+                let order: Vec<usize> = effects(model, t).iter().map(|(s, ..)| *s).collect();
+                let Some(from_i) = order.iter().position(|s| *s == slot) else { return false };
+                let to_i = match target {
+                    Some((s, after)) => order.iter().position(|o| *o == s).map_or(order.len(), |i| i + after as usize),
+                    None => order.len(),
+                };
+                if move_effect(Self::chain_mut(model, t), &order, from_i, to_i) {
+                    out.push(model.rebuild_command());
+                }
+                return true;
+            }
             // Right press on an effect panel's background: Cut / Copy /
             // Paste ([re:a86ca5]; not over
             // its controls); on an empty slot's Add button: Paste
@@ -988,6 +1038,27 @@ pub fn fold_controls(panel: &mut Ctrl, show: bool) {
 #[cfg(test)]
 mod tests {
     use super::*;
+
+    #[test]
+    fn effects_move_in_the_chain() {
+        let mut chain = Node::new("EffectChain", None);
+        for (s, k) in [(0, "A"), (1, "B"), (3, "C")] {
+            let mut n = Node::new("Effect", Some(&format!("Effect{s}")));
+            n.set("Tag", k);
+            chain.children.push(n);
+        }
+        let tags = |c: &Node| {
+            let mut v: Vec<(String, String)> = c.children.iter().map(|n| (n.name.clone().unwrap(), n.attr("Tag").unwrap().to_string())).collect();
+            v.sort();
+            v.into_iter().map(|(_, t)| t).collect::<String>()
+        };
+        // A to the end, then C to the front.
+        assert!(move_effect(&mut chain, &[0, 1, 3], 0, 3));
+        assert_eq!(tags(&chain), "BCA");
+        assert!(move_effect(&mut chain, &[0, 1, 3], 1, 0));
+        assert_eq!(tags(&chain), "CBA");
+        assert!(!move_effect(&mut chain, &[0, 1, 3], 1, 2), "onto its own place");
+    }
 
     #[test]
     fn categories_and_presets() {
