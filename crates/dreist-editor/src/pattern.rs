@@ -1090,7 +1090,10 @@ impl PatternPanel {
             }
             // Scale [re:23318b] / compress [re:f1235c] /
             // randomise [re:2a1033]: applied to the lane values copied
-            // when the knob started moving, posted as 0xd6 per step.
+            // when the knob started moving, posted as 0xd6 per step
+            // without the edit flag, so only the graph's own track
+            // changes; when that track has selected steps
+            // ([re:4fe819]) only those.
             UiEvent::ValueChanged { name, value, .. } if matches!(name.as_str(), "ScaleKnob" | "CompKnob" | "RandKnob" | "VarianceKnob") => {
                 let track = model.pad[e];
                 let lane = model.pattern_view[e].lane;
@@ -1217,9 +1220,13 @@ impl PatternPanel {
                             let rect = dreist_gui::Rect::new(kc.rect.x - 10, kc.rect.y + kc.rect.h / 2 - 9, kc.rect.w + 20, 18);
                             app.open_edit_box(&kp[..kp.len() - 1], SWING_EDIT, rect, format!("{:.0}%", kc.value * 100.0));
                         }
+                let only_selected = self.selection.iter().any(|&(t, _)| t == track);
                         _ => return false,
                     }
                     let _ = anchor;
+                    if only_selected && !self.selection.contains(&(track, st)) {
+                        continue;
+                    }
                     return true;
                 }
                 match *index {

@@ -4017,3 +4017,34 @@ fn tools_menu_toggles_save_samples_with_presets() {
     assert!(!project::embed_samples());
     assert_eq!(open(&mut ed).last().map(String::as_str), Some("Save samples with presets"));
 }
+
+#[test]
+fn graph_knobs_act_on_the_tracks_selected_steps() {
+    let Some(mut ed) = demo_editor("Presets/Hollow.geist") else { return };
+    if let Some(pp) = ed.pattern.as_mut() {
+        pp.multi = false;
+    }
+    ed.sync();
+    let e = ed.model.engine;
+    let t = ed.model.pad[e];
+    let other = (t + 1) % 16;
+    let vel = |ed: &Editor, tr: usize, st: usize| ed.model.pattern(e, ed.model.current_pattern(e)).tracks[tr].steps[st].lanes[0];
+    let before = [vel(&ed, t, 0), vel(&ed, t, 1), vel(&ed, t, 2), vel(&ed, other, 0)];
+    let ac = ed.app.root.path_of("SingleAutoControl").unwrap();
+    let knob = [ac.clone(), (ed.app.ctrl(&ac).unwrap()).path_of("ScaleKnob").unwrap()].concat();
+    // The graph's track has selected steps: only those move; another
+    // track's selection is not touched (no edit flag).
+    ed.pattern.as_mut().unwrap().selection = [(t, 0), (t, 2), (other, 0)].into_iter().collect();
+    ed.handle(&UiEvent::ValueChanged { path: knob, name: "ScaleKnob".into(), id: 0, value: 0.25 });
+    assert!((vel(&ed, t, 0) - (before[0] - 0.5).clamp(0.0, 1.0)).abs() < 1e-4);
+    assert!((vel(&ed, t, 2) - (before[2] - 0.5).clamp(0.0, 1.0)).abs() < 1e-4);
+    assert_eq!(vel(&ed, t, 1), before[1], "unselected step of the track");
+    assert_eq!(vel(&ed, other, 0), before[3], "selected step of another track");
+    // Without a selection on the track every step moves (Comp fully up:
+    // velocity's target, 1).
+    ed.pattern.as_mut().unwrap().selection = [(other, 0)].into_iter().collect();
+    let comp = [ac.clone(), (ed.app.ctrl(&ac).unwrap()).path_of("CompKnob").unwrap()].concat();
+    ed.handle(&UiEvent::ValueChanged { path: comp, name: "CompKnob".into(), id: 0, value: 1.0 });
+    assert_eq!(vel(&ed, t, 1), 1.0);
+    assert_eq!(vel(&ed, other, 0), before[3]);
+}
