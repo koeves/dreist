@@ -6,7 +6,8 @@
 //! (`a;b` clicks a, then b; `DREIST_SELECT_ALL=1` first selects every step);
 //! `DREIST_RIGHT=1` right-clicks it instead, `DREIST_MENU=a|b` then picks the
 //! open menu's items ending in a, then b (`#3` picks index 3),
-//! `DREIST_HOVER=1` leaves the pointer there and shows its tooltip).
+//! `DREIST_HOVER=1` leaves the pointer there and shows its tooltip;
+//! `DREIST_SIZE=WxH` resizes the window to W x H points first).
 
 use dreist_editor::{Editor, Model};
 
@@ -27,6 +28,9 @@ fn main() {
     }
     if let Some(t) = args.get(6).and_then(|s| s.parse().ok()) {
         ed.model.source = t;
+    }
+    if let Some((w, h)) = std::env::var("DREIST_SIZE").ok().and_then(|v| v.split_once('x').and_then(|(w, h)| Some((w.trim().parse().ok()?, h.trim().parse().ok()?)))) {
+        ed.app.resize(w, h);
     }
     if let Ok(mode) = std::env::var("DREIST_PAD_MODE") {
         let e = ed.model.engine;
