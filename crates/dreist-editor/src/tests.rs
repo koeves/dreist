@@ -3213,17 +3213,18 @@ fn utility_splitter_drags_and_collapses() {
     let c = ed.app.ctrl(&sp).unwrap();
     let p0 = c.children.iter().find(|k| k.display_name == "SplitterPanel0").unwrap();
     assert_eq!(p0.rect.w, start + 50);
-    // Clamped at intMaxSize0 = 600.
+    // Clamped where the main column keeps its 832 px (1390 − 8 − 832; in
+    // a wider window, at intMaxSize0 = 600).
     std::thread::sleep(std::time::Duration::from_millis(450));
     let bx = bx + 50.0;
     ed.app.mouse_move(bx, by);
     ed.app.mouse_down(MouseButton::Left);
     ed.app.mouse_move(bx + 900.0, by);
     ed.app.mouse_up(MouseButton::Left);
-    assert_eq!(dreist_gui::splitter::position(ed.app.ctrl(&sp).unwrap()), 600);
+    assert_eq!(dreist_gui::splitter::position(ed.app.ctrl(&sp).unwrap()), 550);
     // A double click collapses panel 0 (optDbClkCollapse1 false), animated.
     std::thread::sleep(std::time::Duration::from_millis(450));
-    let bx = (ox + 600 + bar.w / 2) as f32;
+    let bx = (ox + 550 + bar.w / 2) as f32;
     ed.app.mouse_move(bx, by);
     for _ in 0..2 {
         ed.app.mouse_down(MouseButton::Left);

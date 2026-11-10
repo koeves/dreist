@@ -43,6 +43,7 @@ def root():
                  N("Panel", "PadsPanel", (0, util_h + SPLIT, SIDE, IH - util_h - SPLIT), pin="lrtb", displayName="SplitterPanel1",
                    overloadClass="EditorPads", style="InvisibleStyle")])
     MW = IW - SIDE - SPLIT
+    MAIN_MIN = 1150 - 10 - SIDE - SPLIT
     ed_h = 372
     editor_tabs = [(0, "PATTERN", False), (3, "LAYER MIXER", False), (4, "PAD MIXER", False), (5, "GLOBAL MIXER", False),
                    (1, "SCENES", False), (2, "SONG", False), (6, "MAPPING", True)]
@@ -57,9 +58,14 @@ def root():
                 overloadClass="PadInspector", style="InvisibleStyle")])])
     return N("Panel", "BackPanel", (0, 0, W, H), pin="lrtb", id=100002, style="BackPanelStyle", kids=[
         N("Panel", "Header", (5, 3, IW, 60), pin="lrt", overloadClass="HeaderBar", style="InvisibleStyle"),
+        # The main column keeps the room it has in the smallest window
+        # (1150 wide) beside the default left column: the editor tabs, the
+        # pattern toolbar and the inspector are laid out for it, so a wider
+        # left column takes only what a larger window has to spare (it
+        # pushed the main column under them, or off a host's frame).
         N("SplitterPanel", "UtilitySplitter", (5, 66, IW, IH), pin="lrtb", style="InvisibleStyle", SplitterPanelStyle="SplitterStyle",
-          intSplitPosition=SIDE, intSplitterDim=SPLIT, intMinSize0=250, intMaxSize0=600, optIsVertical=False, optDbClkCollapse1=False,
-          strAutoSaveName="utilitySplitAS", kids=[side, main]),
+          intSplitPosition=SIDE, intSplitterDim=SPLIT, intMinSize0=250, intMaxSize0=600, intMinSize1=MAIN_MIN, optSnapCollapse1=False,
+          optIsVertical=False, optDbClkCollapse1=False, strAutoSaveName="utilitySplitAS", kids=[side, main]),
         N("Panel", "TransmodSelectPanel", (5, H - 35, IW, 35), pin="lrb", overloadClass="TransmodButtonPanel", style="InvisibleStyle"),
     ])
 
