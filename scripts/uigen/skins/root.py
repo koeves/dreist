@@ -66,51 +66,53 @@ def root():
 
 def header():
     HH = 60
-    menu = N("Panel", "Menu", (76, 3, 200, 15), style="InvisibleStyle", kids=[
+    menu = N("Panel", "Menu", (75, 3, 200, 15), style="InvisibleStyle", kids=[
         btn("LoadButton", (0, 0, 40, 15), "File", None, style="HeaderBarMenuButtonStyle", pin="tb", zorder=10),
-        btn("ToolButton", (44, 0, 48, 15), "Tools", None, style="HeaderBarMenuButtonStyle", pin="tb", zorder=10),
-        btn("HelpButton", (96, 0, 46, 15), "Help", None, style="HeaderBarMenuButtonStyle", pin="tb", zorder=10),
-        *[N("Label", "DropArrowLabel", (x, 3, 10, 10), style="HeaderBarMenuDropButtonStyle", text="▾") for x in (26, 78, 128)],
+        btn("ToolButton", (42, 0, 50, 15), "Tools", None, style="HeaderBarMenuButtonStyle", pin="tb", zorder=10),
+        btn("HelpButton", (94, 0, 50, 15), "Help", None, style="HeaderBarMenuButtonStyle", pin="tb", zorder=10),
+        *[N("Label", "DropArrowLabel", (x, 3, 10, 10), style="HeaderBarMenuDropButtonStyle", text="▼") for x in (22, 74, 123)],
     ])
-    console = N("Panel", "PresetPanel", (76, 20, 200, 35), pin="b", id=100002, style="HeaderBarConsoleStyle", kids=[
-        N("Label", None, (3, 2, 40, 15), id=100002, style="HeaderBarConsoleTextStyle", text="PRESET"),
-        N("Label", "PresetLabel", (44, 2, 98, 15), pin="r", id=100002, style="HeaderBarPresetStyle", text=""),
-        N("Button", "VoiceIndi", (144, 2, 12, 15), id=100002, style="HeaderBarIconIndicatorStyle", text=""),
+    console = N("Panel", "PresetPanel", (75, 20, 200, 35), pin="b", id=100002, style="HeaderBarConsoleStyle", kids=[
+        N("Label", None, (2, 2, 44, 15), id=100002, style="HeaderBarConsoleTextStyle", text="PRESET:"),
+        # Liberation Sans sets "PRESET:" a few px wider than the original's
+        # 40 px label: the name starts 3 px later.
+        N("Label", "PresetLabel", (46, 2, 96, 15), pin="r", id=100002, style="HeaderBarPresetStyle", text=""),
+        N("Button", "VoiceIndi", (145, 2, 12, 15), id=100002, style="HeaderBarIconIndicatorStyle", text=""),
         N("TempoBox", "BPMTextBox", (156, 2, 42, 15), displayName="Tempo", id=100002, style="HeaderBarConsoleRightTextStyle"),
-        N("Label", None, (3, 17, 30, 15), id=100002, style="HeaderBarConsoleTextStyle", text="KIT"),
-        N("Label", "KitLabel", (34, 17, 108, 15), pin="r", id=100002, style="HeaderBarPresetStyle", text=""),
-        N("Button", "MIDIIndi", (144, 17, 12, 15), id=100002, style="HeaderBarIconIndicatorStyle", text=""),
-        N("Label", "MemoryUsageBox", (156, 17, 42, 15), id=100002, style="HeaderBarConsoleRightTextStyle", text=""),
+        N("Label", None, (2, 17, 22, 15), id=100002, style="HeaderBarConsoleTextStyle", text="KIT:"),
+        N("Label", "KitLabel", (26, 17, 116, 15), pin="r", id=100002, style="HeaderBarPresetStyle", text=""),
+        N("Button", "MIDIIndi", (145, 17, 12, 15), id=100002, style="HeaderBarIconIndicatorStyle", text=""),
+        N("Label", "MemoryUsageBox", (158, 17, 40, 15), id=100002, style="HeaderBarConsoleRightTextStyle", text=""),
     ])
     hb = dict(style="HeaderBarIconButtonStyle")
     # Transport: two rows of 24 px buttons.
     r1, r2 = 0, 26
-    transport = N("Panel", "Transport", (W - 252, 5, 250, 50), pin="rtb", id=100002, style="InvisibleStyle", kids=[
+    transport = N("Panel", "Transport", (W - 250, 5, 250, 50), pin="rtb", id=100002, style="InvisibleStyle", kids=[
         N("Button", "PlayButton", (0, r1, 36, 24), displayName="Play", id=100002, style="PlayButtonStyle", text=""),
         N("Button", "RecButton", (38, r1, 36, 24), displayName="Record", id=100003, style="RecordButtonStyle", text=""),
         btn("RetroButton", (76, r1, 36, 24), "", "Capture what you just played", style="RecordButtonStyle", id=100002),
         N("Button", "SongButton", (117, r1, 50, 24), displayName="Song mode", id=100000, style="HeaderBarButtonStyle", text="Song"),
         btn("UndoButton", (172, r1, 32, 24), "", "Undo", id=100000, **hb),
-        btn("UndoHistory", (204, r1, 17, 24), "▾", "Undo history", style="HeaderBarUndoRedoDropStyle", id=100000),
-        btn("MetroVolLearnButton", (226, r1, 24, 24), "MV", "Learn metronome level", style="HeaderBarButtonStyle", id=100001),
-        btn("OptionsButton", (226, r1, 24, 24), "", "Transport options", id=100001, **hb),
+        btn("UndoHistory", (203, r1, 18, 24), "▼", "Undo history", style="HeaderBarUndoRedoDropStyle", id=100000),
+        btn("MetroVolLearnButton", (224, r1, 24, 24), "MV", "Learn metronome level", style="HeaderBarButtonStyle", id=100001),
+        btn("OptionsButton", (224, r1, 24, 24), "", "Transport options", id=100001, **hb),
         N("Button", "MetroButton", (0, r2, 36, 24), displayName="Metronome", id=100003, text="", **hb),
         N("Button", "QuantizeButton", (38, r2, 36, 24), displayName="Quantise MIDI input", id=100003, text="", **hb),
         N("Button", "LearnButton", (76, r2, 36, 24), displayName="MIDI learn", text="", **hb),
         N("Button", "LoopButton", (117, r2, 24, 24), displayName="Loop", text="", **hb),
         btn("RestartButton", (143, r2, 24, 24), "", "Back to the start", **hb),
         btn("RedoButton", (172, r2, 32, 24), "", "Redo", id=100001, **hb),
-        btn("RedoHistory", (204, r2, 17, 24), "▾", "Redo history", style="HeaderBarUndoRedoDropStyle", id=100001),
-        btn("PanicButton", (226, r2, 24, 24), "", "Panic: stop everything", id=100001, **hb),
+        btn("RedoHistory", (203, r2, 18, 24), "▼", "Redo history", style="HeaderBarUndoRedoDropStyle", id=100001),
+        btn("PanicButton", (224, r2, 24, 24), "", "Panic: stop everything", id=100001, **hb),
     ])
     sel_w = 8 * 70 + 7 * 3
     return N("Panel", "HeaderBar", (0, 0, W, HH), pin="lrt", id=100002, style="InvisibleStyle", kids=[
         menu,
-        N("Labeller", None, (5, 5, 66, 50), pin="tb", enumTextPosition="Below", intTextOffset=-1, style="SmallControlLabellerStyle", kids=[
+        N("Labeller", None, (5, 5, 65, 50), pin="tb", enumTextPosition="Below", intTextOffset=-1, style="SmallControlLabellerStyle", kids=[
             N("Panel", "MasterVU", (0, 0, 50, 50), overloadClass="LogoMeter", style="LogoStyle"),
-            N("Slider", "GlobalGain", (54, 0, 12, 50), displayName="Master level", style="SliderStyle", realTrackInset=0.3)]),
+            N("Slider", "GlobalGain", (53, 0, 12, 50), displayName="Master level", style="SliderStyle", realTrackInset=0.3)]),
         console,
-        N("LayoutBox", "EngineSelectors", ((W - sel_w) // 2, 5, sel_w, 50), pin="ctb", id=100002, overloadClass="EditorEngineSelectors",
+        N("LayoutBox", "EngineSelectors", ((W - sel_w + 1) // 2, 5, sel_w, 50), pin="ctb", id=100002, overloadClass="EditorEngineSelectors",
           optIsVertical=False, intIntraSpacing=3, intLeftSpacing=0, intRightSpacing=0, intTopSpacing=0, intBottomSpacing=0,
           style="InvisibleStyle"),
         transport,

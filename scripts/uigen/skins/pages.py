@@ -127,16 +127,16 @@ def engine_selector():
     """One engine in the header: a round selector with mute, power and
     solo stacked at its right."""
     W, H = 70, 50
-    d = 42
-    x, y = 6, (H - d) // 2
+    d = 40
+    x, y = 9, (H - d) // 2
     small = lambda n, r, st, text=None, tip=None, **kw: N("Button", n, r, style=st, text=text, displayName=tip, **kw)
     return N("Panel", "CtrlPanel", (0, 0, W, H), style="InvisibleStyle", kids=[
-        small("StateIndicator", (x - 3, y - 3, d + 6, d + 6), "EngineSelectorStateStyle"),
+        small("StateIndicator", (x - 4, y - 4, d + 8, d + 8), "EngineSelectorStateStyle"),
         small("EngineSelectionButton", (x, y, d, d), "EngineSelectorStyle", tip="Select engine", pin="m", id=100001),
         small("EngineVolIndic", (x, y, d, d), "EngineSelectorOverlayStyle", pin="m", id=100001, zorder=555),
         N("Label", "NameLabel", (x, y, d, d), pin="m", id=100001, style="EngineSelectorLabelStyle", text="1", zorder=666),
-        small("EngineMutedIcon", (1, 2, 6, 6), "EngineSelectorMuteIndicatorStyle", id=100000, zorder=555),
-        small("EngineSoloedIcon", (1, H - 8, 6, 6), "EngineSelectorSoloIndicatorStyle", id=100001, zorder=555),
+        small("EngineMutedIcon", (2, 3, 6, 6), "EngineSelectorMuteIndicatorStyle", id=100000, zorder=555),
+        small("EngineSoloedIcon", (2, H - 9, 6, 6), "EngineSelectorSoloIndicatorStyle", id=100001, zorder=555),
         small("MuteButton", (W - 15, 2, 14, 14), "EngineSelectorMButtonStyle", "M", "Mute", pin="t", id=100002, zorder=999),
         small("PatternPower", (W - 15, 18, 14, 14), "EngineSelectorPPButtonStyle", "", "Pattern on/off", pin="m"),
         small("SoloButton", (W - 15, 34, 14, 14), "EngineSelectorSButtonStyle", "S", "Solo", pin="tb", id=100003, zorder=999),
