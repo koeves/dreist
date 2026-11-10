@@ -3,7 +3,7 @@
 #
 #   scripts/build.sh            release build into target/bundled/
 #   scripts/build.sh --debug    debug build
-#   scripts/build.sh --install  also install to ~/Library/Audio/Plug-Ins and ~/Applications
+#   scripts/build.sh --install  also install to ~/Library/Audio/Plug-Ins and /Applications
 #
 # Output: target/bundled/Dreist.vst3, Dreist.clap, Dreist.app
 #
@@ -101,11 +101,11 @@ fi
 
 if [ "$install" = 1 ]; then
     echo "==> Installing"
-    mkdir -p "$HOME/Library/Audio/Plug-Ins/VST3" "$HOME/Library/Audio/Plug-Ins/CLAP" "$HOME/Applications"
-    rm -rf "$HOME/Library/Audio/Plug-Ins/VST3/Dreist.vst3" "$HOME/Library/Audio/Plug-Ins/CLAP/Dreist.clap" "$HOME/Applications/Dreist.app"
+    mkdir -p "$HOME/Library/Audio/Plug-Ins/VST3" "$HOME/Library/Audio/Plug-Ins/CLAP"
+    rm -rf "$HOME/Library/Audio/Plug-Ins/VST3/Dreist.vst3" "$HOME/Library/Audio/Plug-Ins/CLAP/Dreist.clap" "/Applications/Dreist.app"
     cp -R "$out/Dreist.vst3" "$HOME/Library/Audio/Plug-Ins/VST3/"
     cp -R "$out/Dreist.clap" "$HOME/Library/Audio/Plug-Ins/CLAP/"
-    cp -R "$app" "$HOME/Applications/"
+    cp -R "$app" /Applications/
 fi
 
 echo "==> Done"
