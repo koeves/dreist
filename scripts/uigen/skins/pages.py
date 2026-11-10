@@ -26,7 +26,7 @@ def song_page():
     ])
     body_h = H - BAR - 15
     tiny = dict(style="TinyTransparentButtonStyle", id=100000)
-    return N("Panel", "CtrlPanel", (0, 0, W, H), pin="rb", style="TopRightPanelStyle", kids=[
+    return N("Panel", "CtrlPanel", (0, 0, W, H), pin="RB", style="TopRightPanelStyle", kids=[
         bar,
         N("Panel", "TrackHeaderPanel", (0, BAR, 80, body_h), pin="lrtb", id=100003, style="InvisibleStyle"),
         N("ScrollView", "TrackScrollView", (80, BAR, W - 80, body_h), pin="lrtb", id=100001, style="InvisibleStyle"),
