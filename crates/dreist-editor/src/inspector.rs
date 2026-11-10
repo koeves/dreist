@@ -262,6 +262,9 @@ impl Inspector {
                 c.set_rect(Rect::new(0, 0, w, h));
                 sc.children.push(c);
             }
+            // [re:3c0f5e]: the parameter row scrolls sideways.
+            sc.set_attr("scrollAxes", "h".into());
+            dreist_gui::scroll::place(sc);
         }
         // The layer wave display's zoom bar (tagged so the slicer's
         // identically named controls are left alone).
@@ -507,6 +510,7 @@ impl Inspector {
                 let source = model.source;
                 let src = dreist_formats::TransmodSource::ALL.get(source).copied().unwrap_or(dreist_formats::TransmodSource::ActualParameter);
                 let node = model.layer_node(e, p, l);
+                let polar = crate::model::source_bipolar(model, source);
                 fn walk(c: &mut Ctrl, f: &dyn Fn(&mut Ctrl)) {
                     for k in &mut c.children {
                         f(k);
@@ -526,6 +530,7 @@ impl Inspector {
                     let base = model.layer_param(e, p, l, par);
                     match k.class.as_str() {
                         "CtrlTransmodKnob" | "CtrlTransmodSlider" => {
+                            crate::model::mark_modulation(k, crate::model::modulation_mask(node, par.name()) != 0, polar);
                             let depth = src.attr(par.name()).and_then(|a| node.and_then(|n| n.f32(&a))).unwrap_or(0.0);
                             if k.class == "CtrlTransmodKnob" {
                                 crate::model::bind_knob(k, source, base, depth);
@@ -797,8 +802,9 @@ impl Inspector {
                 }
                 let Some(par) = param_for_control(name) else { return false };
                 let is_tm = app.ctrl(path).is_some_and(|c| c.class == "CtrlTransmodKnob");
-                let (src, v) = crate::model::knob_edit(app.ctrl(path), if is_tm { model.source } else { 0 }, *value);
-                out.push(msg(id::SET_LAYER_PARAMETER, &idx, &[par as u8 as f32, v, src as f32]));
+                for (src, v) in crate::model::knob_edits(app.ctrl(path), if is_tm { model.source } else { 0 }, *value) {
+                    out.push(msg(id::SET_LAYER_PARAMETER, &idx, &[par as u8 as f32, v, src as f32]));
+                }
                 true
             }
             UiEvent::Mouse { path, overload, kind: dreist_gui::app::MouseKind::Down, .. } if overload == "LayerRow" => {

@@ -253,7 +253,9 @@ impl Header {
         };
         set_text(app, "PresetLabel", preset.or_else(|| model.name.clone()).unwrap_or_default());
         set_text(app, "KitLabel", model.engine_node(model.engine).and_then(|n| n.attr("KitName")).unwrap_or("").to_string());
-        set_text(app, "BPMTextBox", format!("{tempo:.2}"));
+        // [re:b0c3e9]: the tempo box shows 20..250 (`SetTempo` clamps).
+        let (lo, hi) = dreist_gui::v2ctl::TEMPO_RANGE;
+        set_text(app, "BPMTextBox", format!("{:.2}", tempo.clamp(lo as f64, hi as f64)));
         // The memory readout ([re:74a677]): the engine's sample memory.
         set_text(app, "MemoryUsageBox", model.memory.map(dreist_engine::memory::bytes_label).unwrap_or_default());
         let song = song_of(model);
@@ -357,6 +359,11 @@ impl Header {
         match ev {
             UiEvent::ValueChanged { name, value, .. } if name == "GlobalGain" => {
                 out.push(msg(id::SET_MASTER_CHANNEL_GAIN, &[], &[*value]));
+                return true;
+            }
+            // A tempo box drag or tap ([re:b0c3e9], [re:71d2a8]) → `e_setTempo`.
+            UiEvent::ValueChanged { name, value, .. } if name == "BPMTextBox" => {
+                out.push(msg(id::SET_TEMPO, &[], &[*value]));
                 return true;
             }
             UiEvent::DoubleClicked { path, name } if name == "GlobalGain" => {

@@ -12,10 +12,46 @@ impl Editor {
         for r in meters::update(&mut self.app.root, &self.model, levels) {
             self.app.invalidate_rect(r);
         }
+        self.update_gr_meters(levels);
         if self.header.tick_indicators(levels.midi_received, levels.voice_stolen) {
             let before = self.app.marks();
             self.header.sync(&mut self.app, &self.model, self.learn.active);
             self.invalidate_changes(&before);
+        }
+    }
+
+    /// [re:f22615]: a dynamics panel's `VUMeter` shows the effect's
+    /// control output ([re:414b35]); while the reading stays the same the
+    /// meter rises by 0.01 a tick, up to 1. The last reading lives on the
+    /// meter (`grRaw`).
+    fn update_gr_meters(&mut self, levels: &dreist_engine::Meters) {
+        let mut dirty = Vec::new();
+        for mx in &self.mixers {
+            let Some((at, slots)) = mx.fx_panel().and_then(|f| f.meters(&self.app)) else { continue };
+            for (slot, path) in slots {
+                let raw = levels.fx_output(at, slot);
+                let Some(c) = self.app.ctrl_mut(&path) else { continue };
+                if !c.visible {
+                    continue;
+                }
+                let last = c.attr("grRaw").and_then(|v| v.parse::<f32>().ok());
+                let v = match (raw, last) {
+                    (Some(r), l) if l.is_none_or(|l| (r - l).abs() > 1e-6) => {
+                        c.set_attr("grRaw", r.to_string());
+                        r
+                    }
+                    (_, Some(_)) => (c.value + 0.01).min(1.0),
+                    _ => continue,
+                };
+                if (c.value - v).abs() >= 1e-6 {
+                    c.value = v.clamp(0.0, 1.0);
+                    dirty.push(path);
+                }
+            }
+        }
+        for m in dirty {
+            let r = self.app.abs_rect(&m);
+            self.app.invalidate_rect(r);
         }
     }
 

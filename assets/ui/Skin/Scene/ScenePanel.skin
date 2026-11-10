@@ -23,12 +23,12 @@
         <CtrlPanel name="CtrlPanel" rect="520, 0, 300, 385" ARLeft="FFar 300.0000" ARRight="FFar 300.0000" ARTop="FNear 0.0000" ARBottom="FNear 10.0000" id="100009" style="BasicPanelStyle">
             <CtrlPanel name="Selectors" rect="10, 5, 281, 46" ARLeft="FNear 10.0000" ARRight="FNear 9.0000" ARTop="FNear 5.0000" overloadClass="PatternSelectors" style="InvisibleStyle" />
             <CtrlLabeller rect="55, 60, 190, 90" ARLeft="Center 0.0000" enumTextPosition="Below" style="SmallControlLabellerStyle">
-                <CtrlButtonGroup name="StartModeButtonGroup" rect="0, 0, 190, 23" ARLeft="Center 0.0000" ARTop="FNear 0.0000" displayName="Start mode" id="100003" intBottomSpacing="3" intLeftSpacing="0" intRightSpacing="0" intTopSpacing="0" optIsVertical="false">
+                <CtrlButtonGroup name="StartModeButtonGroup" rect="0, 0, 190, 23" ARLeft="Center 0.0000" ARTop="FNear 0.0000" displayName="Select Start Mode" id="100003" intBottomSpacing="3" intLeftSpacing="0" intRightSpacing="0" intTopSpacing="0" optIsVertical="false">
                     <CtrlButton name="ImmediateButton" rect="0, 0, 62, 20" displayName="Start scenes at once" id="1" overloadClass="FlashingButton" style="DefaultButtonStyle" text="Immediate" />
                     <CtrlButton name="NextBeatButton" rect="64, 0, 62, 20" displayName="Start scenes on the next beat" id="1" overloadClass="FlashingButton" style="DefaultButtonStyle" text="Next Beat" />
                     <CtrlButton name="NextBarButton" rect="128, 0, 62, 20" displayName="Start scenes on the next bar" overloadClass="FlashingButton" style="DefaultButtonStyle" text="Next Bar" />
                 </CtrlButtonGroup>
-                <CtrlTextBox name="NameTextBox" rect="8, 51, 175, 20" ARLeft="Center 0.0000" displayName="Scene name" id="100001" style="DefaultEditBoxStyle" />
+                <CtrlTextBox name="NameTextBox" rect="8, 51, 175, 20" ARLeft="Center 0.0000" displayName="Scene Name" id="100001" style="DefaultEditBoxStyle" />
             </CtrlLabeller>
             <CtrlPanel rect="10, 165, 281, 215" ARLeft="FNear 10.0000" ARRight="FNear 9.0000" ARTop="FNear 165.0000" ARBottom="FNear 5.0000" style="DarkPanelStyle">
                 <CtrlPanel rect="1, 1, 279, 213" ARLeft="FNear 1.0000" ARRight="FNear 1.0000" ARTop="FNear 1.0000" ARBottom="FNear 1.0000" style="BasicPanelStyle">

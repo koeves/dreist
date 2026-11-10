@@ -2,20 +2,20 @@
 <root>
     <CtrlPanel name="CtrlPanel" rect="0, 0, 88, 400" style="InvisibleStyle">
         <CtrlTextBox name="NameLabel" rect="0, 2, 88, 16" ARLeft="FNear 0.0000" ARRight="FNear 0.0000" ARTop="FNear 2.0000" id="100011" optSingleClickEdit="false" optSupportsDnD="false" placeholder="Name" style="MixerChannelEditTitleStyle" />
-        <CtrlLabeller name="SendPanel" rect="0, 20, 88, 348" ARLeft="FNear 0.0000" ARRight="FNear 0.0000" ARTop="FNear 20.0000" ARBottom="FNear 32.0000" enumTextPosition="Below" intTextOffset="0" style="SmallControlLabellerStyle">
-            <CtrlTransmodKnob name="SendKnob0" rect="27, 8, 34, 34" ARLeft="Center 0.0000" displayName="1" style="TransmodStyle" />
-            <CtrlTransmodKnob name="SendKnob1" rect="27, 54, 34, 34" ARLeft="Center 0.0000" displayName="2" style="TransmodStyle" />
-            <CtrlTransmodKnob name="SendKnob2" rect="27, 100, 34, 34" ARLeft="Center 0.0000" displayName="3" style="TransmodStyle" />
-            <CtrlTransmodKnob name="SendKnob3" rect="27, 146, 34, 34" ARLeft="Center 0.0000" displayName="4" style="TransmodStyle" />
+        <CtrlLabeller name="SendPanel" rect="0, 20, 88, 348" ARLeft="FNear 0.0000" ARRight="FNear 0.0000" ARTop="FNear 20.0000" ARBottom="FNear 32.0000" enumTextPosition="Below" intTextOffset="-3" style="SmallControlLabellerStyle">
+            <CtrlTransmodKnob name="SendKnob0" rect="27, 5, 32, 32" displayName="1" style="TransmodStyle" />
+            <CtrlTransmodKnob name="SendKnob1" rect="27, 47, 32, 32" displayName="2" style="TransmodStyle" />
+            <CtrlTransmodKnob name="SendKnob2" rect="27, 89, 32, 32" displayName="3" style="TransmodStyle" />
+            <CtrlTransmodKnob name="SendKnob3" rect="27, 131, 32, 32" displayName="4" style="TransmodStyle" />
         </CtrlLabeller>
         <CtrlPanel name="MixPanel" rect="0, 20, 88, 348" ARLeft="FNear 0.0000" ARRight="FNear 0.0000" ARTop="FNear 20.0000" ARBottom="FNear 32.0000" style="InvisibleStyle">
-            <CtrlLabeller name="PanPanel" rect="0, 0, 88, 44" ARLeft="FNear 0.0000" ARRight="FNear 0.0000" enumTextPosition="Below" intTextOffset="-1" style="SmallControlLabellerStyle">
-                <CtrlTransmodKnob name="PanKnob" rect="6, 0, 34, 34" displayName="Pan" id="100000" optCentered="true" style="TransmodStyle" />
-                <CtrlTransmodKnob name="Pitch" rect="48, 0, 34, 34" displayName="Pitch" id="100000" optCentered="true" style="TransmodStyle" />
+            <CtrlLabeller name="PanPanel" rect="0, 0, 88, 40" ARLeft="FNear 0.0000" ARRight="FNear 0.0000" ARTop="FNear 0.0000" enumTextPosition="Below" intTextOffset="-2" style="SmallControlLabellerStyle">
+                <CtrlTransmodKnob name="PanKnob" rect="6, 0, 32, 32" ARTop="FNear 0.0000" displayName="Pan" id="100000" optCentered="true" style="TransmodStyle" />
+                <CtrlTransmodKnob name="Pitch" rect="48, 0, 32, 32" ARTop="FNear 0.0000" displayName="Pitch" id="100000" optCentered="true" style="TransmodStyle" />
             </CtrlLabeller>
-            <CtrlTransmodSlider name="GainSlider" rect="4, 46, 20, 302" ARTop="FNear 46.0000" ARBottom="FNear 0.0000" displayName="Gain" id="100012" realModDim="0.3000" style="TransmodSliderStyle" />
-            <CtrlMultiChannelDBMeter name="VUMeter" rect="26, 46, 16, 302" ARTop="FNear 46.0000" ARBottom="FNear 0.0000" style="DefaultVerticalVUMeterStyle" />
-            <CtrlPanel rect="44, 46, 18, 38" style="InvisibleStyle" zorder="888">
+            <CtrlTransmodSlider name="GainSlider" rect="12, 42, 20, 306" ARBottom="FNear 0.0000" ARTop="FNear 42.0000" displayName="Gain" id="100012" realModDim="0.3000" style="TransmodSliderStyle" />
+            <CtrlMultiChannelDBMeter name="VUMeter" rect="36, 42, 20, 306" ARBottom="FNear 0.0000" ARTop="FNear 42.0000" style="DefaultVerticalVUMeterStyle" />
+            <CtrlPanel rect="61, 42, 18, 98" style="InvisibleStyle" zorder="888">
                 <CtrlButton name="MuteButton" rect="0, 0, 18, 18" displayName="Mute" style="MuteButtonStyle" text="M" />
                 <CtrlButton name="SoloButton" rect="0, 20, 18, 18" displayName="Solo" style="SoloButtonStyle" text="S" />
             </CtrlPanel>

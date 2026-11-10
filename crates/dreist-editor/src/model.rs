@@ -201,8 +201,26 @@ pub fn bind_knob(c: &mut dreist_gui::Ctrl, source: usize, base: f32, depth: f32)
     }
 }
 
-/// The (source, value) to send for transmod knob `c` moved to `v` while
-/// `source` is selected: a primary (centre) drag edits the base.
+/// Mark a transmod control's modulation state for the renderer: `modulated`
+/// (any source has a depth on it; [re:3d71a8] `SetIsModulated`) and `polar`
+/// (the selected source is bipolar; [re:b80c4e] `SetPolarState`).
+pub fn mark_modulation(c: &mut dreist_gui::Ctrl, modulated: bool, polar: bool) {
+    for (k, on) in [("modulated", modulated), ("polar", polar)] {
+        if on {
+            c.set_attr(k, "true".into());
+        } else {
+            c.remove_attr(k);
+        }
+    }
+}
+
+/// Whether transmod source `source` (index into `TransmodSource::ALL`) is
+/// bipolar: its `Polar_<source>` document flag is false (unipolar is the
+/// default).
+pub fn source_bipolar(model: &Model, source: usize) -> bool {
+    source != 0 && dreist_formats::TransmodSource::ALL.get(source).is_some_and(|s| model.doc.bool(&format!("Polar_{}", s.name())) == Some(false))
+}
+
 /// The transmod sources (bit per source 1..=28) with a non-zero depth on
 /// parameter `key` of `node` (the objects' `Get…ModulationBitField`).
 pub fn modulation_mask(node: Option<&Node>, key: &str) -> u32 {
@@ -210,8 +228,18 @@ pub fn modulation_mask(node: Option<&Node>, key: &str) -> u32 {
     (1..=28).filter(|&s| dreist_engine::engine::doc::attr_name(key, s).and_then(|k| n.f32(&k)).is_some_and(|d| d != 0.0)).fold(0, |m, s| m | 1 << s)
 }
 
-pub fn knob_edit(c: Option<&dreist_gui::Ctrl>, source: usize, v: f32) -> (usize, f32) {
-    if c.is_some_and(|c| c.attr("dragPart") == Some("primary")) { (0, v) } else { (source, knob_value(source, v)) }
+/// The (source, value) edits to send for transmod knob `c` moved to `v`
+/// while `source` is selected: a primary (centre) drag edits the base; an
+/// option-drag of the base keeps the modulation end ([re:081d3e]:
+/// `dragEnd`), so the source's depth (the knob's value) changes with it,
+/// in the same event (one undo step).
+pub fn knob_edits(c: Option<&dreist_gui::Ctrl>, source: usize, v: f32) -> Vec<(usize, f32)> {
+    let Some(c) = c.filter(|c| c.attr("dragPart") == Some("primary")) else { return vec![(source, knob_value(source, v))] };
+    let mut out = vec![(0, v)];
+    if source != 0 && c.attr("dragEnd").is_some() {
+        out.push((source, knob_value(source, c.value)));
+    }
+    out
 }
 
 /// The value to send for a knob moved to `v` while editing `source`.

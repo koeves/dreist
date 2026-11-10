@@ -53,24 +53,24 @@ def pad_button():
     """The selected pad's header in the inspector."""
     W, H = 120, 58
     return N("Panel", "CtrlPanel", (0, 0, W, H), pin="lr", style="InvisibleStyle", kids=[
-        N("TextBox", "PadName", (2, 0, W - 4, 16), pin="lrt", id=100020, optSingleClickEdit=False, placeholder="Pad",
+        N("TextBox", "PadName", (2, 0, W - 5, 16), pin="lrt", id=100020, optSingleClickEdit=False, placeholder="Pad 1",
           style="LightTextInvisibleEditBoxStyle"),
-        N("MultiChannelDBMeter", "VUMeter", (2, 18, W - 4, 14), pin="lr", style="DefaultLighterHorizontalVUMeterStyle"),
+        N("MultiChannelDBMeter", "VUMeter", (1, 19, W - 4, 15), pin="R", style="DefaultLighterHorizontalVUMeterStyle"),
         N("Button", "Mute", (2, 37, 18, 18), displayName="Mute", style="MuteButtonStyle", text="M"),
         N("Button", "Solo", (22, 37, 18, 18), displayName="Solo", style="SoloButtonStyle", text="S"),
-        N("Button", "AllPads", (44, 37, 36, 18), displayName="Edits apply to every pad", style="DefaultButtonStyle", text="Pad"),
-        N("Button", "AllLayers", (82, 37, 36, 18), displayName="Edits apply to every layer", style="DefaultButtonStyle", text="Layer"),
+        N("Button", "AllPads", (42, 37, 36, 18), displayName="Edits apply to every pad", style="DefaultButtonStyle", text="Pad"),
+        N("Button", "AllLayers", (80, 37, 36, 18), displayName="Edits apply to every layer", style="DefaultButtonStyle", text="Layer"),
     ])
 
 
 def layer_button():
     W, H = 120, 32
     return N("Panel", "CtrlPanel", (0, 0, W, H), pin="lt", style="InvisibleStyle", kids=[
-        N("TextBox", "SampleName", (2, 0, W - 6, 16), pin="lrt", id=100020, optSingleClickEdit=False, placeholder="Empty Layer",
+        N("TextBox", "SampleName", (2, 0, W - 8, 16), pin="lrt", id=100020, optSingleClickEdit=False, placeholder="Empty Layer",
           style="DarkTextInvisibleEditBoxStyle"),
         N("Button", "Mute", (2, 17, 18, 14), displayName="Mute", style="MuteButtonStyle", text="M"),
         N("Button", "Solo", (22, 17, 18, 14), displayName="Solo", style="SoloButtonStyle", text="S"),
-        N("MultiChannelDBMeter", "VUMeter", (42, 17, W - 46, 14), pin="lrt", style="DefaultHorizontalVUMeterStyle"),
+        N("MultiChannelDBMeter", "VUMeter", (42, 17, W - 48, 14), pin="lrt", style="DefaultHorizontalVUMeterStyle"),
     ])
 
 
@@ -100,22 +100,22 @@ def layer_panel():
     W, H = 800, 390
     WH = 196
     bw = W - 10
-    zoom = N("ButtonGroup", "AutoZoomGroup", (bw - 104, WH - 21, 66, 20), pin="rb", optChildPositionsAreLocked=True,
+    zoom = N("ButtonGroup", "AutoZoomGroup", (bw - 101, WH - 21, 66, 20), pin="rb", optChildPositionsAreLocked=True,
              optIsVertical=False, intIntraSpacing=0, intLeftSpacing=0, intRightSpacing=0, intTopSpacing=0, intBottomSpacing=0,
              kids=[N("Button", None, (i * 17, 0, 15, 19), displayName=tip, style="WaveDisplayZoomIconButtonStyle", text=g)
                    for i, (g, tip) in enumerate([("", "Zoom: free"), ("", "Zoom: follow start and end"),
                                                  ("", "Zoom: follow start"), ("", "Zoom: follow end")])])
     wave = N("Panel", "WaveDisplayPanel", (5, 5, bw, WH), pin="lrtb", style="WavePanelBackingStyle", kids=[
         N("Panel", "WaveDisplay", (2, 2, bw - 4, WH - 25), pin="lrtb", overloadClass="LayerWaveDisplay", style="InvisibleStyle"),
-        N("Panel", "WaveZoomSlider", (2, WH - 21, bw - 146, 20), pin="lrb", displayName="WaveZoomSlider",
+        N("Panel", "WaveZoomSlider", (2, WH - 21, bw - 143, 20), pin="lrb", displayName="WaveZoomSlider",
           overloadClass="WaveDisplayZoomSlider", style="WaveDisplayZoomSliderStyle"),
-        N("Button", "ShowAmpEnvButton", (bw - 140, WH - 21, 15, 20), pin="rb", displayName="Draw the amp envelope on the wave",
+        N("Button", "ShowAmpEnvButton", (bw - 136, WH - 21, 15, 20), pin="rb", displayName="Draw the amp envelope on the wave",
           style="WaveDisplayZoomButtonStyle", text="A"),
-        N("Button", "ShowFreeEnvButton", (bw - 124, WH - 21, 15, 20), pin="rb", displayName="Draw the free envelope on the wave",
+        N("Button", "ShowFreeEnvButton", (bw - 121, WH - 21, 15, 20), pin="rb", displayName="Draw the free envelope on the wave",
           style="WaveDisplayZoomButtonStyle", text="F"),
         zoom,
-        btn("ZoomOutButton", (bw - 34, WH - 21, 15, 20), "", "Zoom out", style="WaveDisplayZoomIconButtonStyle", pin="rb"),
-        btn("ZoomInButton", (bw - 18, WH - 21, 15, 20), "", "Zoom in", style="WaveDisplayZoomIconButtonStyle", pin="rb"),
+        btn("ZoomOutButton", (bw - 32, WH - 21, 15, 20), "", "Zoom out", style="WaveDisplayZoomIconButtonStyle", pin="rb"),
+        btn("ZoomInButton", (bw - 17, WH - 21, 15, 20), "", "Zoom in", style="WaveDisplayZoomIconButtonStyle", pin="rb"),
     ])
     return N("Panel", None, (0, 0, W, H), pin="lrtb", style="BasicPanelStyle", kids=[
         wave,
@@ -131,15 +131,15 @@ def metadata_dialog():
     box = lambda n, r, cap, pin="lt", cls="TextBox", st="DefaultEditBoxStyle": N(cls, n, r, pin=pin, displayName=cap, style=st)
     inner = N("Labeller", None, (0, 0, IW, H - 10), pin="lrtb", enumTextPosition="Below", intTextOffset=4,
               style="DialogPanelLeftLabellerStyle", kids=[
-                  box("BPMBox", (10, 10, 54, 20), "BPM"), box("BarsBox", (84, 10, 54, 20), "Bars"),
-                  box("BeatsBox", (158, 10, 54, 20), "Beats"),
-                  box("Root", (10, 60, 80, 20), "Root Hz"),
-                  box("RootNote", (100, 60, 80, 20), "Root note", cls="PopupButton", st="DefaultPopupButtonStyle"),
-                  box("Author", (10, 120, IW - 20, 20), "Author", pin="lrt"),
-                  box("Description", (10, 170, IW - 20, 20), "Description", pin="lrt"),
-                  btn("GuessButton", (10, H - 40, 54, 20), "Detect", None, pin="lb"),
-                  btn("CancelButton", (IW - 124, H - 40, 54, 20), "Cancel", None, pin="rb"),
-                  btn("SaveButton", (IW - 64, H - 40, 54, 20), "Save", None, pin="rb"),
+                  box("BPMBox", (10, 10, 50, 20), "BPM"), box("BarsBox", (85, 10, 50, 20), "Bars"),
+                  box("BeatsBox", (160, 10, 50, 20), "Beats"),
+                  box("Root", (10, 60, 75, 20), "Root (Hz)"),
+                  box("RootNote", (95, 60, 75, 20), "Root (note)", cls="PopupButton", st="DefaultPopupButtonStyle"),
+                  box("Author", (10, 125, IW - 20, 20), "Author", pin="lrt"),
+                  box("Description", (10, 175, IW - 20, 20), "Description", pin="lrt"),
+                  btn("GuessButton", (10, H - 40, 50, 20), "Guess", None, pin="lb"),
+                  btn("CancelButton", (IW - 120, H - 40, 50, 20), "Cancel", None, pin="rb"),
+                  btn("SaveButton", (IW - 60, H - 40, 50, 20), "Save", None, pin="rb"),
               ])
     return N("AnchorPanel", None, (0, 0, W, H), enumAnchorEdge="ARLeft", intAnchorPoint=20, style="TriggerDialogPanelStyle", kids=[
         N("Labeller", None, (25, 5, IW, H - 10), pin="lrtb", displayName="None", enumTextPosition="Above",
@@ -167,18 +167,18 @@ def velocity_splits():
     IW = W - 10
     cols, bw, gap = 32, 14, 2
     links = N("Matrix", "LinkMatrix", (IW - cols * (bw + gap) + gap, 2, cols * (bw + gap) - gap, 38), pin="r",
-              displayName="Linked pads", intNumberOfCols=cols, intNumberOfRows=2, intLeftSpacing=0, intRightSpacing=0,
+              displayName="Pad Linking", intNumberOfCols=cols, intNumberOfRows=2, intLeftSpacing=0, intRightSpacing=0,
               intTopSpacing=0, intBottomSpacing=0, style="InvisibleStyle",
               kids=[N("Button", f"LinkButton{i + 1}", ((i % cols) * (bw + gap), (i // cols) * 20, bw, 18),
                       displayName=f"Link to pad {i + 1}", style="DefaultSmallButtonStyle", text=str(i + 1)) for i in range(64)])
-    top = N("Labeller", None, (5, 5, IW, 56), pin="lr", enumTextPosition="Below", intTextOffset=1, style="SmallControlLabellerStyle", kids=[
-        N("PopupButton", "SelModeCombo", (0, 10, 128, 20), pin="l", displayName="Layer play mode", style="DefaultPopupButtonStyle"),
-        btn("Insert", (136, 10, 54, 20), "Auto", "Auto V Split", style="DefaultPopupButtonStyle"),
-        N("Knob", "v2a", (204, 6, 26, 26), displayName="V-to-A", style="KnobStyle", realDialThickness=0.3),
+    top = N("Labeller", None, (5, 5, IW, 55), pin="lr", enumTextPosition="Below", intTextOffset=1, style="SmallControlLabellerStyle", kids=[
+        N("PopupButton", "SelModeCombo", (0, 10, 125, 20), pin="l", displayName="Layer play mode", style="DefaultPopupButtonStyle"),
+        btn("Insert", (149, 10, 50, 20), "Auto", "Auto V SplitMode", style="DefaultPopupButtonStyle"),
+        N("Knob", "v2a", (225, 5, 25, 25), displayName="V-to-A", style="KnobStyle", realDialThickness=0.3),
         links,
     ])
     return N("Panel", None, (0, 0, W, H), pin="lrtb", style="LayerPanelStyle", kids=[
         top,
-        N("LayoutBox", "LayoutBox", (5, 76, IW, H - 76), pin="lrb", intIntraSpacing=1, intLeftSpacing=0, intRightSpacing=0,
+        N("LayoutBox", "LayoutBox", (5, 78, IW, H - 78), pin="lrb", intIntraSpacing=1, intLeftSpacing=0, intRightSpacing=0,
           intTopSpacing=1, intBottomSpacing=0, style="InvisibleStyle"),
     ])

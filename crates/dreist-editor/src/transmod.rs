@@ -304,6 +304,7 @@ impl Transmod {
         // [re:8b43ec] re-stacks when a panel folds.
         sc.set_attr("stackAxis", "v".into());
         sc.set_attr("stackGap", "2".into());
+        sc.set_attr("scrollAxes", "v".into());
         let w = sc.rect.w;
         let mut y = 0;
         for (slot, t) in types.into_iter().enumerate() {
@@ -345,6 +346,10 @@ impl Transmod {
             y += h + 2;
             sc.children.push(c);
         }
+        dreist_gui::scroll::place(sc);
+        // [re:8b43ec]: the wheel moves 1/16 of the content.
+        let content = dreist_gui::scroll::content(sc).1;
+        sc.set_attr("scrollStep", ((content as f32 * 0.0625 + 0.5) as i32).max(1).to_string());
     }
 
     pub fn sync(&mut self, app: &mut App, model: &Model) {
@@ -379,6 +384,7 @@ impl Transmod {
         }
         let Some(sp) = &self.scroller else { return };
         let Some(sc) = app.ctrl_mut(sp) else { return };
+        let polar = crate::model::source_bipolar(model, source);
         for c in &mut sc.children {
             let Some(slot) = c.attr("modSlot").and_then(|v| v.parse::<usize>().ok()) else { continue };
             let Some(n) = modulator(model, slot) else { continue };
@@ -396,6 +402,8 @@ impl Transmod {
                 } else if k.class == "CtrlButton" {
                     k.on = base >= 0.5;
                 } else if k.class == "CtrlTransmodKnob" {
+                    let modulated = TransmodSource::ALL[1..].iter().any(|s| n.f32(&format!("{pn}_{}", s.name())).is_some_and(|d| d != 0.0));
+                    crate::model::mark_modulation(k, modulated, polar);
                     bind_knob(k, source, base, depth);
                 } else {
                     k.value = base;
@@ -838,8 +846,9 @@ impl Transmod {
                 }
                 let Some(slot) = Self::slot_of(app, path) else { return false };
                 let Some(i) = name.strip_prefix("Control").and_then(|v| v.parse::<usize>().ok()) else { return false };
-                let (src, v) = crate::model::knob_edit(app.ctrl(path), model.source, *value);
-                out.push(msg(id::SET_MODULATION_SOURCE_PARAMETER, &[slot as i32], &[0.0, i as f32, src as f32, v]));
+                for (src, v) in crate::model::knob_edits(app.ctrl(path), model.source, *value) {
+                    out.push(msg(id::SET_MODULATION_SOURCE_PARAMETER, &[slot as i32], &[0.0, i as f32, src as f32, v]));
+                }
                 true
             }
             _ => false,

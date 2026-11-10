@@ -66,11 +66,11 @@
     <CtrlStyle name="ExExLargeIconRadioButtonRight" parentStyle0="ExExLargeIconButtonStyle" optRoundTopLeft="false" optRoundBottomLeft="false" />
     <CtrlStyle name="ExExLargeIconRadioButtonCenter" parentStyle0="ExExLargeIconButtonStyle" optRoundTopLeft="false" optRoundTopRight="false" optRoundBottomLeft="false" optRoundBottomRight="false" />
     <CheckBoxButtonRendererStyle name="DefaultCheckboxButtonStyle" parentStyle0="DefaultButtonStyle" colTick="PanelDarkest" />
-    <CtrlStyle name="DefaultPopupButtonStyle" parentStyle0="DefaultButtonStyle" enumTextHorizontalAlign="left" />
+    <CtrlStyle name="DefaultPopupButtonStyle" parentStyle0="DefaultButtonStyle" enumTextHorizontalAlign="left" optStepperArrows="true" optShortenToControlWidth="true" />
     <CtrlStyle name="ShorteningPopupButtonStyle" parentStyle0="DefaultPopupButtonStyle" enumTextShortenAlgorithm="middle" />
 
     <!-- Text fields -->
-    <CtrlStyle name="DefaultEditBoxStyle" parentStyle0="CornerRoundingStyle" font="Standard" colText="EditorDarkest" colFill="PanelAltMedium" colAltFill="PanelAltMedium" colBorder="PanelAltMedium" colAltBorder="PanelAltMedium" />
+    <CtrlStyle name="DefaultEditBoxStyle" parentStyle0="CornerRoundingStyle" optStepperArrows="true" font="Standard" colText="EditorDarkest" colFill="PanelAltMedium" colAltFill="PanelAltMedium" colBorder="PanelAltMedium" colAltBorder="PanelAltMedium" />
     <CtrlStyle name="SearchBoxStyle" parentStyle0="DefaultEditBoxStyle" enumTextHorizontalAlign="left" colAltFill="EditorDarkest" />
     <CtrlStyle name="InvisibleEditBoxStyle" parentStyle0="ApplicationStyle" optDrawShadow="false" optDrawBorder="false" colFill="Transparent" enumTextHorizontalAlign="left" font="SmallStd" />
     <CtrlStyle name="InvisibleCenteredEditBoxStyle" parentStyle0="InvisibleEditBoxStyle" enumTextHorizontalAlign="center" />
@@ -89,13 +89,13 @@
     <CtrlMultiChannelDBMeterStyle name="BigVerticalVUMeterStyle" parentStyle0="DefaultVUMeterStyle" intChannelSpacing="2" intMarkingSize="12" />
     <CtrlMultiChannelDBMeterStyle name="DefaultHorizontalVUMeterStyle" parentStyle0="DefaultVUMeterStyle" optHideMarkingText="true" />
     <CtrlMultiChannelDBMeterStyle name="DefaultLighterHorizontalVUMeterStyle" parentStyle0="DefaultHorizontalVUMeterStyle" colChannelBack="EditorMedium" />
-    <CtrlStyle name="ScrollbarStyle" parentStyle0="CornerRounding3Style" colFill="Transparent" colBorder="Transparent" colAltFill="PanelMedium" colAltBorder="PanelMedium" />
+    <CtrlStyle name="ScrollbarStyle" parentStyle0="CornerRounding3Style" optFramedThumb="true" colFill="Transparent" colBorder="Transparent" colAltFill="PanelMedium" colAltBorder="PanelMedium" />
 
     <!-- Sliders, knobs, modulation -->
     <CtrlStyle name="SliderStyle" parentStyle0="ApplicationStyle" realDisabledAlpha="0.4" optDrawBorder="false" colFill="PanelMedium" colFillHighlight="EditorMedium" colAltFill="PanelDarkest" colBorder="PanelDarkest" colAltBorder="PanelBrightest" />
     <CtrlStyle name="KnobStyle" parentStyle0="ApplicationStyle" optDrawBorder="false" colFill="PanelMedium" colFillHighlight="EditorMedium" colAltFill="PanelDarkest" colBorder="PanelDarkest" colAltBorder="PanelBrightest" />
     <CtrlStyle name="AltKnobStyle" parentStyle0="KnobStyle" colFill="PanelMediumAlpha03" colFillHighlight="EditorBrightest" />
-    <CtrlTransmodStyle name="TransmodStyle" parentStyle0="ApplicationStyle" optDrawModTrack="true" optDrawBorder="false" colBorder="Transparent" colModulationIndication="EditorAltBrightest" colModTrackFill="PanelMediumAlpha05" colFill="PanelAltDark" colAltFill="EditorMedium" colHandleBorder="PanelBrightest" colHandleFill="PanelDarkest" colModulationPos="EditorAltDarkest" colDepth="EditorAltBrightestAlpha05" />
+    <CtrlTransmodStyle name="TransmodStyle" parentStyle0="ApplicationStyle" optDrawModTrack="true" optTransmodLayers="true" optDrawBorder="false" colBorder="Transparent" colModulationIndication="EditorAltBrightest" colModTrackFill="PanelMediumAlpha05" colFill="PanelAltDark" colAltFill="EditorMedium" colHandleBorder="PanelBrightest" colHandleFill="PanelDarkest" colModulationPos="EditorAltDarkest" colDepth="EditorAltBrightestAlpha05" />
     <CtrlTransmodStyle name="TransmodSliderStyle" parentStyle0="TransmodStyle" optModStrip="true" />
     <CtrlStyle name="MiniSequencerStyle" parentStyle0="ApplicationStyle" colFill="EditorAltMedium" colBorder="EditorAltMedium" colAltFill="EditorBrightest" colDisabledOverlay="PanelMediumAlpha05" />
 
@@ -138,7 +138,7 @@
     <CtrlStyle name="HeaderBarMenuDropButtonStyle" parentStyle0="HeaderBarMenuButtonStyle" font="Small" realTextOffset="0" />
     <CtrlStyle name="HeaderBarButtonStyle" parentStyle0="CornerRoundingStyle" font="SmallStd" enumTextShortenAlgorithm="end" colFill="PanelMediumAlpha03" colText="PanelBrightest" colAltFill="EditorAltBrightest" colAltBorder="EditorAltBrightest" colAltText="PanelDarkest" optDrawBorder="false" realBorderWidth="0" colBorder="Transparent" />
     <CtrlStyle name="HeaderBarIconButtonStyle" parentStyle0="HeaderBarButtonStyle" font="ExExLargeIcons" />
-    <CtrlStyle name="HeaderBarPopupButtonStyle" parentStyle0="HeaderBarButtonStyle" enumTextHorizontalAlign="left" />
+    <CtrlStyle name="HeaderBarPopupButtonStyle" parentStyle0="HeaderBarButtonStyle" enumTextHorizontalAlign="left" optShortenToControlWidth="true" />
     <CtrlStyle name="HeaderBarUndoRedoDropStyle" parentStyle0="HeaderBarButtonStyle" optRoundTopLeft="false" optRoundBottomLeft="false" realTextOffset="0" font="Tiny" />
     <CtrlStyle name="RecordButtonStyle" parentStyle0="CornerRoundingStyle" font="ExExLargeIcons" colFill="PanelSparkAlpha05" colText="EditorDarkest" colAltFill="PanelSpark" colAltBorder="PanelSpark" colAltText="PanelDarkest" optDrawBorder="false" realBorderWidth="0" colBorder="Transparent" />
     <CtrlStyle name="PlayButtonStyle" parentStyle0="CornerRoundingStyle" font="ExExLargeIcons" colFill="EditorAltBrightestAlpha05" colText="EditorDarkest" colAltFill="EditorAltBrightest" colAltBorder="EditorAltBrightest" colAltText="PanelDarkest" optDrawBorder="false" realBorderWidth="0" colBorder="Transparent" />
@@ -228,4 +228,8 @@
     <CtrlStyle name="SongTrackPanelStyle1" parentStyle0="TrackNotSelectedStyle" colBorder="PanelMedium" />
     <CtrlStyle name="SongTrackPanelSelectedStyle" parentStyle0="TrackSelectedStyle" colBorder="PanelMedium" />
     <CtrlStyle name="SongTrackPanelPreviewingStyle" colFill="EditorAltMedium" />
+
+    <!-- Effect panel meters and plots -->
+    <CtrlMeterStyle name="EffectMeterStyle" parentStyle0="MeterStyle" optMeterMarkings="true" />
+    <CtrlStyle name="EffectEQPlotStyle" parentStyle0="PlotStyle" colGrid="EditorDarkestAlpha03" realCurveFillAlpha="0.2" realLineWidth="2" optCurveClosed="true" optRoundBottomLeft="false" optRoundBottomRight="false" />
 </root>

@@ -122,6 +122,8 @@ const HEADER_STYLE: &str = "DefaultTableViewHeaderStyle";
 const CHECK_W: f32 = 50.0;
 
 pub struct Devices {
+    /// First shown row per table (a long list scrolls under its header).
+    first_row: std::cell::RefCell<std::collections::HashMap<String, usize>>,
     audio_overlay: Option<Vec<usize>>,
     midi_overlay: Option<Vec<usize>>,
     audio_slide: crate::modal::Slide,
@@ -168,6 +170,7 @@ impl Devices {
         prep(root, &midi_overlay, &["InputTable", "OutputTable"]);
         let settings = Settings::load(&Options::load());
         Ok(Devices {
+            first_row: Default::default(),
             audio_overlay,
             midi_overlay,
             audio_slide: Default::default(),
@@ -277,6 +280,22 @@ impl Devices {
         }
     }
 
+    /// The first shown row of `table` (clamped so the last row stays at
+    /// the bottom when `n` rows overflow height `h`).
+    fn first(&self, table: &str, n: usize, h: f32) -> usize {
+        let fit = (((h - HEADER) / ROW).floor().max(1.0)) as usize;
+        let mut m = self.first_row.borrow_mut();
+        let f = m.entry(table.to_string()).or_insert(0);
+        *f = (*f).min(n.saturating_sub(fit));
+        *f
+    }
+
+    /// The first shown row of `table` (tests).
+    #[cfg(test)]
+    pub fn first_row(&self, table: &str) -> usize {
+        self.first_row.borrow().get(table).copied().unwrap_or(0)
+    }
+
     /// The table rows: (checked, clock, description).
     fn rows(&self, table: &str) -> Vec<(bool, Option<bool>, String)> {
         match table {
@@ -358,7 +377,7 @@ impl Devices {
             UiEvent::Mouse { overload, kind: MouseKind::Down, x, y, .. } if overload.starts_with("DeviceTable:") => {
                 let table = &overload["DeviceTable:".len()..];
                 if *y >= HEADER && *x < CHECK_W {
-                    let i = ((*y - HEADER) / ROW) as usize;
+                    let i = ((*y - HEADER) / ROW) as usize + self.first_row.borrow().get(table).copied().unwrap_or(0);
                     // One MIDI device each way: a click picks it, a click on
                     // the checked one turns it off.
                     let pick = |cur: &mut String, list: &[String]| {
@@ -373,6 +392,17 @@ impl Devices {
                     }
                     self.changed();
                 }
+                true
+            }
+            // A row per wheel line.
+            UiEvent::Wheel { path, overload, dy } if overload.starts_with("DeviceTable:") => {
+                let table = overload["DeviceTable:".len()..].to_string();
+                let h = app.ctrl(path).map(|c| c.rect.h as f32).unwrap_or(0.0);
+                let n = self.rows(&table).len();
+                let cur = self.first_row.borrow().get(&table).copied().unwrap_or(0) as i32;
+                let want = (cur - dy.round() as i32).max(0) as usize;
+                self.first_row.borrow_mut().insert(table.clone(), want);
+                self.first(&table, n, h);
                 true
             }
             UiEvent::Mouse { path, .. } | UiEvent::Wheel { path, .. } | UiEvent::ValueChanged { path, .. } | UiEvent::Pressed { path, .. } | UiEvent::RightClicked { path, .. } => self.mine(path),
@@ -412,8 +442,10 @@ impl Devices {
                 p.fill_rect(RectF::new(r.x + 4.0, r.y + 4.0, 8.0, 8.0), Colour::rgba(230, 230, 230, a));
             }
         };
-        for (k, (on, clock, desc)) in self.rows(table).iter().enumerate() {
-            let y = HEADER + k as f32 * ROW;
+        let rows = self.rows(table);
+        let first = self.first(table, rows.len(), h);
+        for (k, (on, clock, desc)) in rows.iter().enumerate().skip(first) {
+            let y = HEADER + (k - first) as f32 * ROW;
             if y > h {
                 break;
             }
@@ -450,6 +482,7 @@ mod tests {
     #[test]
     fn rows_and_choices() {
         let mut d = Devices {
+            first_row: Default::default(),
             audio_overlay: None,
             midi_overlay: None,
             audio_slide: Default::default(),

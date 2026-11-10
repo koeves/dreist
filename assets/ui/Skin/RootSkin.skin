@@ -6,8 +6,8 @@
             <CtrlSplitterPanel rect="0, 0, 300, 746" SplitterPanelStyle="SplitterStyle" displayName="SplitterPanel0" intMaxSize1="400" intMinSize0="66" intMinSize1="220" intSplitPosition="518" intSplitterDim="8" optSnapCollapse0="false" strAutoSaveName="padSplitterAS" style="TabPanelStyle">
                 <CtrlPanel name="UtilityPanel" rect="0, 0, 300, 518" displayName="SplitterPanel0" style="TabPanelStyle">
                     <CtrlButtonGroup name="UtilityTabButtonGroup" rect="0, 0, 300, 20" ARLeft="FNear 0.0000" ARRight="FNear 0.0000" ARTop="FNear 0.0000" intBottomSpacing="0" intIntraSpacing="0" intLeftSpacing="5" intRightSpacing="120" intTopSpacing="0" optChildPositionsAreLocked="true" optIsVertical="false" optUseChildID="true" style="TabPanelHeaderLeftStyle">
-                        <CtrlButton rect="8, 2, 63, 20" id="0" style="TabButtonStyle" text="BROWSER" />
-                        <CtrlButton rect="87, 2, 70, 20" id="1" style="TabButtonStyle" text="TRANSMOD" />
+                        <CtrlButton rect="10, 2, 70, 20" id="0" style="TabButtonStyle" text="BROWSER" />
+                        <CtrlButton rect="100, 2, 80, 20" id="1" style="TabButtonStyle" text="TRANSMOD" />
                     </CtrlButtonGroup>
                     <CtrlTabPanel name="UtilityTabPanel" rect="0, 20, 300, 498" ARLeft="FNear 0.0000" ARRight="FNear 0.0000" ARTop="FNear 20.0000" ARBottom="FNear 0.0000" style="TabPanelStyle" />
                 </CtrlPanel>
@@ -17,13 +17,13 @@
                 <CtrlSplitterPanel name="MainSplitter" rect="0, 0, 1082, 746" ARLeft="FNear 0.0000" ARRight="FNear 0.0000" ARTop="FNear 0.0000" ARBottom="FNear 0.0000" SplitterPanelStyle="SplitterStyle" intMaxSize1="390" intMinSize0="190" intMinSize1="360" intSplitPosition="372" intSplitterDim="8" strAutoSaveName="mainSplitAS" style="InvisibleStyle">
                     <CtrlPanel name="EditorPanel" rect="0, 0, 1082, 372" displayName="SplitterPanel0" style="TabPanelStyle">
                         <CtrlButtonGroup name="EditorTabButtons" rect="0, 0, 1082, 20" ARLeft="FNear 0.0000" ARRight="FNear 0.0000" ARTop="FNear 0.0000" intBottomSpacing="0" intIntraSpacing="0" intLeftSpacing="5" intRightSpacing="0" intTopSpacing="0" optChildPositionsAreLocked="true" optIsVertical="false" optUseChildID="true" style="TabPanelHeaderRightStyle">
-                            <CtrlButton rect="8, 2, 63, 20" id="0" style="TabButtonStyle" text="PATTERN" />
-                            <CtrlButton rect="87, 2, 91, 20" id="3" style="TabButtonStyle" text="LAYER MIXER" />
-                            <CtrlButton rect="194, 2, 77, 20" id="4" style="TabButtonStyle" text="PAD MIXER" />
-                            <CtrlButton rect="287, 2, 98, 20" id="5" style="TabButtonStyle" text="GLOBAL MIXER" />
-                            <CtrlButton rect="401, 2, 56, 20" id="1" style="TabButtonStyle" text="SCENES" />
-                            <CtrlButton rect="473, 2, 42, 20" id="2" style="TabButtonStyle" text="SONG" />
-                            <CtrlButton rect="1011, 2, 63, 20" ARLeft="FFar 71.0000" ARRight="FFar 63.0000" id="6" style="TabButtonStyle" text="MAPPING" />
+                            <CtrlButton rect="10, 2, 65, 20" id="0" style="TabButtonStyle" text="PATTERN" />
+                            <CtrlButton rect="114, 2, 85, 20" id="3" style="TabButtonStyle" text="LAYER MIXER" />
+                            <CtrlButton rect="219, 2, 75, 20" id="4" style="TabButtonStyle" text="PAD MIXER" />
+                            <CtrlButton rect="314, 2, 90, 20" id="5" style="TabButtonStyle" text="GLOBAL MIXER" />
+                            <CtrlButton rect="443, 2, 60, 20" id="1" style="TabButtonStyle" text="SCENES" />
+                            <CtrlButton rect="542, 2, 50, 20" id="2" style="TabButtonStyle" text="SONG" />
+                            <CtrlButton rect="1002, 2, 70, 20" ARLeft="FFar 80.0000" ARRight="FFar 70.0000" id="6" style="TabButtonStyle" text="MAPPING" />
                         </CtrlButtonGroup>
                         <CtrlTabPanel name="EditorTabPanel" rect="0, 20, 1082, 352" ARLeft="FNear 0.0000" ARRight="FNear 0.0000" ARTop="FNear 20.0000" ARBottom="FNear 0.0000" style="TabPanelStyle" />
                     </CtrlPanel>

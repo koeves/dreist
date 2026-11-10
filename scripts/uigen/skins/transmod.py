@@ -23,7 +23,7 @@ def card(title, h, knobs, header=(), extra=(), graph="TransmodDisplayPanel", gra
          graph_h=50):
     kids = [N("Button", "Options", (2, 3, 16, 16), style="SmallTextButtonStyle", text="▼", optIsMomentary=True)]
     x = w - 18
-    kids.append(N("Button", "Trigger", (x, 2, 16, 16), pin="r", style="ExxLargeIconButtonStyle", text="",
+    kids.append(N("Button", "Trigger", (x, 2, 16, 16), pin="r", style="ExxLargeIconButtonStyle", text="\ue921",
                   optIsMomentary=True, displayName="Retrigger"))
     for name, bw, attrs in header:
         x -= bw + 2
@@ -47,17 +47,17 @@ SYNC = ("Control0", 30, dict(style="DefaultButtonStyle", text="Sync", displayNam
 
 def panels():
     out = {}
-    out["LFO"] = card("LFO", H, [("Control1", "Freq"), ("Control3", "Phase"), ("Control4", "Level")], header=[SYNC],
+    out["LFO"] = card("LFO", H, [("Control1", "Freq"), ("Control3", "Phase"), ("Control4", "Gain")], header=[SYNC],
                       extra=[N("PopupButton", "Control2", (W - 85, HEAD + 15, 85, 20), pin="r",
                                style="DefaultPopupButtonStyle", displayName="Shape")])
     out["MorphingLFO"] = card("MORPHING LFO", H, [("Control1", "Freq"), ("Control3", "Phase"), ("Control2", "Shape"),
-                                               ("Control4", "Swing"), ("Control5", "Level")], header=[SYNC])
+                                               ("Control4", "Swing"), ("Control5", "Gain")], header=[SYNC])
     out["SampleAndHold"] = card("SAMPLE AND HOLD", H, [("Control1", "Freq"), ("Control3", "Phase"), ("Control2", "Slew"),
-                                                     ("Control4", "Level")], header=[SYNC])
+                                                     ("Control4", "Gain")], header=[SYNC])
     out["ADEnvelope"] = card("AD ENVELOPE", H, [("Control0", "Attack"), ("Control2", "A Curve"), ("Control1", "Decay"),
-                                             ("Control3", "D Curve"), ("Control4", "Level")], w=WIDE)
-    out["BouncingBall"] = card("BOUNCING BALL", H, [("Control0", "Gravity"), ("Control1", "Speed"), ("Control2", "Level")], w=WIDE)
-    out["Constant"] = card("CONSTANT", 80, [("Control0", "Constant"), ("Control1", "Level")], graph=None, w=WIDE, row=(HEAD, 60, 5))
+                                             ("Control3", "D Curve"), ("Control4", "Gain")], w=WIDE)
+    out["BouncingBall"] = card("BOUNCING BALL", H, [("Control0", "Gravity"), ("Control1", "Speed"), ("Control2", "Gain")], w=WIDE)
+    out["Constant"] = card("CONSTANT", 80, [("Control0", "Constant"), ("Control1", "Gain")], graph=None, w=WIDE, row=(HEAD, 60, 5))
     # Constant has no graph: drop the empty panel the card adds.
     out["Constant"].kids.pop()
 
@@ -74,12 +74,12 @@ def panels():
     lab = maths.kids[2]
     lab.rect = (W - 44, HEAD + 1, KNOB, 60)
     lab.pin = "r"
-    lab.add(N("TransmodKnob", "Control3", (0, 7, KNOB, KNOB), displayName="Level", style="TransmodStyle"))
+    lab.add(N("TransmodKnob", "Control3", (0, 7, KNOB, KNOB), displayName="Gain", style="TransmodStyle"))
     out["Math"] = maths
 
-    seq = card("MINI SEQUENCER", 150, [("Control1", "Steps"), ("Control0", "Rate"), ("Control2", "Slew"), ("Control22", "Level")],
+    seq = card("MINI SEQUENCER", 150, [("Control1", "Steps"), ("Control0", "Rate"), ("Control2", "Slew"), ("Control22", "Gain")],
                header=[("Control5", 16, dict(style="DefaultButtonStyle", text="TR", displayName="Advance one step per trigger of the selected pads")),
-                       ("OptionMenu", 16, dict(style="ExxLargeIconButtonStyle", text="", optIsMomentary=True,
+                       ("OptionMenu", 16, dict(style="ExxLargeIconButtonStyle", text="\ue90d", optIsMomentary=True,
                                                displayName="Step shapes"))],
                extra=[N("Button", "Control3", (W - 50, 28, 50, 20), pin="r", style="DefaultButtonStyle", text="Drunk",
                         displayName="Random walk: steps may move back as well as forward"),
@@ -142,19 +142,17 @@ def source_bar():
 
 def trigger_dialog():
     """Which events restart a modulator."""
-    def check(name, x, tip):
-        return N("Button", name, (x, 4, 14, 14), displayName=tip, style="DefaultCheckboxButtonStyle")
-    rows = N("Labeller", None, (20, 6, 320, 436), pin="lrtb", displayName="None", enumTextPosition="Above",
+    def check(name, x, y, tip):
+        return N("Button", name, (x, y, 14, 14), displayName=tip, style="DefaultCheckboxButtonStyle")
+    row = dict(enumTextPosition="Right", intTextOffset=4, style="DialogPanelLeftLabellerStyle")
+    rows = N("Labeller", None, (25, 5, 320, 440), pin="lrtb", displayName="None", enumTextPosition="Above",
              style="DialogPanelLeftLabellerStyle", kids=[
-                 N("Labeller", None, (0, 0, 320, 22), pin="lrt", enumTextPosition="Right", intTextOffset=6,
-                   style="DialogPanelLeftLabellerStyle", kids=[check("TStart", 0, "Reset at transport start")]),
-                 N("Labeller", None, (0, 34, 320, 24), pin="lr", displayName="Reset on engine pattern change",
-                   enumTextPosition="Right", intTextOffset=6, style="DialogPanelLeftLabellerStyle",
-                   kids=[check(f"E{i + 1}", i * 32, str(i + 1)) for i in range(8)]),
-                 N("Labeller", None, (0, 66, 320, 28), pin="lrt", enumTextPosition="Right", intTextOffset=6,
-                   style="DialogPanelLeftLabellerStyle", kids=[
-                       N("PopupButton", "ShowEng", (0, 4, 56, 18), displayName="Engine", style="DefaultPopupButtonStyle")]),
-                 N("Matrix", "Matrix", (0, 116, 320, 320), pin="lrtb", displayName="Pads That Trigger Modulator",
+                 N("Labeller", None, (0, 0, 320, 20), pin="lrt", **row, kids=[check("TStart", 0, 0, "Reset at transport start")]),
+                 N("Labeller", None, (0, 40, 320, 25), pin="lr", displayName="Reset on Engine Pattern Change", **row,
+                   kids=[check(f"E{i + 1}", i * 35, 5, str(i + 1)) for i in range(8)]),
+                 N("Labeller", None, (0, 70, 320, 30), pin="lrt", **row, kids=[
+                     N("PopupButton", "ShowEng", (0, 5, 50, 20), displayName="Show engine", style="DefaultPopupButtonStyle")]),
+                 N("Matrix", "Matrix", (0, 120, 320, 320), pin="lrtb", displayName="Pads That Trigger Modulator",
                    intNumberOfCols=4, intNumberOfRows=16, optLayoutFromTop=False, style="InvisibleStyle"),
              ])
     return N("AnchorPanel", "Anchor", (0, 0, 350, 450), enumAnchorEdge="ARLeft", intAnchorPoint=160,

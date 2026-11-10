@@ -280,6 +280,68 @@ fn skin_for(kind: usize) -> Option<&'static str> {
     })
 }
 
+/// The card's header ([re:aede5e]): the type's name, then the first 15
+/// characters of its preset's name in brackets unless that is `Default`.
+fn title(kind: usize, node: &Node) -> String {
+    let mut t = dreist_formats::params::effect_label(kind).to_string();
+    let preset = node.children.iter().find(|c| c.name.as_deref() == Some("PresetName")).and_then(|c| c.attr("string"));
+    if let Some(stem) = preset.and_then(|p| std::path::Path::new(p.trim()).file_stem()).map(|s| s.to_string_lossy().into_owned()) {
+        if !stem.is_empty() && stem != "Default" {
+            t.push_str(" (");
+            t.extend(stem.chars().take(15));
+            t.push(')');
+        }
+    }
+    t
+}
+
+/// The sample rate the plotted curves are computed at (the editor is not
+/// told the engine's).
+const PLOT_SAMPLE_RATE: f32 = 44100.0;
+
+/// The EQ plot's grid ([re:faafb0]): 30..90 Hz, 100..900 Hz and 1..9 kHz
+/// on the 20 Hz..20 kHz log axis, as fractions of the width.
+fn plot_grid() -> String {
+    let at = |f: f32| (f / 20.0).log2() / 1000f32.log2();
+    let mut v: Vec<f32> = (3..10).map(|k| at(k as f32 * 10.0)).collect();
+    v.extend((1..10).map(|k| at(k as f32 * 100.0)));
+    v.extend((1..10).map(|k| at(k as f32 * 1000.0)));
+    v.iter().map(|x| format!("{x:.5}")).collect::<Vec<_>>().join(",")
+}
+
+/// Fill an EQ / filter panel's `Display` with the effect's response
+/// curves ([re:56f45c], [re:b03feb]): one point per pixel of its width,
+/// curve k in `EQBand<k+1>Colour` ([re:e295f9]; Vari-EQ's in
+/// `EQBand1Colour`, [re:1046fa]). Recomputed only when its inputs change.
+fn plot_curves(plot: &mut Ctrl, kind: usize, node: &Node) {
+    let params: Vec<f32> = effect_param_names(kind)
+        .iter()
+        .enumerate()
+        .map(|(k, name)| {
+            let key: String = name.chars().filter(|c| !c.is_whitespace()).collect();
+            node.f32(&key).or_else(|| node.f32(&format!("Parameter{k}"))).unwrap_or(0.5).clamp(0.0, 1.0)
+        })
+        .collect();
+    let n = plot.rect.w.max(1) as usize;
+    let key = format!("{kind}|{n}|{params:?}");
+    if plot.attr("plotKey") == Some(key.as_str()) {
+        return;
+    }
+    let Some(curves) = dreist_dsp::fx::display::node_ports(kind, &params).and_then(|p| dreist_dsp::fx::display::curves(kind, &p, n, PLOT_SAMPLE_RATE)) else { return };
+    let attr = curves
+        .iter()
+        .enumerate()
+        .map(|(k, ys)| {
+            let pts: Vec<String> = ys.iter().enumerate().map(|(i, y)| format!("{:.5},{y:.4}", i as f32 / n as f32)).collect();
+            format!("EQBand{}Colour|{}", k + 1, pts.join(" "))
+        })
+        .collect::<Vec<_>>()
+        .join(";");
+    plot.set_attr("curves", attr);
+    plot.set_attr("gridX", plot_grid());
+    plot.set_attr("plotKey", key);
+}
+
 /// Which chain the panel shows: engine, pad or layer of the selection.
 #[derive(Clone, Copy, Debug, PartialEq, Eq)]
 pub enum Target {
@@ -440,9 +502,11 @@ impl FxPanel {
             let mut x = 0;
             // [re:6929fb] re-stacks its container when a panel folds.
             sc.set_attr("stackAxis", "h".into());
+            // [re:3c0f5e]: the slots scroll sideways.
+            sc.set_attr("scrollAxes", "h".into());
             for (slot, kind, node) in fx {
                 let Some(mut panel) = self.panel_tpl.clone() else { continue };
-                panel.display_name = dreist_formats::params::effect_label(*kind).to_uppercase();
+                panel.display_name = title(*kind, node);
                 panel.set_attr("fxSlot", slot.to_string());
                 panel.set_attr("fxKind", kind.to_string());
                 let w = panel.rect.w;
@@ -467,6 +531,7 @@ impl FxPanel {
                 empty.set_rect(Rect::new(x, 0, w, h));
                 sc.children.push(empty);
             }
+            dreist_gui::scroll::place(sc);
         }
         host.children.push(chain);
     }
@@ -492,6 +557,16 @@ impl FxPanel {
     pub fn sync(&mut self, app: &mut App, model: &Model, t: Target) {
         let fx = effects(model, t);
         self.rebuild(app, t, &fx);
+        // The chain fills its host whatever size the host has now (window
+        // resizes, splitters, the mixer's compact layout).
+        if let Some(host) = app.ctrl_mut(&self.host) {
+            let r = Rect::new(0, 0, host.rect.w, host.rect.h);
+            for c in host.children.iter_mut() {
+                if c.rect != r {
+                    c.set_rect(r);
+                }
+            }
+        }
         // Chain header: Active / Mix, and the next / previous buttons
         // [re:100883] — prev / next enabled with two or more presets while the
         // chain is active.
@@ -526,6 +601,10 @@ impl FxPanel {
             let names = effect_param_names(kind);
             let get = |k: &str, d: f32| node.f32(k).unwrap_or(d).clamp(0.0, 1.0);
             let active = node.attr("IsActive").map(str::trim) != Some("false");
+            c.display_name = title(kind, node);
+            if let Some(plot) = c.find_mut("Display").filter(|p| p.class == "CtrlPolyPlot") {
+                plot_curves(plot, kind, node);
+            }
             c.walk_mut(&mut |k: &mut Ctrl| {
                 if let Some(n) = k.name.strip_prefix("Control").and_then(|n| n.parse::<usize>().ok()) {
                     if let Some(pn) = names.get(n.wrapping_sub(1)) {
@@ -554,6 +633,29 @@ impl FxPanel {
                 }
             });
         });
+    }
+
+    /// The shown chain's index and, per effect card with a gain-reduction
+    /// meter, its slot and the meter's path.
+    pub(crate) fn meters(&self, app: &App) -> Option<([i8; 3], Vec<(usize, Vec<usize>)>)> {
+        let (t, _) = self.built.as_ref()?;
+        let host = app.ctrl(&self.host)?;
+        let mut out = Vec::new();
+        fn walk(c: &Ctrl, path: &mut Vec<usize>, out: &mut Vec<(usize, Vec<usize>)>) {
+            if let Some(slot) = c.attr("fxSlot").and_then(|v| v.parse().ok()) {
+                if let Some(m) = c.path_of("VUMeter") {
+                    out.push((slot, [&path[..], &m[..]].concat()));
+                }
+                return;
+            }
+            for (i, k) in c.children.iter().enumerate() {
+                path.push(i);
+                walk(k, path, out);
+                path.pop();
+            }
+        }
+        walk(host, &mut self.host.clone(), &mut out);
+        Some((t.index().map(|v| v as i8), out))
     }
 
     /// The (slot, kind) of the effect panel containing `path`.

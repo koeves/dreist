@@ -134,7 +134,9 @@ impl Editor {
         match name.as_str() {
             "BPMTextBox" => {
                 if let Some(bpm) = crate::conv::number(t) {
-                    self.outbox.push(command::msg(dreist_engine::binding::id::SET_TEMPO, &[], &[bpm.clamp(20.0, 999.0)]));
+                    // [re:b0c3e9]: the typed tempo is kept in 20..250.
+                    let (lo, hi) = dreist_gui::v2ctl::TEMPO_RANGE;
+                    self.outbox.push(command::msg(dreist_engine::binding::id::SET_TEMPO, &[], &[bpm.clamp(lo, hi)]));
                 }
             }
             "LengthBox" => {

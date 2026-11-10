@@ -9,6 +9,6 @@
         <CtrlButton name="EngineSoloedIcon" rect="2, 41, 6, 6" id="100001" style="EngineSelectorSoloIndicatorStyle" zorder="555" />
         <CtrlButton name="MuteButton" rect="55, 2, 14, 14" ARTop="FNear 2.0000" displayName="Mute" id="100002" style="EngineSelectorMButtonStyle" text="M" zorder="999" />
         <CtrlButton name="PatternPower" rect="55, 18, 14, 14" ARTop="Center 0.0000" displayName="Pattern on/off" style="EngineSelectorPPButtonStyle" text="" />
-        <CtrlButton name="SoloButton" rect="55, 34, 14, 14" ARTop="FNear 34.0000" ARBottom="FNear 2.0000" displayName="Solo" id="100003" style="EngineSelectorSButtonStyle" text="S" zorder="999" />
+        <CtrlButton name="SoloButton" rect="55, 34, 14, 14" ARTop="FFar 16.0000" ARBottom="FFar 14.0000" displayName="Solo" id="100003" style="EngineSelectorSButtonStyle" text="S" zorder="999" />
     </CtrlPanel>
 </root>

@@ -8,21 +8,14 @@ W, H = 1400, 850
 
 
 def tabs(name, w, items, style, right=0):
-    """A tab strip: (id, label) pairs left to right; a None id starts the
-    right-aligned group."""
-    kids, x = [], 8
-    right_items = [t for t in items if t[2]]
-    for tid, text, at_right in items:
-        if at_right:
-            continue
-        tw = 14 + 7 * len(text)
-        kids.append(N("Button", None, (x, 2, tw, 20), id=tid, style="TabButtonStyle", text=text))
-        x += tw + 16
-    xr = w - 8
-    for tid, text, _ in reversed(right_items):
-        tw = 14 + 7 * len(text)
-        xr -= tw
-        kids.append(N("Button", None, (xr, 2, tw, 20), pin="r", id=tid, style="TabButtonStyle", text=text))
+    """A tab strip: (id, label, x, width) left to right, as the shipped
+    root skin places them; a negative x counts from the right edge."""
+    kids = []
+    for tid, text, x, tw in items:
+        if x < 0:
+            kids.append(N("Button", None, (w + x - tw, 2, tw, 20), pin="r", id=tid, style="TabButtonStyle", text=text))
+        else:
+            kids.append(N("Button", None, (x, 2, tw, 20), id=tid, style="TabButtonStyle", text=text))
     return N("ButtonGroup", name, (0, 0, w, 20), pin="lrt", style=style, optChildPositionsAreLocked=True, optIsVertical=False,
              optUseChildID=True, intLeftSpacing=5, intRightSpacing=right, intTopSpacing=0, intBottomSpacing=0, intIntraSpacing=0,
              kids=kids)
@@ -37,7 +30,7 @@ def root():
              intSplitPosition=util_h, intSplitterDim=SPLIT, intMinSize0=66, intMinSize1=220, intMaxSize1=400, optSnapCollapse0=False,
              strAutoSaveName="padSplitterAS", kids=[
                  N("Panel", "UtilityPanel", (0, 0, SIDE, util_h), displayName="SplitterPanel0", style="TabPanelStyle", kids=[
-                     tabs("UtilityTabButtonGroup", SIDE, [(0, "BROWSER", False), (1, "TRANSMOD", False)], "TabPanelHeaderLeftStyle",
+                     tabs("UtilityTabButtonGroup", SIDE, [(0, "BROWSER", 10, 70), (1, "TRANSMOD", 100, 80)], "TabPanelHeaderLeftStyle",
                           right=120),
                      N("TabPanel", "UtilityTabPanel", (0, 20, SIDE, util_h - 20), pin="lrtb", style="TabPanelStyle")]),
                  N("Panel", "PadsPanel", (0, util_h + SPLIT, SIDE, IH - util_h - SPLIT), pin="lrtb", displayName="SplitterPanel1",
@@ -45,8 +38,8 @@ def root():
     MW = IW - SIDE - SPLIT
     MAIN_MIN = 1150 - 10 - SIDE - SPLIT
     ed_h = 372
-    editor_tabs = [(0, "PATTERN", False), (3, "LAYER MIXER", False), (4, "PAD MIXER", False), (5, "GLOBAL MIXER", False),
-                   (1, "SCENES", False), (2, "SONG", False), (6, "MAPPING", True)]
+    editor_tabs = [(0, "PATTERN", 10, 65), (3, "LAYER MIXER", 114, 85), (4, "PAD MIXER", 219, 75), (5, "GLOBAL MIXER", 314, 90),
+                   (1, "SCENES", 443, 60), (2, "SONG", 542, 50), (6, "MAPPING", -10, 70)]
     main = N("Panel", "MainPanel", (SIDE + SPLIT, 0, MW, IH), displayName="SplitterPanel1", style="InvisibleStyle", kids=[
         N("SplitterPanel", "MainSplitter", (0, 0, MW, IH), pin="lrtb", style="InvisibleStyle", SplitterPanelStyle="SplitterStyle",
           intSplitPosition=ed_h, intSplitterDim=SPLIT, intMinSize0=190, intMinSize1=360, intMaxSize1=390, strAutoSaveName="mainSplitAS",
@@ -82,11 +75,13 @@ def header():
         N("Label", None, (2, 2, 44, 15), id=100002, style="HeaderBarConsoleTextStyle", text="PRESET:"),
         # Liberation Sans sets "PRESET:" a few px wider than the original's
         # 40 px label: the name starts 3 px later.
-        N("Label", "PresetLabel", (46, 2, 96, 15), pin="r", id=100002, style="HeaderBarPresetStyle", text=""),
+        N("Label", "PresetLabel", (46, 2, 96, 15), pin="R", id=100002, style="HeaderBarPresetStyle", text=""),
         N("Button", "VoiceIndi", (145, 2, 12, 15), id=100002, style="HeaderBarIconIndicatorStyle", text=""),
+        # The tempo box ends inside the 200 px console (the shipped one runs
+        # 7 px past its edge).
         N("TempoBox", "BPMTextBox", (156, 2, 42, 15), displayName="Tempo", id=100002, style="HeaderBarConsoleRightTextStyle"),
         N("Label", None, (2, 17, 22, 15), id=100002, style="HeaderBarConsoleTextStyle", text="KIT:"),
-        N("Label", "KitLabel", (26, 17, 116, 15), pin="r", id=100002, style="HeaderBarPresetStyle", text=""),
+        N("Label", "KitLabel", (26, 17, 116, 15), pin="R", id=100002, style="HeaderBarPresetStyle", text=""),
         N("Button", "MIDIIndi", (145, 17, 12, 15), id=100002, style="HeaderBarIconIndicatorStyle", text=""),
         N("Label", "MemoryUsageBox", (158, 17, 40, 15), id=100002, style="HeaderBarConsoleRightTextStyle", text=""),
     ])

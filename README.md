@@ -11,9 +11,8 @@
 
 | | |
 |---|---|
-| ![Hollow: pattern editor](docs/screens/readme/hollow-pattern.png) | ![Blister: pattern editor](docs/screens/readme/blister-pattern.png) |
-| ![Hollow: scenes](docs/screens/readme/hollow-scenes.png) | ![Blister: song mode](docs/screens/readme/blister-song.png) |
-| ![Blister: pad mixer](docs/screens/readme/blister-pad-mixer.png) | ![Hollow: global mixer](docs/screens/readme/hollow-global-mixer.png) |
+| ![Pattern editor](docs/screens/readme/dreist-pattern.png) | ![Scenes](docs/screens/readme/dreist-scenes.png) |
+| ![Song mode](docs/screens/readme/dreist-song.png) | ![Transmod](docs/screens/readme/dreist-transmod.png) |
 
 ## Installation
 

@@ -212,11 +212,15 @@ S("ExExLargeIconRadioButtonLeft", "ExExLargeIconButtonStyle", optRoundTopRight="
 S("ExExLargeIconRadioButtonRight", "ExExLargeIconButtonStyle", optRoundTopLeft="false", optRoundBottomLeft="false")
 S("ExExLargeIconRadioButtonCenter", "ExExLargeIconButtonStyle", **NO_ROUND)
 S("DefaultCheckboxButtonStyle", "DefaultButtonStyle", "CheckBoxButtonRendererStyle", colTick="PanelDarkest")
-S("DefaultPopupButtonStyle", "DefaultButtonStyle", enumTextHorizontalAlign="left")
+# (`optStepperArrows`: value steppers in these styles draw the stepper
+# triangles.)
+# Popup text shortened to the whole button's width and clipped to the text
+# rect, as the original draws it (dreist-gui `optShortenToControlWidth`).
+S("DefaultPopupButtonStyle", "DefaultButtonStyle", enumTextHorizontalAlign="left", optStepperArrows="true", optShortenToControlWidth="true")
 S("ShorteningPopupButtonStyle", "DefaultPopupButtonStyle", enumTextShortenAlgorithm="middle")
 
 section("Text fields")
-S("DefaultEditBoxStyle", "CornerRoundingStyle", font="Standard", colText="EditorDarkest", colFill="PanelAltMedium", colAltFill="PanelAltMedium", colBorder="PanelAltMedium", colAltBorder="PanelAltMedium")
+S("DefaultEditBoxStyle", "CornerRoundingStyle", optStepperArrows="true", font="Standard", colText="EditorDarkest", colFill="PanelAltMedium", colAltFill="PanelAltMedium", colBorder="PanelAltMedium", colAltBorder="PanelAltMedium")
 S("SearchBoxStyle", "DefaultEditBoxStyle", enumTextHorizontalAlign="left", colAltFill="EditorDarkest")
 S("InvisibleEditBoxStyle", optDrawShadow="false", optDrawBorder="false", colFill="Transparent", enumTextHorizontalAlign="left", font="SmallStd")
 S("InvisibleCenteredEditBoxStyle", "InvisibleEditBoxStyle", enumTextHorizontalAlign="center")
@@ -238,7 +242,8 @@ S("DefaultVerticalVUMeterStyle", "DefaultVUMeterStyle", "CtrlMultiChannelDBMeter
 S("BigVerticalVUMeterStyle", "DefaultVUMeterStyle", "CtrlMultiChannelDBMeterStyle", intChannelSpacing="2", intMarkingSize="12")
 S("DefaultHorizontalVUMeterStyle", "DefaultVUMeterStyle", "CtrlMultiChannelDBMeterStyle", optHideMarkingText="true")
 S("DefaultLighterHorizontalVUMeterStyle", "DefaultHorizontalVUMeterStyle", "CtrlMultiChannelDBMeterStyle", colChannelBack="EditorMedium")
-S("ScrollbarStyle", "CornerRounding3Style", colFill="Transparent", colBorder="Transparent", colAltFill="PanelMedium", colAltBorder="PanelMedium")
+# The thumb inset 2 px and framed (dreist-gui `optFramedThumb`).
+S("ScrollbarStyle", "CornerRounding3Style", optFramedThumb="true", colFill="Transparent", colBorder="Transparent", colAltFill="PanelMedium", colAltBorder="PanelMedium")
 
 section("Sliders, knobs, modulation")
 DIAL = dict(optDrawBorder="false", colFill="PanelMedium", colFillHighlight="EditorMedium", colAltFill="PanelDarkest", colBorder="PanelDarkest", colAltBorder="PanelBrightest")
@@ -248,7 +253,9 @@ S("AltKnobStyle", "KnobStyle", colFill="PanelMediumAlpha03", colFillHighlight="E
 TM = dict(optDrawBorder="false", colBorder="Transparent", colModulationIndication="EditorAltBrightest", colModTrackFill="PanelMediumAlpha05",
           colFill="PanelAltDark", colAltFill="EditorMedium", colHandleBorder="PanelBrightest", colHandleFill="PanelDarkest",
           colModulationPos="EditorAltDarkest", colDepth="EditorAltBrightestAlpha05")
-S("TransmodStyle", kind="CtrlTransmodStyle", optDrawModTrack="true", **TM)
+# All seven transmod layers: depth zones, handles, the selected-source
+# indication and the modulated outline (dreist-gui `optTransmodLayers`).
+S("TransmodStyle", kind="CtrlTransmodStyle", optDrawModTrack="true", optTransmodLayers="true", **TM)
 S("TransmodSliderStyle", "TransmodStyle", "CtrlTransmodStyle", optModStrip="true")
 S("MiniSequencerStyle", colFill="EditorAltMedium", colBorder="EditorAltMedium", colAltFill="EditorBrightest", colDisabledOverlay="PanelMediumAlpha05")
 
@@ -301,7 +308,7 @@ HDR_BTN = dict(optDrawBorder="false", realBorderWidth="0", colBorder="Transparen
 S("HeaderBarButtonStyle", "CornerRoundingStyle", font="SmallStd", enumTextShortenAlgorithm="end", colFill="PanelMediumAlpha03", colText="PanelBrightest",
   colAltFill="EditorAltBrightest", colAltBorder="EditorAltBrightest", colAltText="PanelDarkest", **HDR_BTN)
 S("HeaderBarIconButtonStyle", "HeaderBarButtonStyle", font="ExExLargeIcons")
-S("HeaderBarPopupButtonStyle", "HeaderBarButtonStyle", enumTextHorizontalAlign="left")
+S("HeaderBarPopupButtonStyle", "HeaderBarButtonStyle", enumTextHorizontalAlign="left", optShortenToControlWidth="true")
 S("HeaderBarUndoRedoDropStyle", "HeaderBarButtonStyle", optRoundTopLeft="false", optRoundBottomLeft="false", realTextOffset="0", font="Tiny")
 S("RecordButtonStyle", "CornerRoundingStyle", font="ExExLargeIcons", colFill="PanelSparkAlpha05", colText="EditorDarkest", colAltFill="PanelSpark", colAltBorder="PanelSpark", colAltText="PanelDarkest", **HDR_BTN)
 S("PlayButtonStyle", "CornerRoundingStyle", font="ExExLargeIcons", colFill="EditorAltBrightestAlpha05", colText="EditorDarkest", colAltFill="EditorAltBrightest", colAltBorder="EditorAltBrightest", colAltText="PanelDarkest", **HDR_BTN)
@@ -415,6 +422,18 @@ S("SongTrackPanelStyle0", "TrackNotSelectedStyle", colBorder="PanelMedium")
 S("SongTrackPanelStyle1", "TrackNotSelectedStyle", colBorder="PanelMedium")
 S("SongTrackPanelSelectedStyle", "TrackSelectedStyle", colBorder="PanelMedium")
 S("SongTrackPanelPreviewingStyle", None, colFill="EditorAltMedium")
+
+# --- Effect panel meters and plots (fx.py) -------------------------------
+# Kept apart from the general control styles. The original's meter and EQ
+# plot are drawn by their classes ([re:664306], [re:faafb0], [re:b03feb]):
+# a needle meter over MeterStyle's panel, its scale, ticks, texts and needle
+# in a dark grey with the original's geometry (dreist-gui `optMeterMarkings`);
+# an EQ plot over PlotStyle with a 1 px grid and each curve 2 px wide over its
+# own colour at alpha 0.2, the line closed along the bottom (`optCurveClosed`).
+section("Effect panel meters and plots")
+S("EffectMeterStyle", "MeterStyle", "CtrlMeterStyle", optMeterMarkings="true")
+S("EffectEQPlotStyle", "PlotStyle", colGrid="EditorDarkestAlpha03", realCurveFillAlpha="0.2", realLineWidth="2", optCurveClosed="true",
+  optRoundBottomLeft="false", optRoundBottomRight="false")
 
 
 # ---------------------------------------------------------------- output

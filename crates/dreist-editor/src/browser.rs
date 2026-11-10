@@ -277,6 +277,9 @@ pub struct Browser {
     /// release unless it was dragged.
     collapse: Option<usize>,
     scroll: usize,
+    /// The source list's scroll offset and last drawn height (px).
+    source_scroll: std::cell::Cell<f32>,
+    source_view_h: std::cell::Cell<f32>,
     history: Vec<PathBuf>,
     future: Vec<PathBuf>,
     pub(crate) auto_load: bool,
@@ -916,6 +919,8 @@ impl Browser {
             previews: Default::default(),
             collapse: None,
             scroll: 0,
+            source_scroll: Default::default(),
+            source_view_h: Default::default(),
             history: Vec::new(),
             future: Vec::new(),
             auto_load: false,
@@ -1269,7 +1274,7 @@ impl Browser {
             // [re:ecaf90]: an edit box over the row.
             SourceAction::SetName => {
                 let Some(c) = app.ctrl(anchor).cloned() else { return false };
-                let y = c.rect.y + (i as f32 * SOURCE_ROW) as i32 + 2;
+                let y = c.rect.y + (i as f32 * SOURCE_ROW - self.source_scroll.get()) as i32 + 2;
                 let rect = dreist_gui::ctrl::Rect::new(c.rect.x + SOURCE_TEXT_X as i32 - 2, y, (c.rect.w - SOURCE_TEXT_X as i32 - 2).max(40), SOURCE_ROW as i32 - 4);
                 app.open_edit_box(&anchor[..anchor.len() - 1], SOURCE_RENAME_EDIT, rect, src.label.clone());
                 self.renaming = Some(i);
@@ -1825,7 +1830,7 @@ impl Browser {
             }
             // Source list item menu ([re:4b8b2d]).
             UiEvent::Mouse { path, overload, kind: MouseKind::RightDown, y, .. } if overload == "BrowserSourceList" => {
-                let i = (*y / SOURCE_ROW) as usize;
+                let i = self.source_row_at(*y);
                 let items = self.source_items(i);
                 if items.is_empty() {
                     return false;
@@ -1901,6 +1906,12 @@ impl Browser {
                 }
                 r
             }
+            // The source list scrolls a row per wheel line.
+            UiEvent::Wheel { overload, dy, .. } if overload == "BrowserSourceList" => {
+                self.source_scroll.set(self.source_scroll.get() - dy * SOURCE_ROW);
+                self.clamp_source_scroll();
+                true
+            }
             UiEvent::Wheel { overload, dy, .. } if overload == "BrowserFileList" => {
                 self.scroll_by(-(dy.round() as i32) * 3);
                 true
@@ -1918,7 +1929,7 @@ impl Browser {
                 false
             }
             UiEvent::Mouse { overload, kind: MouseKind::Down, y, .. } if overload == "BrowserSourceList" => {
-                let i = (*y / SOURCE_ROW) as usize;
+                let i = self.source_row_at(*y);
                 match self.sources.get(i).cloned() {
                     Some(Source { path: Some(p), .. }) => {
                         self.go(p, true);
@@ -2111,10 +2122,16 @@ impl Browser {
                 let sel = s.colour("BrowserSourceListStyle", "colRowSelection", Colour::BLACK);
                 let paper = s.colour("BrowserSourceListStyle", "colFill", Colour::WHITE);
                 let paper = if paper.a == 0 { Colour::WHITE } else { paper };
+                self.source_view_h.set(h);
+                self.clamp_source_scroll();
+                let off = self.source_scroll.get();
                 for (i, src) in self.sources.iter().enumerate() {
-                    let y = i as f32 * SOURCE_ROW;
+                    let y = i as f32 * SOURCE_ROW - off;
                     if y > h {
                         break;
+                    }
+                    if y + SOURCE_ROW < 0.0 {
+                        continue;
                     }
                     let current = src.path.is_some() && src.path == self.dir;
                     // [re:305087]: a colour label
@@ -2137,6 +2154,14 @@ impl Browser {
                         self.source_icon(p, src, icon, text, paper);
                         p.text(RectF::new(SOURCE_TEXT_X, y, w - SOURCE_TEXT_X - 4.0, SOURCE_ROW), &src.label, text, &font, HAlign::Left, VAlign::Center);
                     }
+                }
+                // A thumb while the rows overflow (ScrollbarStyle).
+                let total = self.sources.len() as f32 * SOURCE_ROW;
+                if total > h && h > 0.0 {
+                    let th = (h * h / total).max(8.0);
+                    let ty = off / (total - h) * (h - th);
+                    let col = s.colour("ScrollbarStyle", "colAltFill", text);
+                    p.fill_rounded(RectF::new(w - 9.0, ty + 1.0, 7.0, th - 2.0), 3.0, [true; 4], col);
                 }
                 true
             }
@@ -2259,6 +2284,27 @@ impl Browser {
         let changed = (*p - f).abs() > 1e-6;
         *p = f;
         changed
+    }
+
+    /// The source row at `y` in the list (scrolled).
+    fn source_row_at(&self, y: f32) -> usize {
+        ((y + self.source_scroll.get()).max(0.0) / SOURCE_ROW) as usize
+    }
+
+    /// Keep the source list's offset within its rows.
+    fn clamp_source_scroll(&self) {
+        let max = (self.sources.len() as f32 * SOURCE_ROW - self.source_view_h.get()).max(0.0);
+        self.source_scroll.set(self.source_scroll.get().clamp(0.0, max));
+    }
+
+    /// Number of source list rows.
+    pub fn sources_len(&self) -> usize {
+        self.sources.len()
+    }
+
+    /// Source list scroll offset (px).
+    pub fn source_scroll(&self) -> f32 {
+        self.source_scroll.get()
     }
 
     /// Mouse wheel / scroll support for the file list.
