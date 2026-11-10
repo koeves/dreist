@@ -22,7 +22,7 @@ jobs:
       DREIST_UI: ${{ github.workspace }}/assets/ui
       DREIST_RESOURCES: ${{ github.workspace }}/assets/factory
     steps:
-      - uses: actions/checkout@v4
+      - uses: actions/checkout@v7
         with:
           submodules: recursive
       - uses: dtolnay/rust-toolchain@stable
@@ -61,7 +61,7 @@ jobs:
       DREIST_UI: ${{ github.workspace }}/assets/ui
       DREIST_RESOURCES: ${{ github.workspace }}/assets/factory
     steps:
-      - uses: actions/checkout@v4
+      - uses: actions/checkout@v7
         with:
           submodules: recursive
       - uses: dtolnay/rust-toolchain@stable
