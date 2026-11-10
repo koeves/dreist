@@ -133,7 +133,10 @@ def source_bar():
                         intTextOffset=-1, kids=[
                             N("Knob", f"Macro{i}", (11, 1, 20, 20), pin="ct", displayName=f"Macro {i + 1}",
                               style="AltKnobStyle", realDialThickness=0.3)]))
-    right = N("LayoutBox", None, (970, 0, 180, H), pin="lrtb", kids=macros, **box)
+    # From x 960 (not 970) the four macros (178 px) still fit in the
+    # smallest window, where this panel is 1140 wide: the last one lost
+    # 8 px there.
+    right = N("LayoutBox", None, (960, 0, 190, H), pin="lrtb", kids=macros, **box)
     return N("Panel", "TransmodSelectPanel", (0, 0, W, H), pin="lrtb", style="InvisibleStyle", kids=[left, right])
 
 
