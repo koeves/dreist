@@ -84,6 +84,7 @@ def scenes_page():
     left = N("Panel", None, (0, 0, LW, H), pin="lrtb", style="InvisibleStyle", kids=[bar, grid])
 
     RW = W - LW
+    TH = H - 10 - 165 - 5   # the engine table, 5 px above the panel's bottom
     start = N("ButtonGroup", "StartModeButtonGroup", (0, 0, 190, 23), pin="ct", displayName="Start mode",
               id=100003, optIsVertical=False, intLeftSpacing=0, intRightSpacing=0, intTopSpacing=0, intBottomSpacing=3,
               kids=[N("Button", n, (i * 64, 0, 62, 20), displayName=tip, overloadClass="FlashingButton", style="DefaultButtonStyle",
@@ -96,9 +97,11 @@ def scenes_page():
         N("Labeller", None, ((RW - 190) // 2, 60, 190, 90), pin="c", style="SmallControlLabellerStyle", enumTextPosition="Below",
           kids=[start, N("TextBox", "NameTextBox", (8, 51, 175, 20), pin="c", displayName="Scene name", id=100001,
                          style="DefaultEditBoxStyle")]),
-        N("Panel", None, (10, 165, RW - 19, 180), pin="lrt", style="DarkPanelStyle", kids=[
-            N("Panel", None, (1, 1, RW - 21, 178), pin="lrtb", style="BasicPanelStyle", kids=[
-                N("TableView", "DetailsTable", (0, 0, RW - 21, 178), pin="lrtb", id=100000, style="DefaultTableViewScrollStyle",
+        # The engine table ends above the panel's bottom edge, scrolling
+        # when the editor tabs are short (it ran out of the panel).
+        N("Panel", None, (10, 165, RW - 19, TH), pin="lrtb", style="DarkPanelStyle", kids=[
+            N("Panel", None, (1, 1, RW - 21, TH - 2), pin="lrtb", style="BasicPanelStyle", kids=[
+                N("TableView", "DetailsTable", (0, 0, RW - 21, TH - 2), pin="lrtb", id=100000, style="DefaultTableViewScrollStyle",
                   HScrollBarStyle="", VScrollBarStyle="", ScrollViewStyle="DefaultTableViewScrollStyle",
                   TableHeaderPanelStyle="DefaultTableViewHeaderStyle", TablePanelStyle="DefaultTableViewStyle")])]),
     ])

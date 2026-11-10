@@ -30,9 +30,9 @@
                 </CtrlButtonGroup>
                 <CtrlTextBox name="NameTextBox" rect="8, 51, 175, 20" ARLeft="Center 0.0000" displayName="Scene name" id="100001" style="DefaultEditBoxStyle" />
             </CtrlLabeller>
-            <CtrlPanel rect="10, 165, 281, 180" ARLeft="FNear 10.0000" ARRight="FNear 9.0000" ARTop="FNear 165.0000" style="DarkPanelStyle">
-                <CtrlPanel rect="1, 1, 279, 178" ARLeft="FNear 1.0000" ARRight="FNear 1.0000" ARTop="FNear 1.0000" ARBottom="FNear 1.0000" style="BasicPanelStyle">
-                    <CtrlTableView name="DetailsTable" rect="0, 0, 279, 178" ARLeft="FNear 0.0000" ARRight="FNear 0.0000" ARTop="FNear 0.0000" ARBottom="FNear 0.0000" HScrollBarStyle="" ScrollViewStyle="DefaultTableViewScrollStyle" TableHeaderPanelStyle="DefaultTableViewHeaderStyle" TablePanelStyle="DefaultTableViewStyle" VScrollBarStyle="" id="100000" style="DefaultTableViewScrollStyle" />
+            <CtrlPanel rect="10, 165, 281, 215" ARLeft="FNear 10.0000" ARRight="FNear 9.0000" ARTop="FNear 165.0000" ARBottom="FNear 5.0000" style="DarkPanelStyle">
+                <CtrlPanel rect="1, 1, 279, 213" ARLeft="FNear 1.0000" ARRight="FNear 1.0000" ARTop="FNear 1.0000" ARBottom="FNear 1.0000" style="BasicPanelStyle">
+                    <CtrlTableView name="DetailsTable" rect="0, 0, 279, 213" ARLeft="FNear 0.0000" ARRight="FNear 0.0000" ARTop="FNear 0.0000" ARBottom="FNear 0.0000" HScrollBarStyle="" ScrollViewStyle="DefaultTableViewScrollStyle" TableHeaderPanelStyle="DefaultTableViewHeaderStyle" TablePanelStyle="DefaultTableViewStyle" VScrollBarStyle="" id="100000" style="DefaultTableViewScrollStyle" />
                 </CtrlPanel>
             </CtrlPanel>
         </CtrlPanel>

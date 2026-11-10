@@ -1,5 +1,5 @@
 editor-tab-0 11ca06dc0e1ad23a
-editor-tab-1 ce5c262b49c81baa
+editor-tab-1 e3da0eb8fa9c595a
 editor-tab-2 27093101aa196214
 editor-tab-3 e9d9be55d2cbeb3e
 editor-tab-4 9ae9a8aa88925f27
@@ -13,7 +13,7 @@ modal-metadata b6bcb36ad009bc8a
 modal-preferences e99b21d34aebd74b
 options-menu b2997bc808a315c5
 resized-tab-0 f2fa033897f0e106
-resized-tab-1 7ca4f87a8401885f
+resized-tab-1 1f987120a8e2e324
 resized-tab-2 7000fb0f169b98bf
 resized-tab-3 57c2e209c444aafd
 resized-tab-4 b4ff68575ea01a02
