@@ -72,10 +72,15 @@ def strip(kind, size):
             rest.add(knob("Pitch", "Pitch", (rest.w - ks) // 2, y, ks, True, transmod=pad))
             mix.append(rest)
         if kind != "MasterChannel":
-            mix.append(mute_solo(32, top))
+            # Beside the fader's top, moving down with it as the strip
+            # grows (they stayed put over the meter), and inside the narrow
+            # aux strip (its Solo button stuck out at x 32).
+            ms = mute_solo(min(32, w - 39), top)
+            ms.attrs["ARTop"] = "Relative 0.5100"
+            mix.append(ms)
             if kind == "AuxChannel":
                 mix.append(N("Button", "PrePostButton", (32, top + 22, w - 34, 18), displayName="Sends before the fader",
-                             style="DefaultButtonStyle", text="Pre"))
+                             style="DefaultButtonStyle", text="Pre", ARTop=f"Relative {(top + 22 + 3) / mh:.4f}"))
     else:
         y0 = 0
         if tall and kind != "AuxChannel":

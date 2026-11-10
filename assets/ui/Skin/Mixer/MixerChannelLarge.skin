@@ -15,7 +15,7 @@
                 <CtrlTransmodKnob name="PanKnob" rect="13, 24, 30, 30" displayName="Pan" id="100000" optCentered="true" style="TransmodStyle" />
                 <CtrlTransmodKnob name="Pitch" rect="13, 70, 30, 30" displayName="Pitch" id="100000" optCentered="true" style="TransmodStyle" />
             </CtrlLabeller>
-            <CtrlPanel rect="32, 174, 38, 20" style="InvisibleStyle" zorder="888">
+            <CtrlPanel rect="32, 174, 38, 20" ARTop="Relative 0.5100" style="InvisibleStyle" zorder="888">
                 <CtrlButton name="MuteButton" rect="0, 0, 18, 18" displayName="Mute" style="MuteButtonStyle" text="M" />
                 <CtrlButton name="SoloButton" rect="20, 0, 18, 18" displayName="Solo" style="SoloButtonStyle" text="S" />
             </CtrlPanel>
