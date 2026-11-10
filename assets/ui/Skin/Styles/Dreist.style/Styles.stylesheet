@@ -76,6 +76,7 @@
     <CtrlStyle name="InvisibleCenteredEditBoxStyle" parentStyle0="InvisibleEditBoxStyle" enumTextHorizontalAlign="center" />
     <CtrlStyle name="DarkTextInvisibleEditBoxStyle" parentStyle0="InvisibleEditBoxStyle" colText="EditorDarkest" />
     <CtrlStyle name="LightTextInvisibleEditBoxStyle" parentStyle0="InvisibleEditBoxStyle" colText="PanelBrightest" />
+    <CtrlStyle name="EmptyLayerTextStyle" parentStyle0="InvisibleEditBoxStyle" colText="PanelMedium" />
     <CtrlStyle name="FieldEditorStyle" parentStyle0="ApplicationStyle" enumTextHorizontalAlign="left" font="Standard" />
     <CtrlStyle name="ListViewSyle" parentStyle0="DefaultEditBoxStyle" enumTextHorizontalAlign="left" font="Standard" />
 

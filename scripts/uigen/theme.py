@@ -222,6 +222,7 @@ S("InvisibleEditBoxStyle", optDrawShadow="false", optDrawBorder="false", colFill
 S("InvisibleCenteredEditBoxStyle", "InvisibleEditBoxStyle", enumTextHorizontalAlign="center")
 S("DarkTextInvisibleEditBoxStyle", "InvisibleEditBoxStyle", colText="EditorDarkest")
 S("LightTextInvisibleEditBoxStyle", "InvisibleEditBoxStyle", colText="PanelBrightest")
+S("EmptyLayerTextStyle", "InvisibleEditBoxStyle", colText="PanelMedium")
 S("FieldEditorStyle", enumTextHorizontalAlign="left", font="Standard")
 S("ListViewSyle", "DefaultEditBoxStyle", enumTextHorizontalAlign="left", font="Standard")
 

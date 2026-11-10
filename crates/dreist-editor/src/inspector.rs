@@ -524,22 +524,35 @@ impl Inspector {
         if let Some(tp) = &self.table {
             let (_, lmask) = crate::multipad::layer_selection(model, e, p);
             let _ = l;
-            let rows: Vec<(String, bool, bool)> = (0..LAYERS)
+            let rows: Vec<(bool, String, bool, bool)> = (0..LAYERS)
                 .map(|li| {
                     let f = model.layer(e, p, li);
-                    (if f.valid { model.layer_name(e, p, li).unwrap_or_default() } else { String::new() }, f.mute, f.solo)
+                    (f.valid, if f.valid { model.layer_name(e, p, li).unwrap_or_default() } else { String::new() }, f.mute, f.solo)
                 })
                 .collect();
             if let Some(t) = app.ctrl_mut(tp) {
                 for r in &mut t.children {
                     let Some(li) = r.attr("layer").and_then(|v| v.parse::<usize>().ok()) else { continue };
-                    let (name, m, s) = &rows[li.min(LAYERS - 1)];
-                    r.set_attr("selected", (lmask & (1u8 << li.min(7)) != 0).to_string());
+                    let (valid, name, m, s) = &rows[li.min(LAYERS - 1)];
+                    let selected = lmask & (1u8 << li.min(7)) != 0;
+                    r.set_attr("selected", selected.to_string());
                     for c in &mut r.children {
                         match c.name.as_str() {
-                            "SampleName" => c.text = if name.is_empty() { c.attr("placeholder").unwrap_or("").to_string() } else { name.clone() },
-                            "Mute" => c.on = *m,
-                            "Solo" => c.on = *s,
+                            "SampleName" => {
+                                c.text = if name.is_empty() { c.attr("placeholder").unwrap_or("").to_string() } else { name.clone() };
+                                // An empty slot reads as a light placeholder on
+                                // the dark table (dark on the selected row).
+                                c.style = if *valid || selected { "DarkTextInvisibleEditBoxStyle" } else { "EmptyLayerTextStyle" }.into();
+                            }
+                            "Mute" => {
+                                c.on = *m;
+                                c.visible = *valid;
+                            }
+                            "Solo" => {
+                                c.on = *s;
+                                c.visible = *valid;
+                            }
+                            "VUMeter" => c.visible = *valid,
                             _ => {}
                         }
                     }
