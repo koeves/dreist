@@ -4,7 +4,7 @@ name: Release
 # CLAP, standalone) on macOS and Windows, tests it and publishes the GitHub
 # release with the zips. A manual run builds the checked-out ref and
 # publishes to `tag` only when `upload` is set. No workflow runs on branch
-# pushes (see .agents/git.md).
+# pushes (see CONTRIBUTING.md).
 on:
   push:
     tags: ["v*"]
