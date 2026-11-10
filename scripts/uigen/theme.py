@@ -248,7 +248,7 @@ S("AltKnobStyle", "KnobStyle", colFill="PanelMediumAlpha03", colFillHighlight="E
 TM = dict(optDrawBorder="false", colBorder="Transparent", colModulationIndication="EditorAltBrightest", colModTrackFill="PanelMediumAlpha05",
           colFill="PanelAltDark", colAltFill="EditorMedium", colHandleBorder="PanelBrightest", colHandleFill="PanelDarkest",
           colModulationPos="EditorAltDarkest", colDepth="EditorAltBrightestAlpha05")
-S("TransmodStyle", kind="CtrlTransmodStyle", **TM)
+S("TransmodStyle", kind="CtrlTransmodStyle", optDrawModTrack="true", **TM)
 S("TransmodSliderStyle", "TransmodStyle", "CtrlTransmodStyle", optModStrip="true")
 S("MiniSequencerStyle", colFill="EditorAltMedium", colBorder="EditorAltMedium", colAltFill="EditorBrightest", colDisabledOverlay="PanelMediumAlpha05")
 
