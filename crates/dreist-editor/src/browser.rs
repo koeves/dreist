@@ -29,6 +29,9 @@ const SOURCE_ROW: f32 = 25.0;
 const FILE_ROW: f32 = 18.0;
 const ITEM_STYLE: &str = "BrowserListItemStyle";
 const SOURCE_STYLE: &str = "BrowserSourceListItemStyle";
+const LIST_STYLE: &str = "BrowserListViewStyle";
+/// Source list items: a 16 px icon at x 16, the name after it.
+const SOURCE_TEXT_X: f32 = 36.0;
 
 /// Listed files besides projects and kits of every family.
 const EXTENSIONS: [&str; 13] = ["wav", "aif", "aiff", "patterntemplate", "rx2", "rex", "rcy", "rex2", "rcso", "gru", "kit", "g01", "g24"];
@@ -314,6 +317,10 @@ pub struct Browser {
     source_menu: Option<(usize, Vec<SourceAction>)>,
     /// Source row being renamed ("Set name...").
     renaming: Option<usize>,
+    /// Source list categories folded by a click on their header.
+    folded: std::collections::HashSet<&'static str>,
+    /// Content pack artwork (`icon.png` in the pack folder) by pack.
+    pack_icons: std::cell::RefCell<std::collections::HashMap<PathBuf, Option<dreist_gui::tiny_skia::Pixmap>>>,
     /// "Export to folder": the shortlist and whether to add the folder to
     /// the favourites, taken by the editor (folder dialog).
     pub export_request: Option<(String, bool)>,
@@ -705,12 +712,15 @@ fn places(home: &Path) -> Vec<(String, PathBuf)> {
     ]
 }
 
-fn sources(favourites: &[PathBuf], searches: &[String], shortlists: &[(String, Vec<PathBuf>)]) -> Vec<Source> {
+fn sources(favourites: &[PathBuf], searches: &[String], shortlists: &[(String, Vec<PathBuf>)], folded: &std::collections::HashSet<&'static str>) -> Vec<Source> {
     let mut v = Vec::new();
     let home = dreist_formats::paths::home();
     let (labels, hidden) = (load_labels(), hidden_content());
     for cat in CATEGORIES {
         v.push(Source { label: cat.into(), path: None, header: true, cat, colour: 0 });
+        if folded.contains(cat) {
+            continue;
+        }
         let items: Vec<(String, PathBuf)> = match cat {
             "Content" => subdirs(&content_dir()).into_iter().map(|p| (p.file_name().unwrap().to_string_lossy().into_owned(), p)).collect(),
             "Places" => places(&home),
@@ -925,6 +935,8 @@ impl Browser {
             pane: Default::default(),
             source_menu: None,
             renaming: None,
+            folded: Default::default(),
+            pack_icons: Default::default(),
             export_request: None,
             nav: Default::default(),
             nav_pressed: None,
@@ -933,7 +945,7 @@ impl Browser {
             pads_track: crate::options::Options::load().bool("PadsTrackBrowser", false),
         };
         b.searches = load_saved_searches();
-        b.sources = sources(&b.favourites, &b.searches, &b.shortlists);
+        b.sources = sources(&b.favourites, &b.searches, &b.shortlists, &b.folded);
         if let Some(d) = start {
             b.go(d, false);
         }
@@ -1148,7 +1160,7 @@ impl Browser {
                 if !self.favourites.contains(&dir) {
                     self.favourites.push(dir);
                     save_favourites(&self.favourites);
-                    self.sources = sources(&self.favourites, &self.searches, &self.shortlists);
+                    self.sources = sources(&self.favourites, &self.searches, &self.shortlists, &self.folded);
                 }
                 true
             }
@@ -1247,7 +1259,7 @@ impl Browser {
                     _ => return false,
                 }
                 labels_set(&path, Some(None), Some(0));
-                self.sources = sources(&self.favourites, &self.searches, &self.shortlists);
+                self.sources = sources(&self.favourites, &self.searches, &self.shortlists, &self.folded);
                 true
             }
             SourceAction::Reveal => {
@@ -1258,7 +1270,7 @@ impl Browser {
             SourceAction::SetName => {
                 let Some(c) = app.ctrl(anchor).cloned() else { return false };
                 let y = c.rect.y + (i as f32 * SOURCE_ROW) as i32 + 2;
-                let rect = dreist_gui::ctrl::Rect::new(c.rect.x + 14, y, (c.rect.w - 18).max(40), SOURCE_ROW as i32 - 4);
+                let rect = dreist_gui::ctrl::Rect::new(c.rect.x + SOURCE_TEXT_X as i32 - 2, y, (c.rect.w - SOURCE_TEXT_X as i32 - 2).max(40), SOURCE_ROW as i32 - 4);
                 app.open_edit_box(&anchor[..anchor.len() - 1], SOURCE_RENAME_EDIT, rect, src.label.clone());
                 self.renaming = Some(i);
                 true
@@ -1271,7 +1283,7 @@ impl Browser {
             // Colour label [re:86689a] (cell 0 = none).
             SourceAction::Colour(k) => {
                 labels_set(&path, None, Some(k));
-                self.sources = sources(&self.favourites, &self.searches, &self.shortlists);
+                self.sources = sources(&self.favourites, &self.searches, &self.shortlists, &self.folded);
                 true
             }
             // [re:51bf3d]: run it again.
@@ -1313,7 +1325,7 @@ impl Browser {
         if favourite && !self.favourites.contains(&to) {
             self.favourites.push(to.clone());
             save_favourites(&self.favourites);
-            self.sources = sources(&self.favourites, &self.searches, &self.shortlists);
+            self.sources = sources(&self.favourites, &self.searches, &self.shortlists, &self.folded);
         }
         Ok(to)
     }
@@ -1350,7 +1362,7 @@ impl Browser {
         } else {
             labels_set(&p, Some(Some(name)), None);
         }
-        self.sources = sources(&self.favourites, &self.searches, &self.shortlists);
+        self.sources = sources(&self.favourites, &self.searches, &self.shortlists, &self.folded);
     }
 
     /// [re:6fa118]: "Shortlist n".
@@ -1358,7 +1370,7 @@ impl Browser {
         let n = (1..).find(|k| !self.shortlists.iter().any(|(s, _)| *s == format!("Shortlist {k}"))).unwrap_or(1);
         self.shortlists.push((format!("Shortlist {n}"), files));
         save_shortlists(&self.shortlists);
-        self.sources = sources(&self.favourites, &self.searches, &self.shortlists);
+        self.sources = sources(&self.favourites, &self.searches, &self.shortlists, &self.folded);
         self.shortlists.len() - 1
     }
 
@@ -1437,7 +1449,7 @@ impl Browser {
                 let term = self.search.clone().unwrap_or_default();
                 if let Some(f) = save_search(&term, &files) {
                     self.searches.push(format!("cache:{}", f.display()));
-                    self.sources = sources(&self.favourites, &self.searches, &self.shortlists);
+                    self.sources = sources(&self.favourites, &self.searches, &self.shortlists, &self.folded);
                 }
                 true
             }
@@ -1533,7 +1545,7 @@ impl Browser {
                     }
                 }
                 save_favourites(&self.favourites);
-                self.sources = sources(&self.favourites, &self.searches, &self.shortlists);
+                self.sources = sources(&self.favourites, &self.searches, &self.shortlists, &self.folded);
                 true
             }
             FileAction::LoadRandom => {
@@ -1564,7 +1576,7 @@ impl Browser {
         self.saved = false;
         if !self.searches.iter().any(|s| s == terms) {
             self.searches.push(terms.to_string());
-            self.sources = sources(&self.favourites, &self.searches, &self.shortlists);
+            self.sources = sources(&self.favourites, &self.searches, &self.shortlists, &self.folded);
         }
         self.selected = None;
         self.scroll = 0;
@@ -1907,11 +1919,21 @@ impl Browser {
             }
             UiEvent::Mouse { overload, kind: MouseKind::Down, y, .. } if overload == "BrowserSourceList" => {
                 let i = (*y / SOURCE_ROW) as usize;
-                if let Some(Source { path: Some(p), .. }) = self.sources.get(i).cloned() {
-                    self.go(p, true);
-                    return true;
+                match self.sources.get(i).cloned() {
+                    Some(Source { path: Some(p), .. }) => {
+                        self.go(p, true);
+                        true
+                    }
+                    // A header folds or unfolds its category.
+                    Some(Source { header: true, cat, .. }) => {
+                        if !self.folded.remove(cat) {
+                            self.folded.insert(cat);
+                        }
+                        self.sources = sources(&self.favourites, &self.searches, &self.shortlists, &self.folded);
+                        true
+                    }
+                    _ => false,
                 }
-                false
             }
             UiEvent::Mouse { overload, kind: MouseKind::Down, y, .. } if overload == "BrowserFileList" => {
                 let i = self.scroll + (*y / FILE_ROW) as usize;
@@ -2084,9 +2106,11 @@ impl Browser {
                 p.fill_rect(RectF::new(0.0, 0.0, w, h), s.colour("BrowserSourceListStyle", "colFill", Colour::WHITE));
                 let font = s.font(SOURCE_STYLE);
                 let text = s.colour(SOURCE_STYLE, "colText", Colour::BLACK);
-                let sel = s.colour(SOURCE_STYLE, "colAltFill", Colour::BLACK);
-                let mut bold = font.clone();
-                bold.bold = true;
+                // [re:305087]: the selected row in the table's
+                // colRowSelection; the text keeps colText.
+                let sel = s.colour("BrowserSourceListStyle", "colRowSelection", Colour::BLACK);
+                let paper = s.colour("BrowserSourceListStyle", "colFill", Colour::WHITE);
+                let paper = if paper.a == 0 { Colour::WHITE } else { paper };
                 for (i, src) in self.sources.iter().enumerate() {
                     let y = i as f32 * SOURCE_ROW;
                     if y > h {
@@ -2101,37 +2125,50 @@ impl Browser {
                     if current {
                         p.fill_rect(RectF::new(0.0, y, w, SOURCE_ROW), sel);
                     }
-                    let col = if current { Colour::WHITE } else { text };
-                    let (x, f) = if src.header { (4.0, &bold) } else { (16.0, &font) };
-                    p.text(RectF::new(x, y, w - x - 4.0, SOURCE_ROW), &src.label, col, f, HAlign::Left, VAlign::Center);
+                    if src.header {
+                        // Disclosure triangle: down when open, right when folded.
+                        let (cx, cy) = (8.0, y + SOURCE_ROW / 2.0);
+                        let tri =
+                            if self.folded.contains(src.cat) { [(cx - 2.5, cy - 4.0), (cx - 2.5, cy + 4.0), (cx + 3.5, cy)] } else { [(cx - 4.0, cy - 2.5), (cx + 4.0, cy - 2.5), (cx, cy + 3.5)] };
+                        p.fill_polygon(&tri, text);
+                        p.text(RectF::new(16.0, y, w - 20.0, SOURCE_ROW), &src.label, text, &font, HAlign::Left, VAlign::Center);
+                    } else {
+                        let icon = RectF::new(16.0, y + (SOURCE_ROW - 16.0) / 2.0, 16.0, 16.0);
+                        self.source_icon(p, src, icon, text, paper);
+                        p.text(RectF::new(SOURCE_TEXT_X, y, w - SOURCE_TEXT_X - 4.0, SOURCE_ROW), &src.label, text, &font, HAlign::Left, VAlign::Center);
+                    }
                 }
                 true
             }
             "BrowserFileList" => {
                 let font = s.font(ITEM_STYLE);
                 let text = s.colour(ITEM_STYLE, "colText", Colour::BLACK);
-                let sel = s.colour(ITEM_STYLE, "colAltFill", Colour::BLACK);
+                let busy = s.colour(ITEM_STYLE, "colAltFill", Colour::BLACK);
+                let sel = s.colour(LIST_STYLE, "colRowSelection", Colour::BLACK);
+                let paper = s.colour(LIST_STYLE, "colFill", Colour::WHITE);
+                let paper = if paper.a == 0 { Colour::WHITE } else { paper };
+                // `optColourAlternate`: every other row in colAltFill.
+                let alt = s.bool(LIST_STYLE, "optColourAlternate", false).then(|| s.colour(LIST_STYLE, "colAltFill", Colour::WHITE));
                 let rows = (h / FILE_ROW) as usize + 1;
                 for (k, en) in self.entries.iter().enumerate().skip(self.scroll).take(rows) {
                     let y = (k - self.scroll) as f32 * FILE_ROW;
                     let selected = if self.multi.is_empty() { self.selected == Some(k) } else { self.multi.contains(&k) };
                     if selected {
                         p.fill_rect(RectF::new(0.0, y, w, FILE_ROW), sel);
+                    } else if let Some(a) = alt.filter(|_| k % 2 == 1) {
+                        p.fill_rect(RectF::new(0.0, y, w, FILE_ROW), a);
                     }
                     // The loading bar ([re:68977d]): colAltFill,
                     // (2, 2, (w − 4)·p, h − 2) while 0 < p ≤ 1.
                     if let Some((_, pr)) = self.loading.as_ref().filter(|(lp, pr)| *lp == en.path && *pr > 0.0 && *pr <= 1.0) {
-                        p.fill_rect(RectF::new(2.0, y + 2.0, (w - 4.0) * pr, FILE_ROW - 2.0), sel.with_alpha(0.6));
+                        p.fill_rect(RectF::new(2.0, y + 2.0, (w - 4.0) * pr, FILE_ROW - 2.0), busy.with_alpha(0.6));
                     }
-                    let col = if selected { Colour::WHITE } else { text };
                     if en.dir {
-                        // Folder glyph.
-                        p.fill_rounded(RectF::new(4.0, y + 5.0, 12.0, 9.0), 1.5, [true; 4], col.with_alpha(0.6));
-                        p.fill_rect(RectF::new(4.0, y + 3.5, 5.0, 2.0), col.with_alpha(0.6));
+                        folder_icon(p, RectF::new(4.0, y + 2.0, 14.0, 14.0), text, paper);
                     }
                     let cols = self.view.columns(w);
                     let name_w = cols[0].2;
-                    p.text(RectF::new(22.0, y, name_w - 26.0, FILE_ROW), &en.name, col, &font, HAlign::Left, VAlign::Center);
+                    p.text(RectF::new(22.0, y, name_w - 26.0, FILE_ROW), &en.name, text, &font, HAlign::Left, VAlign::Center);
                     for &(k, cx, cw) in &cols[1..] {
                         let t = if k == 1 {
                             type_text(en)
@@ -2141,28 +2178,29 @@ impl Browser {
                             size_text(file_size(en))
                         };
                         let align = if k == 2 { HAlign::Right } else { HAlign::Left };
-                        p.text(RectF::new(cx + 4.0, y, cw - 8.0, FILE_ROW), &t, col, &font, align, VAlign::Center);
+                        p.text(RectF::new(cx + 4.0, y, cw - 8.0, FILE_ROW), &t, text, &font, align, VAlign::Center);
                     }
                 }
                 true
             }
             "BrowserFileHeadings" => {
-                let st = "BrowserPathNavStyle";
-                p.fill_rect(RectF::new(0.0, 0.0, w, h), s.colour(st, "colFill", Colour::rgba(220, 224, 228, 255)));
-                let border = s.colour(st, "colBorder", Colour::BLACK);
+                // The table header: a colFill bar, colAltBorder dividers.
+                let st = "BrowserListViewHeaderStyle";
+                p.fill_rect(RectF::new(0.0, 0.0, w, h), s.colour(st, "colFill", Colour::rgba(186, 188, 189, 255)));
+                let border = s.colour(st, "colAltBorder", Colour::BLACK);
                 let text = s.colour(st, "colText", Colour::BLACK);
                 let font = s.font(ITEM_STYLE);
                 p.line(0.0, h - 0.5, w, h - 0.5, border, 1.0);
                 for (k, cx, cw) in self.view.columns(w) {
                     if cx > 0.0 {
-                        p.line(cx + 0.5, 2.0, cx + 0.5, h - 2.0, border, 1.0);
+                        p.line(cx + 0.5, 0.0, cx + 0.5, h, border, 1.0);
                     }
                     let left = if k == 0 { 22.0 } else { 4.0 };
                     p.text(RectF::new(cx + left, 0.0, (cw - left - 14.0).max(0.0), h), SORT_COLUMNS[k], text, &font, HAlign::Left, VAlign::Center);
                     if self.view.sort == k {
-                        // Sort direction: a small triangle at the right.
+                        // Sort direction at the right: down for A to Z.
                         let (ax, ay) = (cx + cw - 10.0, h / 2.0);
-                        let tri = if self.view.descending { [(ax - 3.5, ay - 2.0), (ax + 3.5, ay - 2.0), (ax, ay + 2.5)] } else { [(ax - 3.5, ay + 2.0), (ax + 3.5, ay + 2.0), (ax, ay - 2.5)] };
+                        let tri = if self.view.descending { [(ax - 3.5, ay + 2.0), (ax + 3.5, ay + 2.0), (ax, ay - 2.5)] } else { [(ax - 3.5, ay - 2.0), (ax + 3.5, ay - 2.0), (ax, ay + 2.5)] };
                         p.fill_polygon(&tri, text);
                     }
                 }
@@ -2228,6 +2266,79 @@ impl Browser {
         let max = self.entries.len().saturating_sub(1);
         self.scroll = (self.scroll as i32 + rows).clamp(0, max as i32) as usize;
     }
+}
+
+impl Browser {
+    /// A source row's 16 px icon: the content pack's artwork (`icon.png`
+    /// in its folder) or an outline glyph for the kind of place.
+    fn source_icon(&self, p: &mut Painter, src: &Source, r: RectF, ink: Colour, paper: Colour) {
+        let Some(path) = &src.path else { return };
+        if src.cat == "Content" {
+            let mut cache = self.pack_icons.borrow_mut();
+            let img = cache.entry(path.clone()).or_insert_with(|| dreist_gui::tiny_skia::Pixmap::load_png(path.join("icon.png")).ok());
+            if let Some(img) = img {
+                draw_image(p, img, r);
+                return;
+            }
+        }
+        match src.cat {
+            "Places" if *path == crate::options::documents_dir() => house_icon(p, r, ink, paper),
+            "Places" if path.file_name().is_some_and(|n| n == "Desktop") => monitor_icon(p, r, ink, paper),
+            "Drives" => disk_icon(p, r, ink, paper),
+            _ => folder_icon(p, r, ink, paper),
+        }
+    }
+}
+
+/// `img` scaled into `r` (control coordinates).
+fn draw_image(p: &mut Painter, img: &dreist_gui::tiny_skia::Pixmap, r: RectF) {
+    let s = p.scale;
+    let (sx, sy) = (r.w / img.width().max(1) as f32, r.h / img.height().max(1) as f32);
+    let t = dreist_gui::tiny_skia::Transform::from_row(sx * s, 0.0, 0.0, sy * s, (p.tx + r.x) * s, (p.ty + r.y) * s);
+    let paint = dreist_gui::tiny_skia::PixmapPaint { quality: dreist_gui::tiny_skia::FilterQuality::Bilinear, ..Default::default() };
+    let b = ((p.tx + r.x) * s, (p.ty + r.y) * s, r.w * s, r.h * s);
+    let m = if p.need_mask(b) { p.mask.clone() } else { None };
+    p.pm.draw_pixmap(0, 0, img.as_ref(), &paint, t, m.as_ref());
+}
+
+/// Outline folder: a tabbed body in `paper` with a 1 px `ink` edge.
+fn folder_icon(p: &mut Painter, r: RectF, ink: Colour, paper: Colour) {
+    let (x, y, w, h) = (r.x.round() + 0.5, r.y.round() + 0.5, r.w.round() - 1.0, r.h.round() - 1.0);
+    let top = y + h * 0.25;
+    let pts = [(x, top), (x, y + h * 0.9), (x + w, y + h * 0.9), (x + w, top + 2.0), (x + w * 0.45, top + 2.0), (x + w * 0.35, top), (x, top)];
+    p.fill_polygon(&pts, paper);
+    p.polyline(&pts, ink, 1.0);
+    p.line(x, top + 2.0, x + w * 0.45, top + 2.0, ink, 1.0);
+}
+
+/// Outline house (the home folder).
+fn house_icon(p: &mut Painter, r: RectF, ink: Colour, paper: Colour) {
+    let (x, y, w, h) = (r.x.round() + 0.5, r.y.round() + 0.5, r.w.round() - 1.0, r.h.round() - 1.0);
+    let eave = y + h * 0.45;
+    let pts = [(x + w * 0.5, y + h * 0.1), (x + w, eave), (x + w * 0.85, eave), (x + w * 0.85, y + h * 0.9), (x + w * 0.15, y + h * 0.9), (x + w * 0.15, eave), (x, eave), (x + w * 0.5, y + h * 0.1)];
+    p.fill_polygon(&pts, paper);
+    p.polyline(&pts, ink, 1.0);
+    p.stroke_rect(RectF::new((x + w * 0.4).round() + 0.5, (y + h * 0.62).round() + 0.5, (w * 0.2).round().max(2.0), (h * 0.28).round()), ink, 1.0);
+}
+
+/// Outline monitor (the desktop).
+fn monitor_icon(p: &mut Painter, r: RectF, ink: Colour, paper: Colour) {
+    let (x, y, w, h) = (r.x.round() + 0.5, r.y.round() + 0.5, r.w.round() - 1.0, r.h.round() - 1.0);
+    let screen = RectF::new(x, y + h * 0.12, w, (h * 0.6).round());
+    p.fill_rect(screen, paper);
+    p.stroke_rect(screen, ink, 1.0);
+    let base = (y + h * 0.9).round() + 0.5;
+    p.line(x + w * 0.5, screen.y + screen.h, x + w * 0.5, base, ink, 1.0);
+    p.line(x + w * 0.25, base, x + w * 0.75, base, ink, 1.0);
+}
+
+/// Outline disk (a drive).
+fn disk_icon(p: &mut Painter, r: RectF, ink: Colour, paper: Colour) {
+    let (x, y, w, h) = (r.x.round() + 0.5, r.y.round() + 0.5, r.w.round() - 1.0, r.h.round() - 1.0);
+    let body = RectF::new(x, (y + h * 0.3).round() + 0.5, w, (h * 0.45).round());
+    p.fill_rounded(body, 2.0, [true; 4], paper);
+    p.stroke_rounded(body, 2.0, [true; 4], ink, 1.0);
+    p.fill_ellipse(RectF::new(x + w - 5.0, body.y + body.h / 2.0 - 1.5, 3.0, 3.0), ink);
 }
 
 #[cfg(test)]

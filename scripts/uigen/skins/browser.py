@@ -18,11 +18,11 @@ def browser():
         icon("PrevLocnButton", (W - 31, 24, 14, 22), "", "Back", style="TransparentIconButtonStyle", pin="rt", id=100000),
         icon("NextLocnButton", (W - 16, 24, 14, 22), "", "Forward", style="TransparentIconButtonStyle", pin="rt", id=100000),
         N("SplitterPanel", "SplitView", (0, 46, W, H - 46), pin="lrtb", style="InvisibleStyle", SplitterPanelStyle="SplitterStyle",
-          intSplitPosition=110, intSplitterDim=3, intMinSize1=120, optIsVertical=False, optDbClkCollapse1=False,
+          intSplitPosition=115, intSplitterDim=3, intMinSize1=125, optIsVertical=False, optDbClkCollapse1=False,
           optSnapCollapse1=False, kids=[
-              N("Panel", "SourceList", (0, 0, 110, H - 46), pin="lrtb", displayName="SplitterPanel0",
+              N("Panel", "SourceList", (0, 0, 115, H - 46), pin="lrtb", displayName="SplitterPanel0",
                 overloadClass="BrowserSourceList", style="InvisibleStyle"),
-              N("Panel", "Browser", (113, 0, W - 113, H - 46), pin="lrtb", displayName="SplitterPanel1",
+              N("Panel", "Browser", (118, 0, W - 118, H - 46), pin="lrtb", displayName="SplitterPanel1",
                 overloadClass="BrowserPane", style="InvisibleStyle"),
           ]),
     ])
@@ -54,10 +54,10 @@ def header():
     W = 325
     return N("Panel", "ChooserPanel", (0, 0, W, 24), pin="r", style="InvisibleStyle", kids=[
         icon("ToolButton", (2, 2, 20, 20), "", "Browser options"),
-        btn("LockPadsButton", (25, 2, 48, 20), "Pads", "Lock or unlock all pads", momentary=False, id=100001),
-        btn("LockPatternsButton", (75, 2, 48, 20), "Patterns", "Lock or unlock all patterns", momentary=False, id=100002),
-        N("SearchBox", "SearchBox", (128, 2, W - 130, 20), pin="lr", style="SearchBoxStyle"),
-        N("ProgressBar", "Spinner", (140, 19, W - 150, 3), pin="lr", id=100001, optIsIndeterminate=True,
+        btn("LockPadsButton", (26, 2, 50, 20), "Lk Pads", "Lock or unlock all pads", momentary=False, id=100001),
+        btn("LockPatternsButton", (78, 2, 50, 20), "Lk Pat.", "Lock or unlock all patterns", momentary=False, id=100002),
+        N("SearchBox", "SearchBox", (135, 2, W - 137, 20), pin="lr", style="SearchBoxStyle"),
+        N("ProgressBar", "Spinner", (156, 18, W - 165, 3), pin="lr", id=100001, optIsIndeterminate=True,
           style="BrowserSpinnerStyle", zorder=50),
     ])
 
