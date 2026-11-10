@@ -670,6 +670,17 @@ pub fn content_dir() -> PathBuf {
     std::env::var_os("DREIST_CONTENT").map(PathBuf::from).unwrap_or_else(|| crate::options::documents_dir().join("Content"))
 }
 
+/// [re:5e37a7]: disallowing writes the no-slice file ("No slice") and
+/// alerts when it cannot be created; allowing removes it, failures ignored.
+fn change_noslice(app: &mut App, anchor: &[usize], dir: &Path, disallow: bool) {
+    let f = dir.join(dreist_formats::legacy::NOSLICE_FILE);
+    if !disallow {
+        let _ = std::fs::remove_file(f);
+    } else if std::fs::write(f, "No slice").is_err() {
+        app.open_menu(anchor, vec!["Could not create no slice file in this location. Do you have right permission for this location?".into()], None);
+    }
+}
+
 fn subdirs(p: &Path) -> Vec<PathBuf> {
     let mut v: Vec<PathBuf> = std::fs::read_dir(p).map(|rd| rd.flatten().map(|e| e.path()).filter(|p| p.is_dir() && !hidden(p)).collect()).unwrap_or_default();
     v.sort();
@@ -1102,8 +1113,7 @@ impl Browser {
                 true
             }
             NavAction::NoSlice(disallow) => {
-                let f = dir.join(dreist_formats::legacy::NOSLICE_FILE);
-                let _ = if disallow { std::fs::write(f, "No slice") } else { std::fs::remove_file(f) };
+                change_noslice(app, anchor, &dir, disallow);
                 true
             }
             NavAction::CopyPath => {
@@ -1447,8 +1457,7 @@ impl Browser {
             }
             FileAction::NoSlice(disallow) => {
                 if let Some(d) = &self.dir {
-                    let f = d.join(dreist_formats::legacy::NOSLICE_FILE);
-                    let _ = if disallow { std::fs::write(f, "No slice") } else { std::fs::remove_file(f) };
+                    change_noslice(app, anchor, d, disallow);
                 }
                 true
             }
