@@ -4048,3 +4048,35 @@ fn graph_knobs_act_on_the_tracks_selected_steps() {
     assert_eq!(vel(&ed, t, 1), 1.0);
     assert_eq!(vel(&ed, other, 0), before[3]);
 }
+
+#[test]
+fn graph_lane_menu_is_grouped() {
+    let Some(mut ed) = demo_editor("Presets/Hollow.geist") else { return };
+    if let Some(pp) = ed.pattern.as_mut() {
+        pp.multi = false;
+    }
+    ed.sync();
+    let e = ed.model.engine;
+    let ac = ed.app.root.path_of("SingleAutoControl").unwrap();
+    let combo = [ac.clone(), (ed.app.ctrl(&ac).unwrap()).path_of("GraphCombo").unwrap()].concat();
+    let open = |ed: &mut Editor| {
+        ed.handle(&UiEvent::Clicked { path: combo.clone(), name: "GraphCombo".into(), id: 0, on: false });
+        ed.app.menu.clone().expect("lane menu")
+    };
+    let m = open(&mut ed);
+    let labels: Vec<String> = m.items.iter().map(|s| s.trim_start_matches(dreist_gui::menu::DISABLED).trim_start_matches(dreist_gui::menu::BLOCK).to_string()).collect();
+    assert_eq!(
+        labels,
+        ["Velocity", "Pan", "Repeats", "Shift", "Reverse", "Octave", "Coarse Pitch", "Fine Pitch", "Filter... ▸", "Playback... ▸", "Sends... ▸", "Amp Envelope... ▸", "Free Envelope... ▸"]
+    );
+    // The shown lane is checked and disabled.
+    assert_eq!(m.checked, Some(0));
+    assert!(m.items[0].starts_with(dreist_gui::menu::DISABLED));
+    // Repeats only on one-shot pads.
+    assert_eq!(m.items[2].starts_with(dreist_gui::menu::DISABLED), !ed.model.pad_one_shot(e, ed.model.pad[e]));
+    ed.handle(&UiEvent::MenuSelected { anchor: m.anchor.clone(), name: "GraphCombo".into(), index: 9 });
+    let sub = ed.app.menu.clone().expect("Playback submenu");
+    assert_eq!(sub.items, ["Start Point", "Force Layer", "Probability", "Loop Start", "Loop End"]);
+    ed.handle(&UiEvent::MenuSelected { anchor: sub.anchor.clone(), name: "GraphCombo".into(), index: 2 });
+    assert_eq!(ed.model.pattern_view[e].lane, 16, "Probability");
+}

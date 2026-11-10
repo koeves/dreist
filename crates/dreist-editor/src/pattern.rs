@@ -83,8 +83,8 @@ pub struct PatternPanel {
     /// Track, lane and first step the graph menu acts on (right-click on
     /// a graph; None = the selected track's lane from step 0).
     graph_target: Option<(usize, usize, usize)>,
-    /// The lane menu shows the FX lanes.
-    lane_menu_fx: bool,
+    /// What the open lane menu's items pick.
+    lane_menu: Vec<LaneItem>,
     /// Lane values when a graph knob started moving (copied),
     /// the knob, and the last offset.
     graph_snap: Option<(String, Vec<f32>, f32)>,
@@ -456,9 +456,113 @@ impl Default for PatternView {
 const MARKER_W: f32 = 10.0;
 const MARKER_H: f32 = 15.0;
 
-/// Lanes offered directly in the graph menu; the FX lanes go in a second
-/// menu.
+/// Lanes before the pad FX lanes; each of the six FX slots has nine.
 const CORE_LANES: usize = 39;
+
+/// The lane menu's submenus after its first eight lanes ([re:6dfc31]).
+const LANE_GROUPS: [(&str, &[usize]); 5] = [
+    ("Filter...", &[11, 12, 13, 14]),
+    ("Playback...", &[8, 15, 16, 17, 18]),
+    ("Sends...", &[19, 20, 21, 22]),
+    ("Amp Envelope...", &[23, 24, 25, 26, 27, 28, 29, 30]),
+    ("Free Envelope...", &[31, 32, 33, 34, 35, 36, 37, 38]),
+];
+
+/// What a lane menu item picks.
+#[derive(Clone, Copy, Debug, PartialEq)]
+enum LaneItem {
+    Lane(usize),
+    /// One of [`LANE_GROUPS`].
+    Group(usize),
+    /// A pad FX slot's lanes.
+    Fx(usize),
+    None,
+}
+
+/// The graph lane menu ([re:6dfc31]) for the selected pad's graph: the
+/// first eight lanes, the Filter / Playback / Sends / Amp Envelope /
+/// Free Envelope submenus, then (after a divider) a "Pad FX n (effect)"
+/// submenu per slot holding an effect. Within a menu the shown lane is
+/// checked; it and the lanes the track's other graph rows show are
+/// disabled, as is Repeats on a pad that is not one-shot; lanes holding
+/// data carry the block icon.
+fn lane_menu(model: &Model, shown: &[usize], items: &[LaneItem]) -> Vec<String> {
+    let e = model.engine;
+    let track = model.pad[e];
+    let current = model.pattern_view[e].lane;
+    let one_shot = model.pad_one_shot(e, track);
+    let pat = model.pattern(e, model.current_pattern(e));
+    let has = |l: usize| {
+        pat.tracks.get(track).is_some_and(|t| {
+            t.steps.iter().take(pat.steps as usize).any(|s| if l == lane::VELOCITY { s.on } else { s.lanes.get(l).is_some_and(|v| (v - dreist_formats::params::step_lane_default(l)).abs() > 1e-6) })
+        })
+    };
+    let fx = crate::fxchain::effects(model, crate::fxchain::Target::Pad(e, track));
+    items
+        .iter()
+        .map(|it| match *it {
+            LaneItem::Lane(l) => {
+                let name = lane_menu_label(&fx, l);
+                let allowed = l != lane::REPEATS || one_shot;
+                if l == current {
+                    return dreist_gui::menu::item(name, false);
+                }
+                let text = if allowed && has(l) { format!("{}{name}", dreist_gui::menu::BLOCK) } else { name };
+                dreist_gui::menu::item(text, allowed && !shown.contains(&l))
+            }
+            LaneItem::Group(g) => format!("{} ▸", LANE_GROUPS[g].0),
+            LaneItem::Fx(slot) => {
+                let kind = fx.iter().find(|f| f.0 == slot).map_or(0, |f| f.1);
+                format!("Pad FX {} ({}) ▸", slot + 1, dreist_formats::params::EFFECT_TYPES.get(kind).copied().unwrap_or_default())
+            }
+            LaneItem::None => String::new(),
+        })
+        .collect()
+}
+
+/// The checked item of a lane menu: the shown lane.
+fn lane_menu_checked(model: &Model, items: &[LaneItem]) -> Option<usize> {
+    items.iter().position(|it| *it == LaneItem::Lane(model.pattern_view[model.engine].lane))
+}
+
+/// The lane menu's top level for the selected pad.
+fn lane_menu_top(model: &Model) -> Vec<LaneItem> {
+    let e = model.engine;
+    let mut items: Vec<LaneItem> = (0..8).map(LaneItem::Lane).chain((0..LANE_GROUPS.len()).map(LaneItem::Group)).collect();
+    let fx = crate::fxchain::effects(model, crate::fxchain::Target::Pad(e, model.pad[e]));
+    let mut slots: Vec<usize> = fx.iter().filter(|f| f.1 != 0 && f.0 < 6).map(|f| f.0).collect();
+    slots.sort_unstable();
+    slots.dedup();
+    if !slots.is_empty() {
+        items.push(LaneItem::None);
+        items.extend(slots.into_iter().map(LaneItem::Fx));
+    }
+    items
+}
+
+/// A pad FX slot's lanes: Active, Mix, Level and the effect's parameters.
+fn lane_menu_fx(model: &Model, slot: usize) -> Vec<LaneItem> {
+    let e = model.engine;
+    let fx = crate::fxchain::effects(model, crate::fxchain::Target::Pad(e, model.pad[e]));
+    let kind = fx.iter().find(|f| f.0 == slot).map_or(0, |f| f.1);
+    let n = (3 + dreist_formats::params::effect_param_names(kind).len()).min(9);
+    (0..n).map(|k| LaneItem::Lane(CORE_LANES + slot * 9 + k)).collect()
+}
+
+/// A lane's menu text: pad FX lanes by the slot's effect parameter names.
+fn lane_menu_label(fx: &[(usize, usize, dreist_formats::Node)], l: usize) -> String {
+    if l < CORE_LANES {
+        return lane_label(l);
+    }
+    let (slot, k) = ((l - CORE_LANES) / 9, (l - CORE_LANES) % 9);
+    let kind = fx.iter().find(|f| f.0 == slot).map_or(0, |f| f.1);
+    match k {
+        0 => "Active".into(),
+        1 => "Mix".into(),
+        2 => "Level".into(),
+        _ => dreist_formats::params::effect_param_names(kind).get(k - 3).map(|s| s.to_string()).unwrap_or_else(|| lane_label(l)),
+    }
+}
 
 fn lane_label(lane: usize) -> String {
     dreist_formats::STEP_LANES.get(lane).map(|s| crate::transmod::camel_words(s)).unwrap_or_default()
@@ -687,7 +791,7 @@ impl PatternPanel {
             graph_last: None,
             graph_drag_state: GraphDrag::default(),
             graph_target: None,
-            lane_menu_fx: false,
+            lane_menu: Vec::new(),
             graph_snap: None,
             rng: 0x9e37_79b9,
             selection: Default::default(),
@@ -1109,9 +1213,13 @@ impl PatternPanel {
                 }
                 let target = [1.0f32, 0.5, 1.0, 1.0, 0.5][dreist_engine::pattern::lane_style(lane).min(4) as usize];
                 let mut rng = self.rng;
+                let only_selected = self.selection.iter().any(|&(t, _)| t == track);
                 let (_, snap, prev) = self.graph_snap.as_mut().unwrap();
                 let off = value * 2.0 - 1.0;
                 for (st, base) in snap.iter_mut().enumerate() {
+                    if only_selected && !self.selection.contains(&(track, st)) {
+                        continue;
+                    }
                     let v = match name.as_str() {
                         "ScaleKnob" => {
                             *base += off - *prev;
@@ -1220,13 +1328,9 @@ impl PatternPanel {
                             let rect = dreist_gui::Rect::new(kc.rect.x - 10, kc.rect.y + kc.rect.h / 2 - 9, kc.rect.w + 20, 18);
                             app.open_edit_box(&kp[..kp.len() - 1], SWING_EDIT, rect, format!("{:.0}%", kc.value * 100.0));
                         }
-                let only_selected = self.selection.iter().any(|&(t, _)| t == track);
                         _ => return false,
                     }
                     let _ = anchor;
-                    if only_selected && !self.selection.contains(&(track, st)) {
-                        continue;
-                    }
                     return true;
                 }
                 match *index {
@@ -1317,15 +1421,22 @@ impl PatternPanel {
                 true
             }
             UiEvent::MenuSelected { anchor, name, index } if name == "GraphCombo" => {
-                if !self.lane_menu_fx && *index == CORE_LANES {
-                    self.lane_menu_fx = true;
-                    let items = (CORE_LANES..dreist_formats::STEP_LANES.len()).map(lane_label).collect();
-                    app.open_menu(anchor, items, None);
+                let sub = match std::mem::take(&mut self.lane_menu).get(*index).copied() {
+                    Some(LaneItem::Lane(l)) => {
+                        model.pattern_view[e].lane = l;
+                        None
+                    }
+                    Some(LaneItem::Group(g)) => Some(LANE_GROUPS[g].1.iter().map(|&l| LaneItem::Lane(l)).collect::<Vec<_>>()),
+                    Some(LaneItem::Fx(slot)) => Some(lane_menu_fx(model, slot)),
+                    _ => return false,
+                };
+                if let Some(items) = sub {
+                    let shown = self.shown_lanes(model);
+                    app.open_menu(anchor, lane_menu(model, &shown, &items), lane_menu_checked(model, &items));
+                    self.lane_menu = items;
                     return false;
                 }
-                let lane = if self.lane_menu_fx { CORE_LANES + index } else { *index };
-                model.pattern_view[e].lane = lane;
-                self.lane_menu_fx = false;
+                let lane = model.pattern_view[e].lane;
                 // A MultiTrack lane row's combo changes that lane.
                 if let Some((t, slot)) = self.auto_ctx.take() {
                     if let Some(l) = self.auto_lanes.get_mut(&(e, t)).and_then(|v| v.get_mut(slot)) {
@@ -1567,10 +1678,10 @@ impl PatternPanel {
                 let track = model.pad[e] as i32;
                 match name.as_str() {
                     "GraphCombo" => {
-                        let mut items: Vec<String> = (0..CORE_LANES).map(lane_label).collect();
-                        items.push("FX ▸".into());
-                        self.lane_menu_fx = false;
-                        app.open_menu(path, items, Some(model.pattern_view[e].lane.min(CORE_LANES)));
+                        let items = lane_menu_top(model);
+                        let shown = self.shown_lanes(model);
+                        app.open_menu(path, lane_menu(model, &shown, &items), lane_menu_checked(model, &items));
+                        self.lane_menu = items;
                         false
                     }
                     // Toolbar View ("Show a Single Global Graph", lambda
@@ -1815,6 +1926,12 @@ impl PatternPanel {
                 false
             }
         }
+    }
+
+    /// Lanes the selected pad's graph rows show.
+    fn shown_lanes(&self, model: &Model) -> Vec<usize> {
+        let e = model.engine;
+        self.auto_lanes.get(&(e, model.pad[e])).cloned().unwrap_or_default()
     }
 
     /// (track, lane) of the graph controls containing `path`: the single
