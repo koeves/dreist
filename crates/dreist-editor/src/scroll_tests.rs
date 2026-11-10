@@ -208,3 +208,245 @@ fn global_mixer_effect_row_scrolls_sideways() {
     let right = ed.app.ctrl(&fx).unwrap().children.iter().filter(|k| k.attr(scroll::BAR).is_none()).map(|k| k.rect.right()).max().unwrap();
     assert_eq!(right, v.w);
 }
+
+/// The demo at the smallest window with saved splitter positions.
+fn hollow_small(editor_tab: usize, utility_tab: usize, splits: &[(&str, i32)]) -> Option<Editor> {
+    let p = dreist_formats::legacy::demo("Presets/Hollow.geist");
+    let proj = dreist_formats::Project::load(&p).ok()?;
+    let mut o = crate::options::Options::default();
+    let (w, h) = dreist_gui::app::MIN_WINDOW;
+    o.set("LastEditorSize", format!("{w},{h}"));
+    for (k, v) in splits {
+        o.set(k, v);
+    }
+    let mut model = Model::new(proj.raw);
+    model.editor_tab = editor_tab;
+    model.utility_tab = utility_tab;
+    let mut ed = Editor::with_layout(dreist_gui::skin::default_theme(), model, &o).ok()?;
+    ed.sync();
+    Some(ed)
+}
+
+/// Splitters at their limits (left column widest / narrowest, editor tabs
+/// tallest / shortest) and the skin's.
+const LIMITS: [&[(&str, i32)]; 5] = [&[], &[("utilitySplitAS", 600)], &[("utilitySplitAS", 250)], &[("padSplitterAS", 66)], &[("padSplitterAS", 5000)]];
+
+/// Every shown scroll container named `name`.
+fn containers(ed: &Editor, name: &str) -> Vec<Vec<usize>> {
+    fn rec(app: &dreist_gui::app::App, c: &Ctrl, name: &str, path: &mut Vec<usize>, out: &mut Vec<Vec<usize>>) {
+        if c.name == name && scroll::scrollable(c) && app.shown(path) && c.rect.w > 0 && c.rect.h > 0 {
+            out.push(path.clone());
+        }
+        for (i, k) in c.children.iter().enumerate() {
+            path.push(i);
+            rec(app, k, name, path, out);
+            path.pop();
+        }
+    }
+    let mut out = Vec::new();
+    rec(&ed.app, &ed.app.root, name, &mut Vec::new(), &mut out);
+    out
+}
+
+/// Scroll `path` to both ends with the trackpad and the wheel; true when
+/// it overflowed.
+fn exercise(ed: &mut Editor, path: &[usize], what: &str) -> bool {
+    let (mx, my) = range(ed, path);
+    if mx == 0 && my == 0 {
+        return false;
+    }
+    hover(ed, path);
+    let r = ed.app.abs_rect(path);
+    let (px, py) = ed.app.mouse_pos();
+    assert!(r.contains(px as i32, py as i32), "{what}: pointer inside");
+    let hit = ed.app.hit(px, py);
+    assert!(hit.starts_with(path), "{what}: the container is under the pointer ({hit:?})");
+    wheel(ed, -100_000.0, -100_000.0, false);
+    assert_eq!(offset(ed, path), (mx, my), "{what}: far end");
+    let c = ed.app.ctrl(path).unwrap();
+    let v = scroll::view(c);
+    let content: Vec<&Ctrl> = c.children.iter().filter(|k| k.attr(scroll::BAR).is_none() && k.visible).collect();
+    if mx > 0 {
+        assert_eq!(content.iter().map(|k| k.rect.right()).max().unwrap(), v.w, "{what}: last item at the right edge");
+    }
+    if my > 0 {
+        assert_eq!(content.iter().map(|k| k.rect.bottom()).max().unwrap(), v.h, "{what}: last item at the bottom");
+    }
+    wheel(ed, 0.0, 100.0, true);
+    ed.app.mods.shift = true;
+    wheel(ed, 0.0, 100.0, true);
+    ed.app.mods.shift = false;
+    assert_eq!(offset(ed, path), (0, 0), "{what}: back at the start");
+    true
+}
+
+#[test]
+fn mixers_scroll_in_every_view_at_the_smallest_window() {
+    let mut overflowed = std::collections::BTreeSet::new();
+    for splits in LIMITS {
+        for tab in [3, 4, 5] {
+            for mode in 0..3 {
+                let Some(mut ed) = hollow_small(tab, 0, splits) else { return };
+                let groups: Vec<Vec<usize>> = {
+                    let mut v = Vec::new();
+                    fn rec(app: &dreist_gui::app::App, c: &Ctrl, path: &mut Vec<usize>, out: &mut Vec<Vec<usize>>) {
+                        if c.name == "ModeGroup" && app.shown(path) {
+                            out.push(path.clone());
+                        }
+                        for (i, k) in c.children.iter().enumerate() {
+                            path.push(i);
+                            rec(app, k, path, out);
+                            path.pop();
+                        }
+                    }
+                    rec(&ed.app, &ed.app.root, &mut Vec::new(), &mut v);
+                    v
+                };
+                if let Some(g) = groups.first() {
+                    let b = [g.clone(), vec![mode]].concat();
+                    if ed.app.ctrl(&b).is_some_and(|c| c.enabled) {
+                        ed.handle(&UiEvent::Clicked { path: b, name: String::new(), id: 0, on: true });
+                        ed.sync();
+                    }
+                }
+                for name in ["ChannelScroller", "FXScroller"] {
+                    for p in containers(&ed, name) {
+                        let what = format!("{splits:?} tab {tab} mode {mode} {name}");
+                        if exercise(&mut ed, &p, &what) {
+                            overflowed.insert(format!("tab {tab} {name}"));
+                        }
+                    }
+                }
+            }
+        }
+    }
+    // The pad and global mixers' strips and the chains overflow somewhere.
+    for k in ["tab 4 ChannelScroller", "tab 5 ChannelScroller", "tab 5 FXScroller"] {
+        assert!(overflowed.contains(k), "{k} never overflowed: {overflowed:?}");
+    }
+}
+
+#[test]
+fn transmod_and_layer_rows_scroll_at_the_smallest_window() {
+    for splits in LIMITS {
+        let Some(mut ed) = hollow_small(0, 1, splits) else { return };
+        for p in containers(&ed, "ScrollView") {
+            exercise(&mut ed, &p, &format!("{splits:?} transmod"));
+        }
+        for p in containers(&ed, "ParamScroller") {
+            assert!(exercise(&mut ed, &p, &format!("{splits:?} layer parameters")), "the parameter row overflows at the smallest window");
+        }
+    }
+}
+
+#[test]
+fn browser_sources_scroll_when_they_overflow() {
+    let Some(mut ed) = hollow_small(0, 0, &[("padSplitterAS", 330)]) else { return };
+    let Some(sp) = ed.app.root.path_of("SourceList").or_else(|| {
+        fn rec(c: &Ctrl, path: &mut Vec<usize>) -> Option<Vec<usize>> {
+            if c.overload == "BrowserSourceList" {
+                return Some(path.clone());
+            }
+            for (i, k) in c.children.iter().enumerate() {
+                path.push(i);
+                if let Some(p) = rec(k, path) {
+                    return Some(p);
+                }
+                path.pop();
+            }
+            None
+        }
+        rec(&ed.app.root, &mut Vec::new())
+    }) else {
+        panic!("source list")
+    };
+    let r = ed.app.abs_rect(&sp);
+    assert!(r.h > 50 && (ed.browser.as_ref().unwrap().sources_len() as i32) * 25 > r.h, "the sources overflow {r:?}");
+    let _ = ed.render_frame(1.0);
+    ed.app.mouse_move((r.x + r.w / 2) as f32, (r.y + r.h / 2) as f32);
+    wheel(&mut ed, 0.0, -100.0, true);
+    let _ = ed.render_frame(1.0);
+    let off = ed.browser.as_ref().unwrap().source_scroll();
+    let rows = ed.browser.as_ref().unwrap().sources_len() as f32 * 25.0;
+    assert_eq!(off, (rows - r.h as f32).max(0.0), "clamped at the last row");
+    wheel(&mut ed, 0.0, 100.0, true);
+    assert_eq!(ed.browser.as_ref().unwrap().source_scroll(), 0.0);
+}
+
+#[test]
+fn device_tables_scroll_long_lists() {
+    struct Many;
+    impl crate::devices::DeviceHost for Many {
+        fn audio(&self, _: &str, _: &str) -> crate::devices::AudioSetup {
+            crate::devices::AudioSetup::default()
+        }
+        fn midi(&self) -> crate::devices::MidiSetup {
+            crate::devices::MidiSetup { inputs: (0..40).map(|i| format!("Port {i}")).collect(), outputs: vec!["Out".into()] }
+        }
+        fn restart(&self, _: &dreist_formats::Node, _: Option<&std::path::Path>) {}
+    }
+    let Ok(mut ed) = Editor::new(dreist_gui::skin::default_theme(), Model::new(dreist_formats::Node::new("root", None))) else { return };
+    ed.devices.host = Some(Box::new(Many));
+    ed.show_modal("midi");
+    std::thread::sleep(std::time::Duration::from_millis(600));
+    ed.animate();
+    ed.sync();
+    let _ = ed.render_frame(1.0);
+    let t = {
+        fn rec(c: &Ctrl, path: &mut Vec<usize>) -> Option<Vec<usize>> {
+            if c.overload == "DeviceTable:InputTable" {
+                return Some(path.clone());
+            }
+            for (i, k) in c.children.iter().enumerate() {
+                path.push(i);
+                if let Some(p) = rec(k, path) {
+                    return Some(p);
+                }
+                path.pop();
+            }
+            None
+        }
+        rec(&ed.app.root, &mut Vec::new()).expect("input table")
+    };
+    let r = ed.app.abs_rect(&t);
+    ed.app.mouse_move((r.x + r.w / 2) as f32, (r.y + r.h / 2) as f32);
+    wheel(&mut ed, 0.0, -3.0, true);
+    assert_eq!(ed.devices.first_row("InputTable"), 3);
+    wheel(&mut ed, 0.0, -1000.0, true);
+    let fit = ((r.h as f32 - 20.0) / 18.0).floor() as usize;
+    assert_eq!(ed.devices.first_row("InputTable"), 40 - fit);
+    wheel(&mut ed, 0.0, 1000.0, true);
+    assert_eq!(ed.devices.first_row("InputTable"), 0);
+}
+
+#[test]
+fn scene_engine_table_scrolls_when_squeezed() {
+    let Some(mut ed) = hollow_at(1, 0, (1000, 720)) else { return };
+    let t = {
+        fn rec(c: &Ctrl, path: &mut Vec<usize>) -> Option<Vec<usize>> {
+            if c.overload == "SceneDetailsTable" {
+                return Some(path.clone());
+            }
+            for (i, k) in c.children.iter().enumerate() {
+                path.push(i);
+                if let Some(p) = rec(k, path) {
+                    return Some(p);
+                }
+                path.pop();
+            }
+            None
+        }
+        rec(&ed.app.root, &mut Vec::new()).expect("details table")
+    };
+    // Squeezed to 70 px: 14 px rows, 9 of them (header + 8 engines).
+    ed.app.ctrl_mut(&t).unwrap().rect.h = 70;
+    let _ = ed.render(1.0);
+    let r = ed.app.abs_rect(&t);
+    ed.app.mouse_move((r.x + r.w / 2) as f32, (r.y + r.h / 2) as f32);
+    wheel(&mut ed, 0.0, -2.0, true);
+    assert_eq!(ed.scenes.as_ref().unwrap().details_scroll(), 28.0);
+    wheel(&mut ed, 0.0, -100.0, true);
+    assert_eq!(ed.scenes.as_ref().unwrap().details_scroll(), (9 * 14 - 70) as f32);
+    wheel(&mut ed, 0.0, 100.0, true);
+    assert_eq!(ed.scenes.as_ref().unwrap().details_scroll(), 0.0);
+}

@@ -112,8 +112,6 @@ pub struct Mixer {
     /// Mix (0), Sends (1), Effects (2).
     mode: usize,
     shown: Vec<Channel>,
-    /// Horizontal scroll of the channel strips (px).
-    scroll_x: i32,
     /// Channel whose OutputCombo menu is open.
     output_menu: Option<Channel>,
     /// The output selector's right-click menu is open (its strip kind).
@@ -174,7 +172,7 @@ impl Mixer {
             }
         }
         let fx = fx_host.map(|h| crate::fxchain::FxPanel::new(skin, h));
-        Ok(Mixer { kind, page: page.to_vec(), scroller, strip, aux, master, mode: 0, shown: Vec::new(), scroll_x: 0, output_menu: None, route_all_menu: None, fx, bus_view: None, view_menu: false })
+        Ok(Mixer { kind, page: page.to_vec(), scroller, strip, aux, master, mode: 0, shown: Vec::new(), output_menu: None, route_all_menu: None, fx, bus_view: None, view_menu: false })
     }
 
     fn channels(&self, model: &Model) -> Vec<Channel> {
@@ -229,18 +227,24 @@ impl Mixer {
                 sc.children.push(s);
             }
         }
-        // Lay the strips out from the scroll offset, as tall as the
-        // scroller (it changes with the window within one size index).
-        let total: i32 = sc.children.iter().map(|c| c.rect.w + 2).sum();
-        self.scroll_x = self.scroll_x.clamp(0, (total - sc.rect.w).max(0));
-        let mut x = -self.scroll_x;
-        for c in &mut sc.children {
-            if c.rect.x != x || c.rect.h != h {
-                let r = Rect::new(x, 0, c.rect.w, h);
+        // Lay the strips out at content positions, as tall as the scroller
+        // (it changes with the window within one size index); the scroll
+        // container keeps the offset. [re:3c0f5e]: no drawn bar (empty bar
+        // styles); the wheel moves half a strip ([re:5e1a7d] mixer ctor).
+        sc.set_attr("scrollAxes", "h".into());
+        if let Some(w) = sc.children.first().map(|c| c.rect.w) {
+            sc.set_attr("scrollStep", ((w as f32 * 0.5 + 0.5) as i32).max(1).to_string());
+        }
+        let (sx, _) = dreist_gui::scroll::offset(sc);
+        let mut x = 0;
+        for c in sc.children.iter_mut().filter(|c| c.attr(dreist_gui::scroll::BAR).is_none()) {
+            let r = Rect::new(x - sx, 0, c.rect.w, h);
+            if c.rect != r {
                 c.set_rect(r);
             }
             x += c.rect.w + 2;
         }
+        dreist_gui::scroll::refresh(sc);
     }
 
     /// A preset save the FX chain asked for, with the resources folder.
@@ -701,12 +705,6 @@ impl Mixer {
     }
 
     pub fn handle(&mut self, app: &mut App, model: &mut Model, ev: &UiEvent, out: &mut Vec<Command>) -> bool {
-        if let UiEvent::Wheel { path, overload, dy } = ev {
-            if overload == "MixerScroller" && self.scroller.as_ref().is_some_and(|s| path.starts_with(s)) {
-                self.scroll_x -= (dy * 40.0) as i32;
-                return true;
-            }
-        }
         if let Some(fx) = &mut self.fx {
             if fx.handle(app, model, ev, out) {
                 return true;

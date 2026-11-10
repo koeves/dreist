@@ -40,6 +40,10 @@ pub struct Scenes {
     /// Animation` [re:9f501c] ("▶", once); `ATC_Tick` [re:cc15e0] lowers the alpha
     /// by 0.2 per tick.
     anim: Vec<Option<(bool, f32)>>,
+    /// The details table's scroll offset (px) when its rows do not fit,
+    /// and its last drawn height.
+    details_scroll: std::cell::Cell<f32>,
+    details_h: std::cell::Cell<f32>,
     last_tick: Option<std::time::Instant>,
 }
 
@@ -129,7 +133,19 @@ impl Scenes {
             c.overload = "SceneDetailsTable".into();
             c.children.clear();
         }
-        Ok(Scenes { page: page.to_vec(), matrix, bank: 0, selected: 0, held: None, clipboard: None, menu: None, anim: vec![None; 96], last_tick: None })
+        Ok(Scenes {
+            page: page.to_vec(),
+            matrix,
+            bank: 0,
+            selected: 0,
+            held: None,
+            clipboard: None,
+            menu: None,
+            anim: vec![None; 96],
+            last_tick: None,
+            details_scroll: Default::default(),
+            details_h: Default::default(),
+        })
     }
 
     /// Follow a resize of the scene matrix (cheap when unchanged).
@@ -271,7 +287,13 @@ impl Scenes {
         let (w, h) = (c.rect.w as f32, c.rect.h as f32);
         let (st, hs) = ("DefaultTableViewStyle", "DefaultTableViewHeaderStyle");
         p.fill_rect(RectF::new(0.0, 0.0, w, h), s.colour(st, "colFill", dreist_gui::Colour::TRANSPARENT));
-        let row_h = (h / 9.0).floor().max(12.0);
+        // Rows shrink to 14 px; below that the table scrolls under its
+        // header (a row per wheel line).
+        let row_h = (h / 9.0).floor().max(14.0);
+        self.details_h.set(h);
+        let max = (9.0 * row_h - h).max(0.0);
+        let off = self.details_scroll.get().clamp(0.0, max);
+        self.details_scroll.set(off);
         let cols = [(0.0, 40.0), (40.0, 189.0), (229.0, 50.0)];
         p.fill_rect(RectF::new(0.0, 0.0, w, row_h), s.colour(hs, "colFill", dreist_gui::Colour::rgba(200, 200, 200, 255)));
         let font = s.font(st);
@@ -285,8 +307,9 @@ impl Scenes {
         }
         let scenes = dreist_engine::scene::SceneManager::from_node(model.doc.children.iter().find(|c| c.class == "SceneManager").unwrap_or(&dreist_formats::Node::new("SceneManager", None)));
         let sc = scenes.scenes.get(self.selected).cloned().unwrap_or_default();
+        let clip = p.push_clip(p.tx as i32, (p.ty + row_h) as i32, w as i32, (h - row_h).max(0.0) as i32);
         for e in 0..8 {
-            let y = row_h * (e + 1) as f32;
+            let y = row_h * (e + 1) as f32 - off;
             if e % 2 == 1 {
                 p.fill_rect(RectF::new(0.0, y, w, row_h), alt);
             }
@@ -300,10 +323,17 @@ impl Scenes {
                 p.text(RectF::new(x + 3.0, y, cw - 6.0, row_h), &t, text, &font, HAlign::Left, VAlign::Center);
             }
         }
+        p.pop_clip(clip);
         for (x, _) in cols.iter().skip(1) {
             p.line(x + 0.5, 0.0, x + 0.5, h, div, 1.0);
         }
         true
+    }
+
+    /// The details table's scroll offset (px).
+    #[cfg(test)]
+    pub fn details_scroll(&self) -> f32 {
+        self.details_scroll.get()
     }
 
     fn scene_of(app: &App, path: &[usize]) -> Option<usize> {
@@ -363,6 +393,13 @@ impl Scenes {
                 if let Some(c) = app.ctrl_mut(path) {
                     c.on = false;
                 }
+                true
+            }
+            UiEvent::Wheel { overload, dy, .. } if overload == "SceneDetailsTable" => {
+                let h = self.details_h.get();
+                let row_h = (h / 9.0).floor().max(14.0);
+                let max = (9.0 * row_h - h).max(0.0);
+                self.details_scroll.set((self.details_scroll.get() - dy * row_h).clamp(0.0, max));
                 true
             }
             UiEvent::Mouse { path, overload, kind: MouseKind::RightDown, .. } if overload == "EditorScene" => {
