@@ -1,5 +1,38 @@
 # Changelog
 
+## [0.2.3] - 2026-11-11
+
+Dependency updates (rfd 0.18, midir 0.11, libc; dreist-commons v0.2.3 with tiny-skia 0.12,
+pixel-identical), and the audio, MIDI, dialog and serialisation crates now come through the
+shared host crate in dreist-commons, which defines their versions. Dependabot and CodeQL on
+release tags. No change in look or sound.
+
+### Refactoring
+
+- **deps:** Take the host-side crates through dreist-host
+
+### Documentation
+
+- Third-party notices
+
+### Build and CI
+
+- Dependabot for cargo, GitHub Actions and the commons submodule
+- CodeQL on release tags and by hand; read-only workflow permissions
+- **deps:** Bump actions/checkout from 4 to 7
+- **deps:** Bump actions/upload-artifact from 4 to 7
+- **deps:** Bump actions/download-artifact from 4 to 8
+- Dreist-commons 9060148
+- Dreist-commons v0.2.2
+- Dreist-commons e0f4cd1
+- Dreist-commons v0.2.3
+
+### Other
+
+- **deps:** Bump libc
+- **deps:** Bump rfd from 0.16.0 to 0.18.0
+- **deps:** Bump midir from 0.9.1 to 0.11.1
+
 ## [0.2.2] - 2026-11-10
 
 A UI pass against the shipped original (skins, manual, tutorial videos and the decompiled

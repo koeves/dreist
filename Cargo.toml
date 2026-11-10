@@ -6,7 +6,7 @@ exclude = ["commons"]
 
 [workspace.package]
 edition = "2024"
-version = "0.2.2"
+version = "0.2.3"
 license = "MIT OR Apache-2.0"
 
 # The DSP is transcribed from the decompiled original: constants as the
