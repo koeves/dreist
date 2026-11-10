@@ -8,7 +8,7 @@
             <CtrlPanel rect="308, 5, 184, 20" ARLeft="Center 0.0000" style="InvisibleStyle">
                 <CtrlButton name="EraseButton" rect="0, 0, 60, 20" displayName="Erase mode" id="100028" optIsMomentary="true" style="DefaultButtonStyle" text="Erase" />
                 <CtrlButton name="ClearAllButton" rect="62, 0, 60, 20" displayName="Remove every part" id="100028" optIsMomentary="true" style="DefaultButtonStyle" text="Clear All" />
-                <CtrlButton name="DuplicateButton" rect="124, 0, 60, 20" displayName="Duplicate the selection" id="100028" optIsMomentary="true" style="DefaultButtonStyle" text="Duplicate" />
+                <CtrlButton name="DuplicateButton" rect="125, 0, 60, 20" displayName="Duplicate the selection" id="100028" optIsMomentary="true" style="DefaultButtonStyle" text="Duplicate" />
             </CtrlPanel>
         </CtrlPanel>
         <CtrlPanel name="TrackHeaderPanel" rect="0, 30, 80, 455" ARLeft="FNear 0.0000" ARTop="FNear 30.0000" ARBottom="FNear 15.0000" id="100003" style="InvisibleStyle" />

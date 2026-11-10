@@ -13,10 +13,10 @@ def btn(name, rect, text, tip=None, momentary=True, flashing=False, style="Defau
 
 def song_page():
     W, H = 800, 500
-    tools = N("Panel", None, ((W - 184) // 2, 5, 184, 20), pin="c", style="InvisibleStyle", kids=[
+    tools = N("Panel", None, (308, 5, 184, 20), pin="c", style="InvisibleStyle", kids=[
         btn("EraseButton", (0, 0, 60, 20), "Erase", "Erase mode", id=100028),
         btn("ClearAllButton", (62, 0, 60, 20), "Clear All", "Remove every part", id=100028),
-        btn("DuplicateButton", (124, 0, 60, 20), "Duplicate", "Duplicate the selection", id=100028),
+        btn("DuplicateButton", (125, 0, 60, 20), "Duplicate", "Duplicate the selection", id=100028),
     ])
     bar = N("Panel", None, (0, 0, W, BAR), pin="lr", style="BasicPanelStyle", kids=[
         btn("SelectPatternButton", (5, 5, 70, 20), "Pattern", "Pattern to insert", flashing=True, style="DefaultPopupButtonStyle", id=100028),
@@ -53,11 +53,11 @@ def scene():
           style="SceneNameLabelStyle", zorder=3),
         N("Label", "ActivityLabel", (5, 22, W - 10, 30), pin="lrm", style="SceneActivityLabelStyle"),
         btn("SelectButton", (1, H - 21, 46, 20), "C-2", "Select scene", momentary=False, style="SceneSelectionButtonStyle",
-            pin="ltb", id=100001),
+            pin="lb", id=100001),
         btn("SnapshotButton", (W - 44, H - 21, 20, 20), "", "Snapshot into this scene", style="SceneIconButtonStyle",
-            pin="lrtb", id=100001),
+            pin="rb", id=100001),
         btn("ClearButton", (W - 22, H - 21, 20, 20), "", "Clear this scene", style="SceneIconButtonStyle",
-            pin="lrtb", id=100001),
+            pin="rb", id=100001),
     ])
 
 
@@ -85,7 +85,7 @@ def scenes_page():
 
     RW = W - LW
     TH = H - 10 - 165 - 5   # the engine table, 5 px above the panel's bottom
-    start = N("ButtonGroup", "StartModeButtonGroup", (0, 0, 190, 23), pin="ct", displayName="Start mode",
+    start = N("ButtonGroup", "StartModeButtonGroup", (0, 0, 190, 23), pin="ct", displayName="Select Start Mode",
               id=100003, optIsVertical=False, intLeftSpacing=0, intRightSpacing=0, intTopSpacing=0, intBottomSpacing=3,
               kids=[N("Button", n, (i * 64, 0, 62, 20), displayName=tip, overloadClass="FlashingButton", style="DefaultButtonStyle",
                       text=t, id=1 if i < 2 else None)
@@ -95,7 +95,7 @@ def scenes_page():
     right = N("Panel", "CtrlPanel", (LW, 0, RW, H - 10), pin="rtb", id=100009, style="BasicPanelStyle", kids=[
         N("Panel", "Selectors", (10, 5, RW - 19, 46), pin="lrt", overloadClass="PatternSelectors", style="InvisibleStyle"),
         N("Labeller", None, ((RW - 190) // 2, 60, 190, 90), pin="c", style="SmallControlLabellerStyle", enumTextPosition="Below",
-          kids=[start, N("TextBox", "NameTextBox", (8, 51, 175, 20), pin="c", displayName="Scene name", id=100001,
+          kids=[start, N("TextBox", "NameTextBox", (8, 51, 175, 20), pin="c", displayName="Scene Name", id=100001,
                          style="DefaultEditBoxStyle")]),
         # The engine table ends above the panel's bottom edge, scrolling
         # when the editor tabs are short (it ran out of the panel).
@@ -110,17 +110,17 @@ def scenes_page():
 
 def mapping_page():
     W, H = 700, 500
-    bar = N("Panel", "MapControls", (0, 0, W, 26), pin="lr", style="InvisibleStyle", kids=[
-        btn("Clear", (3, 3, 62, 20), "Clear All", "Remove every mapping", pin="l", id=100016),
-        btn("Lock", (69, 3, 20, 20), "", "Lock mappings", momentary=False, style="ExxLargeIconButtonStyle", pin="l", id=100017),
-        btn("AddButton", (91, 3, 20, 20), "", "Add a mapping", style="ExxLargeIconButtonStyle", pin="l"),
-        btn("Select", (115, 3, 76, 20), "Auto Select", "Select the mapping that receives MIDI", momentary=False, pin="l", id=10000),
-        btn("SendNotesButton", (W - 150, 3, 72, 20), "Send Notes", "Send note data to the host", momentary=False, pin="r", id=100000),
-        btn("SendCCButton", (W - 75, 3, 72, 20), "Send CC", "Send CCs to the host as they change", momentary=False, pin="r", id=100001),
+    bar = N("Panel", "MapControls", (0, 0, W, 25), pin="lr", style="InvisibleStyle", kids=[
+        btn("Clear", (2, 2, 60, 20), "Clear All", "Remove every mapping", pin="l", id=100016),
+        btn("Lock", (84, 2, 20, 20), "", "Lock mappings", momentary=False, style="ExxLargeIconButtonStyle", pin="l", id=100017),
+        btn("AddButton", (106, 2, 20, 20), "", "Add a mapping", style="ExxLargeIconButtonStyle", pin="l"),
+        btn("Select", (128, 2, 70, 20), "Auto select", "Select the mapping that receives MIDI", momentary=False, pin="l", id=10000),
+        btn("SendNotesButton", (W - 144, 2, 70, 20), "Send Note", "Send note data to the host", momentary=False, pin="r", id=100000),
+        btn("SendCCButton", (W - 72, 2, 70, 20), "Send CC", "Send CCs to the host as they change", momentary=False, pin="r", id=100001),
     ])
     return N("Panel", "CtrlPanel", (0, 0, W, H), pin="lrtb", style="BasicPanelStyle", kids=[
         bar,
-        N("TableView", "TableView", (0, 26, W, H - 26), pin="lrtb", id=100001, intScrollBarDim=10, style="InvisibleStyle",
+        N("TableView", "TableView", (0, 25, W, H - 25), pin="lrtb", id=100001, intScrollBarDim=12, style="InvisibleStyle",
           HScrollBarStyle="ScrollbarStyle", VScrollBarStyle="ScrollbarStyle", ScrollViewStyle="DefaultTableViewScrollStyle",
           TableHeaderPanelStyle="DefaultTableViewHeaderStyle", TablePanelStyle="DefaultTableViewStyle", optOverlay=False, optAutoHide=True),
     ])
@@ -142,7 +142,7 @@ def engine_selector():
         small("EngineSoloedIcon", (2, H - 9, 6, 6), "EngineSelectorSoloIndicatorStyle", id=100001, zorder=555),
         small("MuteButton", (W - 15, 2, 14, 14), "EngineSelectorMButtonStyle", "M", "Mute", pin="t", id=100002, zorder=999),
         small("PatternPower", (W - 15, 18, 14, 14), "EngineSelectorPPButtonStyle", "", "Pattern on/off", pin="m"),
-        small("SoloButton", (W - 15, 34, 14, 14), "EngineSelectorSButtonStyle", "S", "Solo", pin="tb", id=100003, zorder=999),
+        small("SoloButton", (W - 15, 34, 14, 14), "EngineSelectorSButtonStyle", "S", "Solo", pin="b", id=100003, zorder=999),
     ])
 
 
