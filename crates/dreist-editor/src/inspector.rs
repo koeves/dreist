@@ -711,7 +711,7 @@ impl Inspector {
             // Wheel [re:207f1c]: the thumb moves 5 px.
             UiEvent::Wheel { path, overload, dy } if overload == "WaveDisplayZoomSlider" && app.ctrl(path).is_some_and(|c| c.attr("layerZoom").is_some()) => {
                 let Some(tw) = app.ctrl(path).map(|c| c.rect.w as f32) else { return false };
-                self.view = crate::zoomslider::clamp((self.view.0 + if *dy > 0.0 { 5.0 } else { -5.0 } / tw.max(1.0), self.view.1));
+                self.view = crate::zoomslider::clamp((self.view.0 + (if *dy > 0.0 { 5.0 } else { -5.0 }) / tw.max(1.0), self.view.1));
                 true
             }
             UiEvent::ValueChanged { path, name, value, .. } => {
