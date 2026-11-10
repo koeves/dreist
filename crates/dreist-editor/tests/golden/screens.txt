@@ -1,6 +1,6 @@
 editor-tab-0 e3d4da67fd961064
 editor-tab-1 de1e3f9e0f712514
-editor-tab-2 b1bf204b39181630
+editor-tab-2 73bd05caa8bae7f6
 editor-tab-3 7fb8820b0ede5c68
 editor-tab-4 df135b7d8631cf09
 editor-tab-5 e8b2b828b0c99af7
@@ -14,7 +14,7 @@ modal-preferences 144d089246cae972
 options-menu 6c8d8b958dd88c77
 resized-tab-0 6e3b72153496513c
 resized-tab-1 05379e5d27b5a21d
-resized-tab-2 f04549b4ad7714fc
+resized-tab-2 f785a57f8ae63dfd
 resized-tab-3 f97552506425e453
 resized-tab-4 d1cece2ec16cc5d8
 resized-tab-5 29564e3cb4f58137

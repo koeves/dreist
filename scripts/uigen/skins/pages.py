@@ -28,7 +28,7 @@ def song_page():
     tiny = dict(style="TinyTransparentButtonStyle", id=100000)
     return N("Panel", "CtrlPanel", (0, 0, W, H), pin="RB", style="TopRightPanelStyle", kids=[
         bar,
-        N("Panel", "TrackHeaderPanel", (0, BAR, 80, body_h), pin="lrtb", id=100003, style="InvisibleStyle"),
+        N("Panel", "TrackHeaderPanel", (0, BAR, 80, body_h), pin="ltb", id=100003, style="InvisibleStyle"),
         N("ScrollView", "TrackScrollView", (80, BAR, W - 80, body_h), pin="lrtb", id=100001, style="InvisibleStyle"),
         # Part handles the song view moves onto the hovered part.
         btn("PartNextPatternButton", (0, 0, 8, 8), "+", **tiny),

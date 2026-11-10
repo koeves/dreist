@@ -507,8 +507,14 @@ impl SongPanel {
 
     /// Follow a resize of the track header panel (cheap when unchanged).
     fn layout(&self, app: &mut App) {
-        if let Some(hp) = app.ctrl_mut(&self.page).and_then(|p| p.find_mut("TrackHeaderPanel")) {
+        let Some(page) = app.ctrl_mut(&self.page) else { return };
+        if let Some(hp) = page.find_mut("TrackHeaderPanel") {
             layout_headers(hp);
+        }
+        // The visible span (scroll bar, snap) follows the body's width at
+        // once, not with its next drawing.
+        if let Some(b) = page.find("SongBody") {
+            self.body_w.set(b.rect.w as f32);
         }
     }
 
