@@ -588,4 +588,6 @@ pub mod screens;
 mod screens_test;
 
 #[cfg(test)]
+mod resize_tests;
+#[cfg(test)]
 mod tests;

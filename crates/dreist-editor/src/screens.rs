@@ -45,6 +45,10 @@ pub fn click(ed: &mut Editor, spec: &str, button: dreist_gui::app::MouseButton) 
 /// A window size other than the default (a user's saved one).
 pub const RESIZED: (i32, i32) = (1351, 879);
 
+/// The window sizes of the size screens: the smallest, the skin's, a saved
+/// one, a large one.
+pub const SIZES: [(i32, i32); 4] = [dreist_gui::app::MIN_WINDOW, (1400, 850), RESIZED, (1920, 1200)];
+
 pub fn shot(ed: &mut Editor) -> u64 {
     fnv_bytes(ed.render(1.0).data())
 }
@@ -74,6 +78,21 @@ pub fn check_screens(name: &str) {
         ed.model.utility_tab = 1;
         ed.sync();
         golden.check(&format!("resized-tab-{tab}"), shot(&mut ed), &[]);
+    }
+    // Every tab in both pad modes at the smallest window, the skin's, a
+    // saved one and a large one: the panels follow the window.
+    for (w, h) in SIZES {
+        for sampler in [false, true] {
+            let mut ed = editor().unwrap();
+            ed.app.resize(w, h);
+            let e = ed.model.engine;
+            ed.model.engine_mut(e).set("EnginePadMode", if sampler { "Sampler" } else { "Normal" });
+            for tab in 0..7 {
+                ed.model.editor_tab = tab;
+                ed.sync();
+                golden.check(&format!("size-{w}x{h}-tab-{tab}-{}", if sampler { "sampler" } else { "normal" }), shot(&mut ed), &[]);
+            }
+        }
     }
     let mut ed = editor().unwrap();
     ed.model.utility_tab = 1;
