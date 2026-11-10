@@ -42,6 +42,9 @@ impl Editor {
 
     /// Set a knob as if moved to `v` (base value: transmod source 0).
     pub(crate) fn knob_set(&mut self, path: &[usize], name: &str, id: i32, v: f32) {
+        // The knob itself changes here, before the sync: what changed is
+        // taken from before it (only that repaints, not the window).
+        let before = self.app.marks();
         if let Some(c) = self.app.ctrl_mut(path) {
             c.value = v;
         }
@@ -49,7 +52,7 @@ impl Editor {
         self.handle(&UiEvent::ValueChanged { path: path.to_vec(), name: name.to_string(), id, value: v });
         self.model.source = source;
         self.sync();
-        self.app.dirty = true;
+        self.invalidate_changes(&before);
     }
 
     /// Knob right clicks (the panels' [re:944095] 0x10 listeners, e.g.

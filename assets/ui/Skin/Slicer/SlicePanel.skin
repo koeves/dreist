@@ -2,7 +2,7 @@
 <root>
     <CtrlPanel name="CtrlPanel" rect="0, 0, 870, 740" ARLeft="FNear 0.0000" ARRight="FNear 0.0000" ARTop="FNear 0.0000" ARBottom="FNear 0.0000" style="BasicPanelStyle">
         <CtrlLabeller name="Controls" rect="0, 0, 870, 46" ARLeft="FNear 0.0000" ARRight="FNear 0.0000" ARTop="FNear 0.0000" enumTextPosition="Below" style="SmallControlLabellerStyle">
-            <CtrlButtonGroup name="ToolsButton" rect="8, 8, 83, 20" displayName="Slice tool" intBottomSpacing="0" intIntraSpacing="1" intLeftSpacing="0" intRightSpacing="0" intTopSpacing="0" optIsVertical="false">
+            <CtrlButtonGroup name="ToolsButton" rect="10, 8, 86, 20" displayName="Slice tool" intBottomSpacing="0" intIntraSpacing="1" intLeftSpacing="0" intRightSpacing="0" intTopSpacing="0" optIsVertical="false">
                 <CtrlButton rect="0, 0, 20, 20" displayName="Insert tool (Alt-click deletes the slice point to the left)" style="ExExLargeIconRadioButtonLeft" text="" />
                 <CtrlButton rect="21, 0, 20, 20" displayName="Delete tool (Alt-click inserts a slice point)" style="ExExLargeIconRadioButtonCenter" text="" />
                 <CtrlButton rect="42, 0, 20, 20" displayName="Lock tool: click in a slice to lock its point" style="ExExLargeIconRadioButtonCenter" text="" />

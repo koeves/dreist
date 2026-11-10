@@ -29,110 +29,105 @@ def button(name, rect, text, tip=None, style="DefaultButtonStyle", pin=""):
     return N("Button", name, rect, pin=pin, displayName=tip, style=style, text=text)
 
 
-def col(x, w):
-    """x of a knob centred in a w-wide column starting at x."""
-    return x + (w - K) // 2
-
-
 def setup():
-    w = 98
+    w = 96
     return section("ModesPanel", "SETUP", w, [
-        lab("SetupLabeller", (0, HEAD, w - 4, H - HEAD), pin="lrtb", offset=1, kids=[
-            N("PopupButton", "PlayMode", (2, 6, w - 8, 20), pin="lr", displayName="Playback mode", style="ShorteningPopupButtonStyle"),
-            N("PopupButton", "Choke", (2, 46, w - 8, 20), pin="lr", displayName="Choke", style="ShorteningPopupButtonStyle"),
-            button("EnvMode", (2, 86, w - 8, 20), "Track Pitch", "Envelope timing"),
-            *[button(n, (2 + i * 23, 128, 21, 20), t, tip) for i, (n, t, tip) in enumerate([
-                ("PS", "S", "Set the sample start here"), ("PE", "E", "Set the sample end here"),
+        lab("SetupLabeller", (0, HEAD, w, H - HEAD), pin="lrtb", offset=1, kids=[
+            N("PopupButton", "PlayMode", (0, 6, w - 5, 20), pin="lr", displayName="Playback", style="ShorteningPopupButtonStyle"),
+            N("PopupButton", "Choke", (0, 47, w - 5, 20), pin="lr", displayName="Choke", style="ShorteningPopupButtonStyle"),
+            button("EnvMode", (0, 88, w - 5, 20), "Track Pitch", "Env Mode"),
+            *[button(n, (5 + i * 22, 130, 20, 20), t, tip) for i, (n, t, tip) in enumerate([
+                ("PS", "SP", "Set the sample start here"), ("PE", "EP", "Set the sample end here"),
                 ("LS", "LS", "Set the loop start here"), ("LE", "LE", "Set the loop end here")])],
         ])])
 
 
 def mix():
-    w = 56
+    w = 55
     return section("MixPanel", "MIX", w, [
         lab("MixLabeller", (0, HEAD, w, H - HEAD), pin="lrtb", kids=[
-            knob("VoiceGain", "Gain", col(0, w - 2), 6), knob("VoicePan", "Pan", col(0, w - 2), 6 + PITCH, True)]),
-        button("LayerMode", (3, FOOT1, w - 8, 20), "Vintage", "Vintage playback"),
-        button("Reverse", (3, FOOT2, 23, 20), "", "Reverse", style="ExExLargeIconButtonStyle"),
-        button("Phase", (w - 28, FOOT2, 23, 20), "", "Invert phase", style="ExExLargeIconButtonStyle"),
+            knob("VoiceGain", "Gain", 7, 6), knob("VoicePan", "Pan", 7, 6 + PITCH + 1, True)]),
+        button("LayerMode", (3, FOOT1, w - 9, 20), "Vintage", "Vintage playback"),
+        button("Reverse", (3, FOOT2, 22, 20), "", "Reverse", style="ExExLargeIconButtonStyle"),
+        button("Phase", (w - 28, FOOT2, 22, 20), "", "Invert phase", style="ExExLargeIconButtonStyle"),
     ])
 
 
 def tuning():
-    w = 102
-    big = 58
+    w = 100
+    big = 60
     return section("TuningPanel", "TUNING", w, [
         N("Panel", None, (0, HEAD, w, H - HEAD), pin="r", overloadClass="LayerDrawPanel", style="InvisibleStyle", kids=[
             lab("CRSPanel", (0, 0, w, 100), pin="lrt", offset=0, style="LargeControlLabellerStyle", kids=[
-                knob("CoarseTune", "Tune", (w - big) // 2, 8, True, size=big)]),
+                knob("CoarseTune", "Tune", (w - big) // 2, 6, True, size=big)]),
             lab(None, (0, 102, w, 54), pin="r", kids=[
-                knob("Octave", "Octave", 8, 3, True), knob("FineTune", "Fine", w - K - 8, 3, True)]),
+                knob("Octave", "Octave", 6, 3, True), knob("FineTune", "Fine", w - K - 6, 3, True)]),
         ])])
 
 
 def filt():
-    w = 116
-    big = 58
+    w = 115
+    big = 60
     return section("FilterPanel", "FILTER", w, [
         N("Panel", None, (0, HEAD, w, H - HEAD), pin="lrb", overloadClass="LayerDrawPanel", style="InvisibleStyle", kids=[
-            lab("CutoffPanel", (2, 0, 64, 84), pin="t", offset=0, style="LargeControlLabellerStyle", kids=[
-                knob("Cutoff", "Cutoff", 3, 8, size=big)]),
-            lab(None, (w - K - 8, 0, K, 108), pin="r", kids=[
-                knob("FilterDrive", "Drive", 0, 6), knob("Resonance", "Res", 0, 6 + PITCH)]),
+            lab("CutoffPanel", (0, 0, big, 80), pin="t", offset=0, style="LargeControlLabellerStyle", kids=[
+                knob("Cutoff", "Cutoff", 0, 6, size=big)]),
+            lab(None, (w - K - 6, 0, K, 108), pin="r", kids=[
+                knob("FilterDrive", "Drive", 0, 6), knob("Resonance", "Res", 0, 6 + PITCH + 1)]),
         ]),
-        button("FilterActive", (2, FOOT1 - 22, 66, 20), "Active", "Filter on/off"),
-        N("PopupButton", "FilterAlgorithm", (2, FOOT1, w - 8, 20), pin="lr", displayName="Algorithm", style="DefaultPopupButtonStyle"),
-        N("PopupButton", "FilterType", (2, FOOT2, w - 8, 20), pin="lr", displayName="Type", style="DefaultPopupButtonStyle"),
+        button("FilterActive", (0, FOOT1 - 22, 70, 20), "Active", "Filter on/off"),
+        N("PopupButton", "FilterAlgorithm", (0, FOOT1, w - 6, 20), pin="lr", displayName="Algorithm", style="DefaultPopupButtonStyle"),
+        N("PopupButton", "FilterType", (0, FOOT2, w - 6, 20), pin="lr", displayName="Type", style="DefaultPopupButtonStyle"),
     ])
 
 
 def play():
-    w = 64
-    x = col(0, w - 2)
+    w = 60
+    x = 11
     return section("PositionPanel", "PLAY", w, [
         lab("PositionLabeller", (0, HEAD, w, H - HEAD), pin="lrtb", kids=[
-            knob("PreDelayTime", "Predelay", x, 6), knob("SampleStartPoint", "Start ofs", x, 6 + PITCH, True),
-            knob("SampleEndPoint", "End ofs", x, 6 + 2 * PITCH, True)])])
+            knob("PreDelayTime", "Pre delay", x, 6), knob("SampleStartPoint", "Start Offset", x, 6 + PITCH + 1, True),
+            knob("SampleEndPoint", "End Offset", x, 6 + 2 * PITCH + 1, True)])])
 
 
 def looping():
-    w = 116
-    a, b = 10, w - K - 12
+    w = 115
+    a, b = 8, w - K - 13
     return section("LoopPanel", "LOOPING", w, [
-        lab("LoopLabeller", (0, HEAD, w, 104), pin="lr", kids=[
-            knob("SampleLoopStartPoint", "Start ofs", a, 6, True), knob("SampleLoopEndPoint", "End ofs", b, 6, True),
-            knob("XFadeLoopTime", "X-Fade", a, 6 + PITCH), knob("XFadeLoopCurve", "Curve", b, 6 + PITCH, True)]),
-        button("LoopInRelease", (2, FOOT1, w - 8, 20), "Release", "Keep looping in the release stage"),
-        button("AltLoopMode", (2, FOOT2, w - 8, 20), "Alternate", "Loop back and forth"),
+        lab("LoopLabeller", (0, HEAD, w, 105), pin="lr", kids=[
+            knob("SampleLoopStartPoint", "Start Offset", a, 6, True), knob("SampleLoopEndPoint", "End Offset", b, 6, True),
+            knob("XFadeLoopTime", "X-Fade", a, 6 + PITCH + 1), knob("XFadeLoopCurve", "Curve", b, 6 + PITCH + 1, True)]),
+        button("LoopInRelease", (0, FOOT1, w - 6, 20), "Release", "Keep looping in the release stage"),
+        button("AltLoopMode", (0, FOOT2, w - 6, 20), "Alternate", "Loop back and forth"),
     ])
 
 
 def stretch():
-    w = 54
-    return section("StretchPanel", "STRETCH", w, [
-        lab("StretchLabeller", (0, HEAD, w, H - HEAD), pin="lrtb", kids=[knob("TimestretchAmount", "Amount", col(0, w - 4), 34, True)]),
-        button("TimestretchActive", (2, HEAD + 6, w - 8, 20), "Power", "Time stretch on/off", pin="lr"),
-        button("TimestretchMode", (2, FOOT1, w - 8, 20), "Fast", "Constant CPU mode: faster for some pitch ranges", pin="lr"),
-        button("TimestretchTracksBPM", (2, FOOT2, w - 8, 20), "Track", "Follow the project tempo", pin="lr"),
+    w = 50
+    return section("StretchPanel", "TS", w, [
+        lab("StretchLabeller", (0, HEAD, w, H - HEAD), pin="lrtb", kids=[knob("TimestretchAmount", "Amount", 4, 38, True)]),
+        button("TimestretchActive", (0, HEAD + 6, w - 6, 20), "Active", "Time stretch on/off", pin="lr"),
+        button("TimestretchMode", (0, FOOT1, w - 6, 20), "Fast", "Constant CPU mode: faster for some pitch ranges", pin="lr"),
+        button("TimestretchTracksBPM", (0, FOOT2, w - 6, 20), "Track", "Follow the project tempo", pin="lr"),
     ])
 
 
 def envelope(name, title, p):
-    w = 152
+    w = 150
     faders = [N("TransmodSlider", f"{p}{s}", (i * 20, 5, 16, 132), displayName=s[0], style="TransmodSliderStyle")
               for i, s in enumerate(["Attack", "Decay", "Hold", "Sustain", "Release"])]
-    curves = [knob(f"{p}{s}Curve", f"{s[0]}-C", 4, 6 + i * PITCH, True)
+    curves = [knob(f"{p}{s}Curve", f"{s[0]}-C", 4, 6 + i * PITCH + min(i, 1), True)
               for i, s in enumerate(["Attack", "Decay", "Release"])]
     return section(name, title, w, [
-        lab(None, (6, HEAD, 98, H - HEAD), pin="b", offset=2, kids=faders),
-        lab(None, (106, HEAD, 44, H - HEAD), pin="b", kids=curves),
+        lab(None, (5, HEAD, 100, H - HEAD), pin="b", offset=2, kids=faders),
+        lab(None, (105, HEAD, 45, H - HEAD), pin="b", kids=curves),
     ])
 
 
 def params():
     gap = 6
     secs = [setup(), mix(), tuning(), filt(), play(), looping(), stretch(),
-            envelope("AEPanel", "AMP ENV", "AmpEnv"), envelope("FEPanel", "FREE ENV", "FreeEnv")]
+            envelope("AEPanel", "AMP ENVELOPE", "AmpEnv"), envelope("FEPanel", "FREE ENVELOPE", "FreeEnv")]
     x = 0
     for s in secs:
         s.rect = (x, 0, s.w, s.h)

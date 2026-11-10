@@ -8,19 +8,19 @@ from .pages import btn
 
 def pads_panel():
     W, H = 400, 400
-    bank = N("ButtonGroup", "PadBank", (88, 2, 92, 20), intIntraSpacing=1, optIsVertical=False, intLeftSpacing=0,
+    bank = N("ButtonGroup", "PadBank", (88, 2, 90, 20), intIntraSpacing=1, optIsVertical=False, intLeftSpacing=0,
              intRightSpacing=0, intTopSpacing=0, intBottomSpacing=0, style="InvisibleStyle",
-             kids=[N("Button", None, (i * 18, 0, 17 if t != "All" else 20, 20), style="TransmodButtonStyle", text=t)
+             kids=[N("Button", None, (i * 18, 0, 17, 20), style="TransmodButtonStyle", text=t)
                    for i, t in enumerate(["A", "B", "C", "D", "All"])])
     bar = N("Panel", "PadControl", (0, 0, W, 24), pin="lrt", style="InvisibleStyle", kids=[
-        N("PopupButton", "PadMode", (2, 2, 82, 20), displayName="Pad mode", style="HeaderBarPopupButtonStyle"),
+        N("PopupButton", "PadMode", (2, 2, 83, 20), displayName="Pad mode", style="HeaderBarPopupButtonStyle"),
         bank,
-        N("Button", "EraseButton", (190, 2, 20, 20), displayName="Erase: hold a pad to clear its steps", id=100002,
+        N("Button", "EraseButton", (192, 2, 20, 20), displayName="Erase: hold a pad to clear its steps", id=100002,
           style="HeaderBarIconButtonStyle", text=""),
-        N("Button", "RepeatButton", (220, 2, 42, 20), displayName="Note repeat", id=100001, style="TransmodButtonStyle", text="Rpt"),
-        btn("RepeatCount", (264, 2, 32, 20), "1/16", "Note repeat rate", style="TransmodButtonStyle", id=100000),
-        N("Button", "FullLevelButton", (304, 2, 30, 20), displayName="Fixed velocity", id=100000, style="TransmodButtonStyle", text="Full"),
-        N("Knob", "FullLevelKnob", (338, 2, 20, 20), displayName="Fixed velocity", id=100001, style="AltKnobStyle", realDialThickness=0.3),
+        N("Button", "RepeatButton", (224, 2, 40, 20), displayName="Note repeat", id=100001, style="TransmodButtonStyle", text="Repeat"),
+        btn("RepeatCount", (266, 2, 30, 20), "1/16", "Note repeat rate", style="TransmodButtonStyle", id=100000),
+        N("Button", "FullLevelButton", (307, 2, 30, 20), displayName="Fixed velocity", id=100000, style="TransmodButtonStyle", text="Full"),
+        N("Knob", "FullLevelKnob", (341, 2, 20, 20), displayName="Fixed velocity", id=100001, style="AltKnobStyle", realDialThickness=0.3),
         btn("Options", (W - 22, 2, 20, 20), "", "More pad options", style="HeaderBarIconButtonStyle", pin="r"),
     ])
     return N("Panel", None, (0, 0, W, H), pin="lrtb", style="InvisibleStyle", kids=[
@@ -78,15 +78,18 @@ def inspector():
     W, H = 800, 350
     LW = 120
     side = N("Panel", None, (0, 0, LW, H), pin="ltb", style="BackPanelStyle", kids=[
-        N("Panel", None, (0, -5, LW, 60), pin="t", style="InvisibleStyle", kids=[
+        # The pad name row starts at the panel's top edge (5 px above it, it
+        # was cut off under the splitter bar), its buttons end above the
+        # options button.
+        N("Panel", None, (0, 0, LW, 57), pin="t", style="InvisibleStyle", kids=[
             N("Panel", "PadSelButton", (0, 0, LW, 60), pin="lr", overloadClass="PadSelectionButton")]),
         N("Button", "ShowSplits", (0, 57, LW, 22), pin="lrt", displayName="Velocity splits and pad options",
-          style="VSplitButtonStyle", text="Pad options ▸"),
-        N("TableView", "LayerTable", (0, 79, LW, H - 79), pin="lrtb", style="InvisibleStyle", HScrollBarStyle="", VScrollBarStyle="",
+          style="VSplitButtonStyle", text="Pad options... ▶"),
+        N("TableView", "LayerTable", (0, 78, LW, H - 78), pin="lrtb", style="InvisibleStyle", HScrollBarStyle="", VScrollBarStyle="",
           ScrollViewStyle="InvisibleStyle", TableHeaderPanelStyle="InvisibleStyle", TablePanelStyle="InspectorTableStyle",
           intHeaderHeight=0, intScrollBarDim=10),
     ])
-    return N("Panel", None, (0, 0, W, H), style="BackPanelStyle", kids=[
+    return N("Panel", None, (0, 0, W, H), pin="lrtb", style="BackPanelStyle", kids=[
         side,
         N("Panel", "LayerPanel", (LW, 0, W - LW, H), pin="lrtb", overloadClass="LayerPanel", style="LayerPanelStyle"),
         N("Panel", "VelocitySplitPanel", (LW, 0, W - LW, H), pin="lrtb", overloadClass="VelocitySplitPanel", style="InvisibleStyle"),

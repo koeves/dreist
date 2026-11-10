@@ -212,7 +212,7 @@ impl Mixer {
             self.shown = chans.clone();
             sc.set_attr("sizeIndex", size.to_string());
             sc.children.clear();
-            for ch in chans {
+            for (i, ch) in chans.into_iter().enumerate() {
                 let set = match ch {
                     Channel::Aux(_) => &self.aux,
                     Channel::Master => &self.master,
@@ -223,16 +223,20 @@ impl Mixer {
                 let w = s.rect.w;
                 s.set_rect(Rect::new(0, 0, w, h));
                 s.set_attr("channel", format!("{ch:?}"));
+                // [re:5d1918]: strips alternate the odd / even channel
+                // styles (both light panels in the shipped stylesheet).
+                s.style = if i % 2 == 0 { "MixerChannelOddStyle" } else { "MixerChannelEvenStyle" }.into();
                 sc.children.push(s);
             }
         }
-        // Lay the strips out from the scroll offset.
+        // Lay the strips out from the scroll offset, as tall as the
+        // scroller (it changes with the window within one size index).
         let total: i32 = sc.children.iter().map(|c| c.rect.w + 2).sum();
         self.scroll_x = self.scroll_x.clamp(0, (total - sc.rect.w).max(0));
         let mut x = -self.scroll_x;
         for c in &mut sc.children {
-            if c.rect.x != x {
-                let r = Rect::new(x, 0, c.rect.w, c.rect.h);
+            if c.rect.x != x || c.rect.h != h {
+                let r = Rect::new(x, 0, c.rect.w, h);
                 c.set_rect(r);
             }
             x += c.rect.w + 2;

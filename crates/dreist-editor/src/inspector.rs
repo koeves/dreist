@@ -128,6 +128,41 @@ pub fn snap_zero(zeros: &[u32], f: u32, range: u32) -> u32 {
     }
 }
 
+/// [re:799c79]: the lines joining a big layer knob to the two small knobs
+/// it belongs with, 2 px in light grey under the knobs. Tune: from its
+/// rim at 120° and 60° (below, left and right) to the top of Octave and
+/// Fine. Cutoff: from 35° below and 30° above its right side to the left
+/// of Res and Drive, 20° above their centres.
+fn draw_connectors(p: &mut Painter, c: &Ctrl) {
+    // Centre and half size of a descendant, in the panel's coordinates.
+    let at = |name: &str| -> Option<(f32, f32, f32, f32)> {
+        let path = c.path_of(name)?;
+        let (mut x, mut y, mut k) = (0, 0, c);
+        for &i in &path {
+            k = k.children.get(i)?;
+            x += k.rect.x;
+            y += k.rect.y;
+        }
+        let (rx, ry) = (k.rect.w as f32 / 2.0, k.rect.h as f32 / 2.0);
+        Some((x as f32 + rx, y as f32 + ry, rx, ry))
+    };
+    let col = Colour::rgba(192, 192, 192, 255);
+    let lines = if let Some((x, y, rx, ry)) = at("Cutoff") {
+        let (Some(res), Some(drive)) = (at("Resonance"), at("FilterDrive")) else { return };
+        let end = |(kx, ky, krx, kry): (f32, f32, f32, f32)| (kx - krx * 0.939_692_6, ky - kry * 0.342_020_4);
+        [((x + rx * 0.819_152, y + ry * 0.573_576_5), end(res)), ((x + rx * 0.866_025_8, y - ry * 0.5), end(drive))]
+    } else if let Some((x, y, rx, ry)) = at("CoarseTune") {
+        let (Some(oct), Some(fine)) = (at("Octave"), at("FineTune")) else { return };
+        let end = |(kx, ky, _, kry): (f32, f32, f32, f32)| (kx, ky - kry);
+        [((x - rx * 0.5, y + ry * 0.866_025_4), end(oct)), ((x + rx * 0.5, y + ry * 0.866_025_4), end(fine))]
+    } else {
+        return;
+    };
+    for ((x0, y0), (x1, y1)) in lines {
+        p.line(x0, y0, x1, y1, col, 2.0);
+    }
+}
+
 pub struct Inspector {
     /// The [re:d46410] panel (the zoom bar's controls are searched under it).
     host: Option<Vec<usize>>,
@@ -148,6 +183,9 @@ pub struct Inspector {
     zoom_mode: i64,
     /// The layer and file the auto zoom last ran for.
     zoom_key: Option<(usize, usize, usize, PathBuf)>,
+    /// Views zoomed by hand with the auto zoom off, per (engine, pad,
+    /// layer) and the file shown ([re:1b1720]).
+    zoom_memory: std::collections::HashMap<(usize, usize, usize), (PathBuf, (f32, f32))>,
     /// Envelope overlays (options `AmpEnvVisible` / `FreeEnvVisible`).
     env_visible: (bool, bool),
     /// Envelope handle drag: (Amp?, handle 0..7).
@@ -202,6 +240,7 @@ impl Inspector {
                 zoom_drag: None,
                 zoom_mode: 0,
                 zoom_key: None,
+                zoom_memory: Default::default(),
                 env_visible: (true, true),
                 env_drag: None,
                 timeline_beats: crate::timeline::beats_mode("PadEdit"),
@@ -242,7 +281,10 @@ impl Inspector {
                     let mut r = row.clone();
                     r.overload = "LayerRow".into();
                     r.set_attr("layer", l.to_string());
-                    r.set_rect(Rect::new(0, l as i32 * (row.rect.h + 1), w, row.rect.h));
+                    let y = l as i32 * (row.rect.h + 1);
+                    r.set_rect(Rect::new(0, y, w, row.rect.h));
+                    // Keep the row where it is when the table is resized.
+                    r.anchors[1].1 = y as f32;
                     if let Some(n) = r.find_mut("SampleName") {
                         n.passive = true;
                     }
@@ -263,6 +305,7 @@ impl Inspector {
             zoom_drag: None,
             zoom_mode: crate::options::Options::load().int("WaveDisplayZoomMode", 0),
             zoom_key: None,
+            zoom_memory: Default::default(),
             env_visible: {
                 let o = crate::options::Options::load();
                 (o.bool("AmpEnvVisible", true), o.bool("FreeEnvVisible", true))
@@ -368,6 +411,16 @@ impl Inspector {
         }
     }
 
+    /// [re:1b1720]: a view zoomed by hand with the auto zoom off is kept
+    /// for the selected layer.
+    fn remember_view(&mut self) {
+        if self.zoom_mode == 0 {
+            if let Some((e, p, l, f)) = &self.zoom_key {
+                self.zoom_memory.insert((*e, *p, *l), (f.clone(), self.view));
+            }
+        }
+    }
+
     /// SP / EP / LS / LE (the toolbar names PS / PE / LS / LE):
     /// hidden, shown only in MIDI learn mode ([re:7fd1e4]
     /// [re:cca449]) as learn targets for the markers.
@@ -413,6 +466,14 @@ impl Inspector {
                 self.zoom_key = key;
                 self.view = (0.0, 1.0);
                 self.apply_auto_zoom(model);
+                // [re:a29974]: with the auto zoom off the layer's own view
+                // comes back; a new sample in the pad or layer starts from
+                // the whole file again ([re:4de987]).
+                if let Some((e, p, l, f)) = self.zoom_key.as_ref().filter(|_| self.zoom_mode == 0) {
+                    if let Some((_, v)) = self.zoom_memory.get(&(*e, *p, *l)).filter(|(mf, _)| mf == f) {
+                        self.view = *v;
+                    }
+                }
             }
         }
         // Zoom bar states: the mode group, and Zoom in only while the
@@ -498,22 +559,35 @@ impl Inspector {
         if let Some(tp) = &self.table {
             let (_, lmask) = crate::multipad::layer_selection(model, e, p);
             let _ = l;
-            let rows: Vec<(String, bool, bool)> = (0..LAYERS)
+            let rows: Vec<(bool, String, bool, bool)> = (0..LAYERS)
                 .map(|li| {
                     let f = model.layer(e, p, li);
-                    (if f.valid { model.layer_name(e, p, li).unwrap_or_default() } else { String::new() }, f.mute, f.solo)
+                    (f.valid, if f.valid { model.layer_name(e, p, li).unwrap_or_default() } else { String::new() }, f.mute, f.solo)
                 })
                 .collect();
             if let Some(t) = app.ctrl_mut(tp) {
                 for r in &mut t.children {
                     let Some(li) = r.attr("layer").and_then(|v| v.parse::<usize>().ok()) else { continue };
-                    let (name, m, s) = &rows[li.min(LAYERS - 1)];
-                    r.set_attr("selected", (lmask & (1u8 << li.min(7)) != 0).to_string());
+                    let (valid, name, m, s) = &rows[li.min(LAYERS - 1)];
+                    let selected = lmask & (1u8 << li.min(7)) != 0;
+                    r.set_attr("selected", selected.to_string());
                     for c in &mut r.children {
                         match c.name.as_str() {
-                            "SampleName" => c.text = if name.is_empty() { c.attr("placeholder").unwrap_or("").to_string() } else { name.clone() },
-                            "Mute" => c.on = *m,
-                            "Solo" => c.on = *s,
+                            "SampleName" => {
+                                c.text = if name.is_empty() { c.attr("placeholder").unwrap_or("").to_string() } else { name.clone() };
+                                // An empty slot reads as a light placeholder on
+                                // the dark table (dark on the selected row).
+                                c.style = if *valid || selected { "DarkTextInvisibleEditBoxStyle" } else { "EmptyLayerTextStyle" }.into();
+                            }
+                            "Mute" => {
+                                c.on = *m;
+                                c.visible = *valid;
+                            }
+                            "Solo" => {
+                                c.on = *s;
+                                c.visible = *valid;
+                            }
+                            "VUMeter" => c.visible = *valid,
                             _ => {}
                         }
                     }
@@ -650,6 +724,7 @@ impl Inspector {
                 let at = (self.view.0 + mx * self.view.1).clamp(0.0, 1.0);
                 let tw = find_tagged(&app.root, "WaveZoomSlider").map(|c| c.rect.w as f32).unwrap_or(w);
                 self.view = crate::zoomslider::zoom_in(self.view, if *dy > 0.0 { 2.0 } else { 0.5 }, at, tw, frames);
+                self.remember_view();
                 true
             }
             // Zoom bar (zoom in by 2 / 0.5 around 0.5).
@@ -657,6 +732,7 @@ impl Inspector {
                 let Some((_, frames)) = self.layer_frames(model) else { return true };
                 let tw = find_tagged(&app.root, "WaveZoomSlider").map(|c| c.rect.w as f32).unwrap_or(1.0);
                 self.view = crate::zoomslider::zoom_in(self.view, if name == "ZoomInButton" { 2.0 } else { 0.5 }, 0.5, tw, frames);
+                self.remember_view();
                 true
             }
             // A / F: [re:682bc8] reads `AmpEnvVisible` /
@@ -694,6 +770,7 @@ impl Inspector {
                         let Some((mode, last)) = self.zoom_drag else { return false };
                         self.view = crate::zoomslider::drag(self.view, tw, mode, last, *x, min);
                         self.zoom_drag = Some((mode, *x));
+                        self.remember_view();
                         true
                     }
                     dreist_gui::app::MouseKind::Up => self.zoom_drag.take().is_some(),
@@ -703,12 +780,14 @@ impl Inspector {
             // Double click [re:009295]: the whole file.
             UiEvent::DoubleClicked { path, .. } if app.ctrl(path).is_some_and(|c| c.overload == "WaveDisplayZoomSlider" && c.attr("layerZoom").is_some()) => {
                 self.view = (0.0, 1.0);
+                self.remember_view();
                 true
             }
             // Wheel [re:207f1c]: the thumb moves 5 px.
             UiEvent::Wheel { path, overload, dy } if overload == "WaveDisplayZoomSlider" && app.ctrl(path).is_some_and(|c| c.attr("layerZoom").is_some()) => {
                 let Some(tw) = app.ctrl(path).map(|c| c.rect.w as f32) else { return false };
-                self.view = crate::zoomslider::clamp((self.view.0 + if *dy > 0.0 { 5.0 } else { -5.0 } / tw.max(1.0), self.view.1));
+                self.view = crate::zoomslider::clamp((self.view.0 + (if *dy > 0.0 { 5.0 } else { -5.0 }) / tw.max(1.0), self.view.1));
+                self.remember_view();
                 true
             }
             UiEvent::ValueChanged { path, name, value, .. } => {
@@ -868,7 +947,14 @@ impl Inspector {
                 true
             }
             "WaveDisplayZoomSlider" if c.attr("layerZoom").is_some() => {
-                crate::zoomslider::draw(p, r.styles, "WaveDisplayZoomSliderStyle", c.rect.w as f32, c.rect.h as f32, self.view);
+                let e = model.engine;
+                let mut cache = self.peaks.borrow_mut();
+                let overview = model.layer_sample(e, model.pad[e], model.layer[e]).and_then(|f| cache.get(&f)).map_or(&[][..], |pk| &pk.buckets[..]);
+                crate::zoomslider::draw(p, r.styles, "WaveDisplayZoomSliderStyle", c.rect.w as f32, c.rect.h as f32, self.view, overview);
+                true
+            }
+            "LayerDrawPanel" => {
+                draw_connectors(p, c);
                 true
             }
             "LayerRow" => {

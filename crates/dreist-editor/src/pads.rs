@@ -30,6 +30,8 @@ pub struct Pads {
     template: Ctrl,
     /// Which pads are currently instantiated (first, count).
     shown: (usize, usize),
+    /// The matrix size the pads were laid out for.
+    shown_size: (i32, i32),
     /// Pad held down by the mouse.
     held: Option<usize>,
     /// Path of the `PadControl` strip (mode, bank, erase, repeat, full level).
@@ -152,8 +154,9 @@ pub(crate) fn matrix_cells(m: &Ctrl, cols: i32, rows: i32) -> Vec<Rect> {
     let sp = m.attr_i32("intIntraSpacing", 0);
     let (l, rgt, t, b) = (m.attr_i32("intLeftSpacing", 0), m.attr_i32("intRightSpacing", 0), m.attr_i32("intTopSpacing", 0), m.attr_i32("intBottomSpacing", 0));
     let from_top = m.attr_bool("optLayoutFromTop", true);
-    let w = (m.rect.w - l - rgt - (cols - 1) * sp) as f32 / cols as f32;
-    let h = (m.rect.h - t - b - (rows - 1) * sp) as f32 / rows as f32;
+    // A collapsed matrix (the pads splitter snapped shut): empty cells.
+    let w = ((m.rect.w - l - rgt - (cols - 1) * sp) as f32 / cols as f32).max(0.0);
+    let h = ((m.rect.h - t - b - (rows - 1) * sp) as f32 / rows as f32).max(0.0);
     let mut out = Vec::new();
     for i in 0..cols * rows {
         let (c, r) = (i % cols, i / cols);
@@ -217,6 +220,7 @@ impl Pads {
             bank,
             template,
             shown: (0, 0),
+            shown_size: (0, 0),
             held: None,
             control,
             repeat_base: [8; crate::model::ENGINES],
@@ -246,14 +250,24 @@ impl Pads {
     /// [re:ca55ac].
     fn layout(&mut self, root: &mut Ctrl, model: &Model) {
         let vis = model.visible_pads();
-        if vis == self.shown {
+        let dim = if vis.1 == 64 { 8 } else { 4 };
+        let shown = self.shown;
+        let template = self.template.clone();
+        let Some(m) = self.matrix_mut(root) else { return };
+        let size = (m.rect.w, m.rect.h);
+        if vis == shown && size == self.shown_size {
+            return;
+        }
+        self.shown_size = size;
+        let cells = matrix_cells(m, dim, dim);
+        // The matrix resized (window, splitters): the same pads follow.
+        if vis == shown && m.children.len() == cells.len() {
+            for (p, cell) in m.children.iter_mut().zip(cells) {
+                p.set_rect(cell);
+            }
             return;
         }
         self.shown = vis;
-        let dim = if vis.1 == 64 { 8 } else { 4 };
-        let template = self.template.clone();
-        let Some(m) = self.matrix_mut(root) else { return };
-        let cells = matrix_cells(m, dim, dim);
         m.children.clear();
         for (i, cell) in cells.into_iter().enumerate() {
             let mut p = template.clone();

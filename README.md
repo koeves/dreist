@@ -88,7 +88,7 @@ shares with Einst (a Geist v1 rebuild): `dreist-formats`, `dreist-dsp`, `dreist-
 - Checks: `cargo fmt --all --check`, `cargo clippy --workspace --all-targets -- -D warnings`,
   `cargo test --workspace`.
 - dreist-commons is a submodule at `commons`: clone with `--recursive`.
-- Code and git conventions for contributors and agents: [`.agents/`](.agents/README.md).
+- Code and git conventions for contributors: [`CONTRIBUTING.md`](CONTRIBUTING.md).
 
 ## Related projects
 

@@ -9,8 +9,8 @@
             <CtrlLabeller rect="58, 6, 222, 38" enumTextPosition="Below" style="SmallControlLabellerStyle">
                 <CtrlPanel rect="0, 0, 54, 20" displayName="Steps" style="InvisibleStyle">
                     <CtrlValueBox name="LengthBox" rect="0, 0, 38, 20" displayName="Steps" id="100002" optCanBeDragged="false" placeholder="16" realIncDecRange="1" realMaxValue="1024" realMinValue="1" style="DefaultEditBoxStyle" />
-                    <CtrlButton name="PlusButton" rect="38, 0, 16, 10" displayName="More steps" id="100001" optIsMomentary="true" style="SmallIconButtonStyle" text="" />
-                    <CtrlButton name="MinusButton" rect="38, 10, 16, 10" displayName="Fewer steps" id="100000" optIsMomentary="true" style="SmallIconButtonStyle" text="" />
+                    <CtrlButton name="PlusButton" rect="36, 0, 17, 10" displayName="More steps" id="100001" optIsMomentary="true" style="SmallIconButtonStyle" text="" />
+                    <CtrlButton name="MinusButton" rect="36, 10, 17, 10" displayName="Fewer steps" id="100000" optIsMomentary="true" style="SmallIconButtonStyle" text="" />
                 </CtrlPanel>
                 <CtrlPopupButton name="StepLengthCombo" rect="58, 0, 52, 20" displayName="Step Length" id="100004" style="DefaultPopupButtonStyle" />
                 <CtrlPanel rect="114, 0, 106, 20" displayName="Playback" style="InvisibleStyle">
@@ -35,7 +35,7 @@
                     <CtrlValueBox name="TempoDenom" rect="28, 0, 18, 20" displayName="Tempo Modifier" optSingleClickEdit="false" placeholder="1" realIncDecRange="1" realMaxValue="16" realMinValue="1" style="InvisibleCenteredEditBoxStyle" />
                 </CtrlPanel>
                 <CtrlKnob name="SwingKnob" rect="80, 0, 20, 20" displayName="Swing" realDialThickness="0.3000" style="KnobStyle" />
-                <CtrlButton name="SwingDrop" rect="102, 6, 10, 10" optIsMomentary="true" style="HeaderBarMenuDropButtonStyle" text="▾" />
+                <CtrlButton name="SwingDrop" rect="102, 6, 10, 10" optIsMomentary="true" style="HeaderBarMenuDropButtonStyle" text="▼" />
                 <CtrlKnob name="InstoGraph" rect="126, 0, 20, 20" displayName="Graph Rec" realDialThickness="0.3000" style="KnobStyle" />
             </CtrlLabeller>
         </CtrlLabeller>

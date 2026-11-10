@@ -81,7 +81,7 @@ enum MenuAction {
 pub const QUANTIZE_MODES: [&str; 3] = ["Auto", "Maintain Start Phase", "Maintain Sync"];
 
 pub struct SongPanel {
-    page: Vec<usize>,
+    pub(crate) page: Vec<usize>,
     /// `SongBody` (under `page`).
     named: dreist_gui::app::PathCache,
     /// Pixels per quarter note.
@@ -170,6 +170,20 @@ fn pattern_qn(model: &Model, e: usize, p: usize) -> f64 {
     pat.steps as f64 * 0.25 / dreist_engine::pattern::steps_per_16th(pat.resolution).max(1e-6)
 }
 
+/// One track header per song row, under the timeline: at build and
+/// whenever the header panel changes size (a window resize).
+fn layout_headers(hp: &mut Ctrl) {
+    let rh = row_h(hp) as i32;
+    let w = hp.rect.w;
+    for h in &mut hp.children {
+        let Some(e) = h.attr("songTrack").and_then(|v| v.parse::<i32>().ok()) else { continue };
+        let r = Rect::new(0, TIMELINE_H as i32 + e * rh, w, rh);
+        if h.rect != r {
+            h.set_rect(r);
+        }
+    }
+}
+
 impl SongPanel {
     pub fn build(skin: &mut Skin, root: &mut Ctrl, page: &[usize]) -> Result<SongPanel, EditorError> {
         let mut host = &mut *root;
@@ -194,18 +208,19 @@ impl SongPanel {
         }
         let rel = skin.find("SongTrackHeaderPanel.skin").unwrap_or_else(|| "Song/SongTrackHeaderPanel.skin".into());
         let tpl = skin.load_skin(&rel).ok().and_then(|r| r.children.into_iter().next());
-        if let (Some(hp), Some(t)) = (host.find_mut("TrackHeaderPanel"), tpl) {
-            let rh = ((hp.rect.h as f32 - TIMELINE_H) / ENGINES as f32).floor() as i32;
-            let w = hp.rect.w;
+        if let (Some(hp), Some(mut t)) = (host.find_mut("TrackHeaderPanel"), tpl) {
+            // The headers follow the rows (`layout_headers`), not their own
+            // fill anchors (those would stack all of them over the panel).
+            t.anchors = Default::default();
             for e in 0..ENGINES {
                 let mut h = t.clone();
-                h.set_rect(Rect::new(0, TIMELINE_H as i32 + e as i32 * rh, w, rh));
                 if let Some(l) = h.find_mut("TrackNumberLabel") {
                     l.text = format!("{}", e + 1);
                 }
                 h.set_attr("songTrack", e.to_string());
                 hp.children.push(h);
             }
+            layout_headers(hp);
         }
         Ok(SongPanel {
             page: page.to_vec(),
@@ -490,8 +505,22 @@ impl SongPanel {
         }
     }
 
+    /// Follow a resize of the track header panel (cheap when unchanged).
+    fn layout(&self, app: &mut App) {
+        let Some(page) = app.ctrl_mut(&self.page) else { return };
+        if let Some(hp) = page.find_mut("TrackHeaderPanel") {
+            layout_headers(hp);
+        }
+        // The visible span (scroll bar, snap) follows the body's width at
+        // once, not with its next drawing.
+        if let Some(b) = page.find("SongBody") {
+            self.body_w.set(b.rect.w as f32);
+        }
+    }
+
     pub fn sync(&mut self, app: &mut App, model: &Model) {
         self.tick(model);
+        self.layout(app);
         self.place_part_buttons(app, model);
         let song = song_of(model);
         let ip = self.insert_pattern;

@@ -11,8 +11,8 @@
 //!   and track separators in `colGridBar` α0.35 ([re:60f2b5], [re:ecd2fe]);
 //! - steps ([re:cef393], [re:b3cfd7]): inset
 //!   2/1/4/3 when the row is ≥ 10 px, rounded rect radius 2 (or h/4 when
-//!   small) in `colStep` at alpha `vel·0.85 + 0.15`; repeats subdivide
-//!   one-shot steps;
+//!   small) in `colStep` (selected steps `colSelected`) at alpha
+//!   `vel·0.85 + 0.15`; repeats subdivide one-shot steps;
 //! - beyond the track length: `colOverlay` (track drawing);
 //! - the current step column in `colPosition` ([re:bfe463]);
 //! - pattern power off: `colPowerOverlay` α0.3 and "Pattern power off"
@@ -83,8 +83,8 @@ pub struct PatternPanel {
     /// Track, lane and first step the graph menu acts on (right-click on
     /// a graph; None = the selected track's lane from step 0).
     graph_target: Option<(usize, usize, usize)>,
-    /// The lane menu shows the FX lanes.
-    lane_menu_fx: bool,
+    /// What the open lane menu's items pick.
+    lane_menu: Vec<LaneItem>,
     /// Lane values when a graph knob started moving (copied),
     /// the knob, and the last offset.
     graph_snap: Option<(String, Vec<f32>, f32)>,
@@ -456,9 +456,113 @@ impl Default for PatternView {
 const MARKER_W: f32 = 10.0;
 const MARKER_H: f32 = 15.0;
 
-/// Lanes offered directly in the graph menu; the FX lanes go in a second
-/// menu.
+/// Lanes before the pad FX lanes; each of the six FX slots has nine.
 const CORE_LANES: usize = 39;
+
+/// The lane menu's submenus after its first eight lanes ([re:6dfc31]).
+const LANE_GROUPS: [(&str, &[usize]); 5] = [
+    ("Filter...", &[11, 12, 13, 14]),
+    ("Playback...", &[8, 15, 16, 17, 18]),
+    ("Sends...", &[19, 20, 21, 22]),
+    ("Amp Envelope...", &[23, 24, 25, 26, 27, 28, 29, 30]),
+    ("Free Envelope...", &[31, 32, 33, 34, 35, 36, 37, 38]),
+];
+
+/// What a lane menu item picks.
+#[derive(Clone, Copy, Debug, PartialEq)]
+enum LaneItem {
+    Lane(usize),
+    /// One of [`LANE_GROUPS`].
+    Group(usize),
+    /// A pad FX slot's lanes.
+    Fx(usize),
+    None,
+}
+
+/// The graph lane menu ([re:6dfc31]) for the selected pad's graph: the
+/// first eight lanes, the Filter / Playback / Sends / Amp Envelope /
+/// Free Envelope submenus, then (after a divider) a "Pad FX n (effect)"
+/// submenu per slot holding an effect. Within a menu the shown lane is
+/// checked; it and the lanes the track's other graph rows show are
+/// disabled, as is Repeats on a pad that is not one-shot; lanes holding
+/// data carry the block icon.
+fn lane_menu(model: &Model, shown: &[usize], items: &[LaneItem]) -> Vec<String> {
+    let e = model.engine;
+    let track = model.pad[e];
+    let current = model.pattern_view[e].lane;
+    let one_shot = model.pad_one_shot(e, track);
+    let pat = model.pattern(e, model.current_pattern(e));
+    let has = |l: usize| {
+        pat.tracks.get(track).is_some_and(|t| {
+            t.steps.iter().take(pat.steps as usize).any(|s| if l == lane::VELOCITY { s.on } else { s.lanes.get(l).is_some_and(|v| (v - dreist_formats::params::step_lane_default(l)).abs() > 1e-6) })
+        })
+    };
+    let fx = crate::fxchain::effects(model, crate::fxchain::Target::Pad(e, track));
+    items
+        .iter()
+        .map(|it| match *it {
+            LaneItem::Lane(l) => {
+                let name = lane_menu_label(&fx, l);
+                let allowed = l != lane::REPEATS || one_shot;
+                if l == current {
+                    return dreist_gui::menu::item(name, false);
+                }
+                let text = if allowed && has(l) { format!("{}{name}", dreist_gui::menu::BLOCK) } else { name };
+                dreist_gui::menu::item(text, allowed && !shown.contains(&l))
+            }
+            LaneItem::Group(g) => format!("{} ▸", LANE_GROUPS[g].0),
+            LaneItem::Fx(slot) => {
+                let kind = fx.iter().find(|f| f.0 == slot).map_or(0, |f| f.1);
+                format!("Pad FX {} ({}) ▸", slot + 1, dreist_formats::params::EFFECT_TYPES.get(kind).copied().unwrap_or_default())
+            }
+            LaneItem::None => String::new(),
+        })
+        .collect()
+}
+
+/// The checked item of a lane menu: the shown lane.
+fn lane_menu_checked(model: &Model, items: &[LaneItem]) -> Option<usize> {
+    items.iter().position(|it| *it == LaneItem::Lane(model.pattern_view[model.engine].lane))
+}
+
+/// The lane menu's top level for the selected pad.
+fn lane_menu_top(model: &Model) -> Vec<LaneItem> {
+    let e = model.engine;
+    let mut items: Vec<LaneItem> = (0..8).map(LaneItem::Lane).chain((0..LANE_GROUPS.len()).map(LaneItem::Group)).collect();
+    let fx = crate::fxchain::effects(model, crate::fxchain::Target::Pad(e, model.pad[e]));
+    let mut slots: Vec<usize> = fx.iter().filter(|f| f.1 != 0 && f.0 < 6).map(|f| f.0).collect();
+    slots.sort_unstable();
+    slots.dedup();
+    if !slots.is_empty() {
+        items.push(LaneItem::None);
+        items.extend(slots.into_iter().map(LaneItem::Fx));
+    }
+    items
+}
+
+/// A pad FX slot's lanes: Active, Mix, Level and the effect's parameters.
+fn lane_menu_fx(model: &Model, slot: usize) -> Vec<LaneItem> {
+    let e = model.engine;
+    let fx = crate::fxchain::effects(model, crate::fxchain::Target::Pad(e, model.pad[e]));
+    let kind = fx.iter().find(|f| f.0 == slot).map_or(0, |f| f.1);
+    let n = (3 + dreist_formats::params::effect_param_names(kind).len()).min(9);
+    (0..n).map(|k| LaneItem::Lane(CORE_LANES + slot * 9 + k)).collect()
+}
+
+/// A lane's menu text: pad FX lanes by the slot's effect parameter names.
+fn lane_menu_label(fx: &[(usize, usize, dreist_formats::Node)], l: usize) -> String {
+    if l < CORE_LANES {
+        return lane_label(l);
+    }
+    let (slot, k) = ((l - CORE_LANES) / 9, (l - CORE_LANES) % 9);
+    let kind = fx.iter().find(|f| f.0 == slot).map_or(0, |f| f.1);
+    match k {
+        0 => "Active".into(),
+        1 => "Mix".into(),
+        2 => "Level".into(),
+        _ => dreist_formats::params::effect_param_names(kind).get(k - 3).map(|s| s.to_string()).unwrap_or_else(|| lane_label(l)),
+    }
+}
 
 fn lane_label(lane: usize) -> String {
     dreist_formats::STEP_LANES.get(lane).map(|s| crate::transmod::camel_words(s)).unwrap_or_default()
@@ -659,6 +763,8 @@ impl PatternPanel {
             if let Some(b) = t.find_mut("Learn") {
                 b.visible = false;
             }
+            // Placed by `sync` with the graphs, as the track rows.
+            t.anchors = Default::default();
             t
         });
         let rel = skin.find("TrackControls.skin").unwrap_or_else(|| "Patterns/TrackControls.skin".into());
@@ -666,6 +772,11 @@ impl PatternPanel {
         // The track name area takes clicks (select / right-click menu).
         if let Some(sa) = row_template.as_mut().and_then(|r| r.children.iter_mut().find(|c| c.name == "SelectArea")) {
             sa.overload = "TrackSelectArea".into();
+        }
+        // The rows follow the grid's rows (`sync`), not their own fill
+        // anchors (those would stretch each over the whole list).
+        if let Some(t) = row_template.as_mut() {
+            t.anchors = Default::default();
         }
         Ok(PatternPanel {
             page: page.to_vec(),
@@ -687,7 +798,7 @@ impl PatternPanel {
             graph_last: None,
             graph_drag_state: GraphDrag::default(),
             graph_target: None,
-            lane_menu_fx: false,
+            lane_menu: Vec::new(),
             graph_snap: None,
             rng: 0x9e37_79b9,
             selection: Default::default(),
@@ -793,6 +904,11 @@ impl PatternPanel {
         x.round().min(w - MARKER_W).max(0.0)
     }
 
+    /// The track length a marker released at `x` sets: the step under it.
+    fn snapped_len(lay: &GridLayout, x: f32) -> usize {
+        (0..lay.steps).find(|&s| x >= lay.step_x(s) && x < lay.step_x(s) + lay.step_w).unwrap_or(lay.steps).max(1)
+    }
+
     /// The track length markers ([re:f32484] ctor: a 10 × 15
     /// button at the top of each track row): a press starts a drag
     /// ([re:82fafd]: clamped to the steps, shift / cmd move every track's
@@ -821,8 +937,7 @@ impl PatternPanel {
                 }
                 MouseKind::Up => {
                     self.marker_drag = None;
-                    let len = (0..lay.steps).find(|&s| x >= lay.step_x(s) && x < lay.step_x(s) + lay.step_w).unwrap_or(lay.steps).max(1);
-                    send(track, len, out);
+                    send(track, Self::snapped_len(lay, x), out);
                 }
                 _ => {}
             }
@@ -982,12 +1097,12 @@ impl PatternPanel {
         let multi = self.multi;
         set(app, "View", &|c| c.on = !multi);
         self.apply_view(app);
-        let sig = format!("{:?}{:?}{}", lay.track_y, lay.graphs, lay.row_h);
         let open: Vec<bool> = (0..lay.tracks).map(|r| self.auto_open.contains(&(e, lay.first_track + r))).collect();
         let (Some(rp), Some(t)) = (self.rows.clone(), self.row_template.clone()) else { return };
         let auto_t = self.auto_template.clone();
         let Some(rows) = app.ctrl_mut(&rp) else { return };
         let w = rows.rect.w;
+        let sig = format!("{:?}{:?}{}{w}", lay.track_y, lay.graphs, lay.row_h);
         if self.rows_sig != sig || rows.children.is_empty() {
             self.rows_sig = sig;
             rows.children.clear();
@@ -1024,9 +1139,12 @@ impl PatternPanel {
             let Some(r) = row.attr("trackRow").and_then(|v| v.parse::<usize>().ok()) else { continue };
             let track = lay.first_track + r;
             let is_open = open.get(r).copied().unwrap_or(false);
+            // The disclosure button draws an arrow, not its skin text:
+            // right when closed, down when the graphs are open.
             if let Some(b) = row.find_mut("AutomateButton") {
                 b.on = is_open;
                 b.visible = multi;
+                b.text = if is_open { "▼" } else { "►" }.into();
             }
             let td = pat.tracks.get(track);
             row.set_attr("track", track.to_string());
@@ -1090,7 +1208,10 @@ impl PatternPanel {
             }
             // Scale [re:23318b] / compress [re:f1235c] /
             // randomise [re:2a1033]: applied to the lane values copied
-            // when the knob started moving, posted as 0xd6 per step.
+            // when the knob started moving, posted as 0xd6 per step
+            // without the edit flag, so only the graph's own track
+            // changes; when that track has selected steps
+            // ([re:4fe819]) only those.
             UiEvent::ValueChanged { name, value, .. } if matches!(name.as_str(), "ScaleKnob" | "CompKnob" | "RandKnob" | "VarianceKnob") => {
                 let track = model.pad[e];
                 let lane = model.pattern_view[e].lane;
@@ -1106,9 +1227,13 @@ impl PatternPanel {
                 }
                 let target = [1.0f32, 0.5, 1.0, 1.0, 0.5][dreist_engine::pattern::lane_style(lane).min(4) as usize];
                 let mut rng = self.rng;
+                let only_selected = self.selection.iter().any(|&(t, _)| t == track);
                 let (_, snap, prev) = self.graph_snap.as_mut().unwrap();
                 let off = value * 2.0 - 1.0;
                 for (st, base) in snap.iter_mut().enumerate() {
+                    if only_selected && !self.selection.contains(&(track, st)) {
+                        continue;
+                    }
                     let v = match name.as_str() {
                         "ScaleKnob" => {
                             *base += off - *prev;
@@ -1310,15 +1435,22 @@ impl PatternPanel {
                 true
             }
             UiEvent::MenuSelected { anchor, name, index } if name == "GraphCombo" => {
-                if !self.lane_menu_fx && *index == CORE_LANES {
-                    self.lane_menu_fx = true;
-                    let items = (CORE_LANES..dreist_formats::STEP_LANES.len()).map(lane_label).collect();
-                    app.open_menu(anchor, items, None);
+                let sub = match std::mem::take(&mut self.lane_menu).get(*index).copied() {
+                    Some(LaneItem::Lane(l)) => {
+                        model.pattern_view[e].lane = l;
+                        None
+                    }
+                    Some(LaneItem::Group(g)) => Some(LANE_GROUPS[g].1.iter().map(|&l| LaneItem::Lane(l)).collect::<Vec<_>>()),
+                    Some(LaneItem::Fx(slot)) => Some(lane_menu_fx(model, slot)),
+                    _ => return false,
+                };
+                if let Some(items) = sub {
+                    let shown = self.shown_lanes(model);
+                    app.open_menu(anchor, lane_menu(model, &shown, &items), lane_menu_checked(model, &items));
+                    self.lane_menu = items;
                     return false;
                 }
-                let lane = if self.lane_menu_fx { CORE_LANES + index } else { *index };
-                model.pattern_view[e].lane = lane;
-                self.lane_menu_fx = false;
+                let lane = model.pattern_view[e].lane;
                 // A MultiTrack lane row's combo changes that lane.
                 if let Some((t, slot)) = self.auto_ctx.take() {
                     if let Some(l) = self.auto_lanes.get_mut(&(e, t)).and_then(|v| v.get_mut(slot)) {
@@ -1560,10 +1692,10 @@ impl PatternPanel {
                 let track = model.pad[e] as i32;
                 match name.as_str() {
                     "GraphCombo" => {
-                        let mut items: Vec<String> = (0..CORE_LANES).map(lane_label).collect();
-                        items.push("FX ▸".into());
-                        self.lane_menu_fx = false;
-                        app.open_menu(path, items, Some(model.pattern_view[e].lane.min(CORE_LANES)));
+                        let items = lane_menu_top(model);
+                        let shown = self.shown_lanes(model);
+                        app.open_menu(path, lane_menu(model, &shown, &items), lane_menu_checked(model, &items));
+                        self.lane_menu = items;
                         false
                     }
                     // Toolbar View ("Show a Single Global Graph", lambda
@@ -1808,6 +1940,12 @@ impl PatternPanel {
                 false
             }
         }
+    }
+
+    /// Lanes the selected pad's graph rows show.
+    fn shown_lanes(&self, model: &Model) -> Vec<usize> {
+        let e = model.engine;
+        self.auto_lanes.get(&(e, model.pad[e])).cloned().unwrap_or_default()
     }
 
     /// (track, lane) of the graph controls containing `path`: the single
@@ -2290,6 +2428,7 @@ impl PatternPanel {
         }
         // Steps.
         let step_col = s.colour(TRACK_STYLE, "colStep", Colour::BLACK);
+        let selected_col = s.colour(TRACK_STYLE, "colSelected", pink);
         let overlay = s.colour(TRACK_STYLE, "colOverlay", pink);
         for row in 0..lay.tracks {
             let Some(t) = pat.tracks.get(lay.first_track + row) else { continue };
@@ -2311,10 +2450,13 @@ impl PatternPanel {
                 };
                 let vel = step.lanes[lane::VELOCITY].clamp(0.0, 1.0);
                 let radius = if a.h * 0.5 < 2.0 { (a.h * 0.25).floor().max(0.0) } else { 2.0 };
-                p.fill_rounded(a, radius, [true; 4], step_col.with_alpha(vel * 0.85 + 0.15));
+                let col = if self.selection.contains(&(lay.first_track + row, st)) { selected_col } else { step_col };
+                p.fill_rounded(a, radius, [true; 4], col.with_alpha(vel * 0.85 + 0.15));
             }
-            // Beyond the track length.
-            let len = t.length as usize;
+            // Beyond the track length (while a marker is dragged: the
+            // length the release would set).
+            let drag = self.marker_drag.filter(|(tr, _, all)| *all || *tr == lay.first_track + row);
+            let len = drag.map(|(_, x, _)| Self::snapped_len(&lay, x)).unwrap_or(t.length as usize);
             if len < lay.steps {
                 let x = lay.step_x(len).max(0.0);
                 p.fill_rect(RectF::new(x, lay.row_y(row), w - x + 1.0, lay.row_h), overlay);
@@ -2323,7 +2465,6 @@ impl PatternPanel {
             // [re:e606aa]): a left-pointing triangle, tip at x + 1, half
             // height 0.4·min(h, 12), `PatternTrackMarkerStyle` colFill
             // (colAltFill while dragged).
-            let drag = self.marker_drag.filter(|(tr, _, all)| *all || *tr == lay.first_track + row);
             let len = if t.length > 0 { t.length as usize } else { lay.steps };
             let mx = drag.map(|(_, x, _)| x.min(c.rect.w as f32 - MARKER_W)).unwrap_or_else(|| Self::marker_x(&lay, len, c.rect.w as f32));
             let mh = lay.row_h.min(MARKER_H);
@@ -2331,14 +2472,8 @@ impl PatternPanel {
             let col = s.colour("PatternTrackMarkerStyle", if drag.is_some() { "colAltFill" } else { "colFill" }, Colour::rgba(40, 40, 40, 255));
             p.fill_polygon(&[(mx + 1.0, cy), (mx + MARKER_W * 0.7, cy - half), (mx + MARKER_W * 0.7, cy + half)], col);
         }
-        // Selected steps and the rubber band.
+        // The rubber band.
         let sel = s.colour("PatternTrackMarkerStyle", "colAltFill", Colour::rgba(0, 200, 255, 255));
-        for &(t, st) in &self.selection {
-            if t >= lay.first_track && t < lay.first_track + lay.tracks && lay.step_range().contains(&st) {
-                let a = lay.step_rect(t - lay.first_track, st).inset(1.0);
-                p.stroke_rect(a, sel, 2.0);
-            }
-        }
         if let Some(((t0, s0), (t1, s1))) = self.band {
             let r0 = lay.row_y(t0.min(t1).saturating_sub(lay.first_track));
             let r1 = lay.row_y(t0.max(t1).saturating_sub(lay.first_track)) + lay.row_h;

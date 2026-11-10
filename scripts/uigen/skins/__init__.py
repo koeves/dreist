@@ -65,6 +65,12 @@ def anchors(pin, rect, pw, ph):
 
     axis("l" in pin, "r" in pin, "c" in pin, x, w, pw, "ARLeft", "ARRight")
     axis("t" in pin, "b" in pin, "m" in pin, y, h, ph, "ARTop", "ARBottom")
+    # "R" / "B": only the far edge follows the parent (ARRight / ARBottom
+    # FNear alone), as the shipped page and card roots do.
+    if "R" in pin:
+        out["ARRight"] = f"FNear {pw - x - w:.4f}"
+    if "B" in pin:
+        out["ARBottom"] = f"FNear {ph - y - h:.4f}"
     return out
 
 

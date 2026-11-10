@@ -42,8 +42,8 @@ def toolbar():
     steps = sub("Steps", 0, 54, [
         N("ValueBox", "LengthBox", (0, 0, 38, 20), displayName="Steps", id=100002, placeholder="16", optCanBeDragged=False,
           realIncDecRange=1, realMinValue=1, realMaxValue=1024, style="DefaultEditBoxStyle"),
-        btn("PlusButton", (38, 0, 16, 10), "", "More steps", style="SmallIconButtonStyle", id=100001),
-        btn("MinusButton", (38, 10, 16, 10), "", "Fewer steps", style="SmallIconButtonStyle", id=100000)])
+        btn("PlusButton", (36, 0, 17, 10), "", "More steps", style="SmallIconButtonStyle", id=100001),
+        btn("MinusButton", (36, 10, 17, 10), "", "Fewer steps", style="SmallIconButtonStyle", id=100000)])
     play = sub("Playback", 114, 106, [
         btn("Gated", (0, 0, 52, 20), "Gated", "Play only while the note is held", momentary=False),
         btn("Restart", (54, 0, 52, 20), "Restart", "Start from the top on every trigger", momentary=False)])
@@ -67,7 +67,7 @@ def toolbar():
                style="SmallControlLabellerStyle", kids=[
                    tempo,
                    N("Knob", "SwingKnob", (80, 0, 20, 20), displayName="Swing", **SMALL_KNOB),
-                   btn("SwingDrop", (102, 6, 10, 10), "▾", None, style="HeaderBarMenuDropButtonStyle"),
+                   btn("SwingDrop", (102, 6, 10, 10), "▼", None, style="HeaderBarMenuDropButtonStyle"),
                    N("Knob", "InstoGraph", (126, 0, 20, 20), displayName="Graph Rec", **SMALL_KNOB)])
     left = N("Labeller", None, (0, 0, W - SEL, H), pin="lrtb", enumTextPosition="Below", style="SmallControlLabellerStyle", kids=[
         N("Panel", "ViewPanel", (6, 6, 46, 20), displayName="View", style="InvisibleStyle", kids=[
@@ -106,11 +106,11 @@ def editor():
     ])
     nav = dict(style="TransparentLightIconButtonStyle", overloadClass="wdButton", pin="b")
     foot_y = H - 14
-    navs = [("NextTrackButton", 4, "", "Next track"), ("PreviousTrackButton", 17, "", "Previous track"),
-            ("NudgeTrackBackButton", 38, "", "Move this track one step earlier"),
-            ("NudgeTrackForwardButton", 51, "", "Move this track one step later"),
-            ("NudgePatternBackButton", 72, "", "Move the pattern (or selection) one step earlier"),
-            ("NudgePatternForwardButton", 85, "", "Move the pattern (or selection) one step later")]
+    navs = [("NextTrackButton", 5, "", "Next track"), ("PreviousTrackButton", 18, "", "Previous track"),
+            ("NudgeTrackBackButton", 40, "", "Move this track one step earlier"),
+            ("NudgeTrackForwardButton", 53, "", "Move this track one step later"),
+            ("NudgePatternBackButton", 75, "", "Move the pattern (or selection) one step earlier"),
+            ("NudgePatternForwardButton", 88, "", "Move the pattern (or selection) one step later")]
     return N("Panel", None, (0, 0, W, H), pin="lrtb", style="TopRightPanelStyle", kids=[
         N("SplitterPanel", "Splitter", (0, 2, W, H - 16), pin="lrtb", style="InvisibleStyle", SplitterPanelStyle="InvisibleStyle",
           intSplitPosition=split, intSplitterDim=1, intMinSize1=lane, intMaxSize1=lane, kids=[upper, lower]),
@@ -126,13 +126,13 @@ def editor():
 def track_row():
     W, H = 200, 20
     return N("Panel", "HighlightPanel", (0, 0, W, H), pin="lrtb", style="TrackNotSelectedStyle", kids=[
-        N("DisclosureButton", "AutomateButton", (4, 0, 15, H), pin="ltb", displayName="Show graphs", id=100003, realScaling=0.5,
+        N("DisclosureButton", "AutomateButton", (5, 0, 15, H), pin="ltb", displayName="Show graphs", id=100003, realScaling=0.5,
           style="InvisibleStyle", text="A"),
-        N("Label", "SelectArea", (20, 0, W - 72, H), pin="lrtb", id=100000, style="DarkTextInvisibleEditBoxStyle", text=""),
-        N("Knob", "PadLevel", (W - 50, 2, 16, 16), pin="rm", displayName="Pad level", **SMALL_KNOB),
-        N("Button", "MuteButton", (W - 30, 4, 12, 12), pin="rm", displayName="Mute this track's steps", id=100002,
+        N("Label", "SelectArea", (20, 0, W - 70, H), pin="lrtb", id=100000, style="DarkTextInvisibleEditBoxStyle", text=""),
+        N("Knob", "PadLevel", (W - 48, 2, 16, 16), pin="rm", displayName="Pad level", **SMALL_KNOB),
+        N("Button", "MuteButton", (W - 28, 4, 12, 12), pin="rm", displayName="Mute this track's steps", id=100002,
           style="TrackMuteStyle", text="M"),
-        N("Button", "SoloButton", (W - 16, 4, 12, 12), pin="rm", displayName="Solo this track's steps", id=100004,
+        N("Button", "SoloButton", (W - 14, 4, 12, 12), pin="rm", displayName="Solo this track's steps", id=100004,
           style="TrackSoloStyle", text="S"),
     ])
 

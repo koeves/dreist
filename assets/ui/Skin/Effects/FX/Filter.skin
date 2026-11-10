@@ -5,8 +5,8 @@
         <CtrlTransmodKnob name="Control4" rect="26, 11, 34, 34" displayName="Lo Hz" style="TransmodStyle" />
         <CtrlTransmodKnob name="Control2" rect="86, 11, 34, 34" displayName="Hi Hz" style="TransmodStyle" />
         <CtrlPanel rect="148, 7, 56, 40" style="InvisibleStyle">
-            <CtrlButton name="Control3" rect="0, 0, 56, 18" displayName="Low Pass" style="DefaultButtonStyle" text="LP" />
-            <CtrlButton name="Control1" rect="0, 22, 56, 18" displayName="High Pass" style="DefaultButtonStyle" text="HP" />
+            <CtrlButton name="Control3" rect="0, 0, 56, 18" displayName="Low Pass" style="DefaultButtonStyle" text="LP Active" />
+            <CtrlButton name="Control1" rect="0, 22, 56, 18" displayName="High Pass" style="DefaultButtonStyle" text="HP Active" />
         </CtrlPanel>
     </CtrlLabeller>
 </root>

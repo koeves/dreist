@@ -18,11 +18,13 @@ def browser():
         icon("PrevLocnButton", (W - 31, 24, 14, 22), "", "Back", style="TransparentIconButtonStyle", pin="rt", id=100000),
         icon("NextLocnButton", (W - 16, 24, 14, 22), "", "Forward", style="TransparentIconButtonStyle", pin="rt", id=100000),
         N("SplitterPanel", "SplitView", (0, 46, W, H - 46), pin="lrtb", style="InvisibleStyle", SplitterPanelStyle="SplitterStyle",
-          intSplitPosition=110, intSplitterDim=3, intMinSize1=120, optIsVertical=False, optDbClkCollapse1=False,
+          # The file pane keeps room for its toolbar (182 px) in the
+          # narrowest left column; the source list gives way first.
+          intSplitPosition=115, intSplitterDim=3, intMinSize1=182, optIsVertical=False, optDbClkCollapse1=False,
           optSnapCollapse1=False, kids=[
-              N("Panel", "SourceList", (0, 0, 110, H - 46), pin="lrtb", displayName="SplitterPanel0",
+              N("Panel", "SourceList", (0, 0, 115, H - 46), pin="lrtb", displayName="SplitterPanel0",
                 overloadClass="BrowserSourceList", style="InvisibleStyle"),
-              N("Panel", "Browser", (113, 0, W - 113, H - 46), pin="lrtb", displayName="SplitterPanel1",
+              N("Panel", "Browser", (118, 0, W - 118, H - 46), pin="lrtb", displayName="SplitterPanel1",
                 overloadClass="BrowserPane", style="InvisibleStyle"),
           ]),
     ])
@@ -52,12 +54,12 @@ def file_list():
 
 def header():
     W = 325
-    return N("Panel", "ChooserPanel", (0, 0, W, 24), pin="r", style="InvisibleStyle", kids=[
+    return N("Panel", "ChooserPanel", (0, 0, W, 24), pin="R", style="InvisibleStyle", kids=[
         icon("ToolButton", (2, 2, 20, 20), "", "Browser options"),
-        btn("LockPadsButton", (25, 2, 48, 20), "Pads", "Lock or unlock all pads", momentary=False, id=100001),
-        btn("LockPatternsButton", (75, 2, 48, 20), "Patterns", "Lock or unlock all patterns", momentary=False, id=100002),
-        N("SearchBox", "SearchBox", (128, 2, W - 130, 20), pin="lr", style="SearchBoxStyle"),
-        N("ProgressBar", "Spinner", (140, 19, W - 150, 3), pin="lr", id=100001, optIsIndeterminate=True,
+        btn("LockPadsButton", (26, 2, 50, 20), "Lk Pads", "Lock or unlock all pads", momentary=False, id=100001),
+        btn("LockPatternsButton", (78, 2, 50, 20), "Lk Pat.", "Lock or unlock all patterns", momentary=False, id=100002),
+        N("SearchBox", "SearchBox", (135, 2, W - 137, 20), pin="lr", style="SearchBoxStyle"),
+        N("ProgressBar", "Spinner", (156, 18, W - 165, 3), pin="lr", id=100001, optIsIndeterminate=True,
           style="BrowserSpinnerStyle", zorder=50),
     ])
 
@@ -77,7 +79,7 @@ def search_option():
 def search_pane():
     W, H = 300, 125
     box = dict(intLeftSpacing=0, intRightSpacing=0, intTopSpacing=0, intBottomSpacing=0, style="InvisibleStyle")
-    return N("Panel", "CtrlPanel", (0, 0, W, H), pin="r", style="InvisibleStyle", kids=[
+    return N("Panel", "CtrlPanel", (0, 0, W, H), style="InvisibleStyle", kids=[
         N("LayoutBox", None, (2, 4, W - 4, 90), pin="lrtb", kids=[
             N("Panel", f"Option{i + 1}", (0, i * 30, W - 4, 28), pin="lr", overloadClass="BrowserSearchPaneOptionItem",
               style="InvisibleStyle") for i in range(3)], **box),
@@ -93,42 +95,42 @@ def sampler():
     """The recording strip above the pads (80 px: sampler::OPEN_HEIGHT)."""
     W, H = 300, 80
     fl = dict(overloadClass="FlashingButton")
-    menus = N("LayoutBox", None, (70, 2, 184, 34), pin="r", optIsVertical=False, intLeftSpacing=0, intRightSpacing=0,
+    menus = N("LayoutBox", None, (69, 2, 184, 35), pin="r", optIsVertical=False, intLeftSpacing=0, intRightSpacing=0,
               intTopSpacing=0, intBottomSpacing=0, style="InvisibleStyle", kids=[
-                  N("Labeller", None, (i * 62, 0, 60, 34), enumTextPosition="Below", intTextOffset=1,
+                  N("Labeller", None, (i * 62, 0, 60, 35), enumTextPosition="Below", intTextOffset=1,
                     style="SmallControlLabellerStyle", kids=[
-                        N("PopupButton", n, (0, 0, 60, 19), pin="lr", displayName=cap, id=i_d, style="DefaultPopupButtonStyle")])
-                  for i, (n, cap, i_d) in enumerate([("SourceList", "Input", 100000), ("TriggerMode", "Start", None),
-                                                     ("Follow", "Then", None)])])
+                        N("PopupButton", n, (0, 0, 60, 20), pin="lr", displayName=cap, id=i_d, style="DefaultPopupButtonStyle")])
+                  for i, (n, cap, i_d) in enumerate([("SourceList", "Source", 100000), ("TriggerMode", "Trigger", None),
+                                                     ("Follow", "Assign", None)])])
     lab = N("Labeller", None, (0, 0, W, H), pin="lrtb", enumTextPosition="Below", intTextOffset=1, style="SmallControlLabellerStyle", kids=[
-        N("Slider", "InputGain", (4, 3, 15, 62), pin="tb", displayName="Input", id=100001, style="SliderStyle", realTrackInset=0.3),
-        N("MultiChannelDBMeter", "VUMeter", (21, 3, 14, 62), pin="tb", id=100003, optIsLinear=True, style="DefaultVUMeterStyle"),
-        N("Panel", None, (40, 3, 24, 42), style="InvisibleStyle", kids=[
+        N("Slider", "InputGain", (4, 3, 15, 63), pin="tb", displayName="Input", id=100001, style="SliderStyle", realTrackInset=0.3),
+        N("MultiChannelDBMeter", "VUMeter", (22, 2, 15, 64), pin="tb", id=100003, optIsLinear=True, style="DefaultVUMeterStyle"),
+        N("Panel", None, (40, 2, 24, 42), style="InvisibleStyle", kids=[
             btn("MonoButton", (2, 0, 20, 20), "M", "Recording channels", id=100028, flashing=True),
             icon("ThruButton", (2, 22, 20, 20), "", "Hear the input", momentary=False, id=100028, flashing=True)]),
         N("Knob", "PreviewVolume", (42, 47, 20, 20), displayName="Thru", id=100001, style="KnobStyle", realDialThickness=0.3),
         menus,
-        N("Labeller", "ThresholdPanel", (70, 37, 184, 40), pin="r", id=100001, enumTextPosition="Left", style="SmallControlLabellerStyle", kids=[
-            N("Slider", "StartThresholdSlider", (30, 0, 154, 12), pin="rt", displayName="Start", id=100004, overloadClass="SamplerSlider",
+        N("Labeller", "ThresholdPanel", (69, 36, 184, 40), pin="r", id=100001, enumTextPosition="Left", style="SmallControlLabellerStyle", kids=[
+            N("Slider", "StartThresholdSlider", (28, 0, 156, 12), pin="rt", displayName="Start", id=100004, overloadClass="SamplerSlider",
               style="SliderStyle", realTrackInset=0.3),
-            N("MultiChannelDBMeter", "ThresholdVU", (30, 14, 154, 12), pin="rtb", id=100004, optIsLinear=True,
+            N("MultiChannelDBMeter", "ThresholdVU", (28, 14, 156, 12), pin="rtb", id=100004, optIsLinear=True,
               style="DefaultHorizontalVUMeterStyle"),
-            N("Slider", "StopThresholdSlider", (30, 28, 154, 12), pin="rtb", displayName="Stop", id=100004, overloadClass="SamplerSlider",
+            N("Slider", "StopThresholdSlider", (28, 28, 156, 12), pin="rtb", displayName="Stop", id=100004, overloadClass="SamplerSlider",
               style="SliderStyle", realTrackInset=0.3)]),
-        N("Panel", "SyncPanel", (70, 37, 184, 42), id=100005, style="InvisibleStyle", kids=[
-            N("ButtonGroup", "SyncButtonGroup", (0, 0, 120, 18), id=100003, optIsVertical=False, intLeftSpacing=0, intRightSpacing=0,
+        N("Panel", "SyncPanel", (69, 36, 180, 42), id=100005, style="InvisibleStyle", kids=[
+            N("ButtonGroup", "SyncButtonGroup", (0, 0, 122, 20), id=100003, optIsVertical=False, intLeftSpacing=0, intRightSpacing=0,
               intTopSpacing=0, intBottomSpacing=0, kids=[
-                  N("Button", "BeatsButton", (0, 0, 58, 18), displayName="Length in bars and beats", id=1, style="DefaultButtonStyle",
+                  N("Button", "BeatsButton", (0, 0, 60, 20), displayName="Length in bars and beats", id=1, style="DefaultButtonStyle",
                     text="Beats", **fl),
-                  N("Button", "SecsButton", (60, 0, 60, 18), displayName="Length in seconds", style="DefaultButtonStyle", text="Secs", **fl)]),
-            N("Labeller", "BeatsPanel", (0, 21, 170, 19), pin="l", id=100002, enumTextPosition="Right", intTextOffset=2,
+                  N("Button", "SecsButton", (62, 0, 60, 20), displayName="Length in seconds", style="DefaultButtonStyle", text="Seconds", **fl)]),
+            N("Labeller", "BeatsPanel", (0, 22, 170, 20), pin="l", id=100002, enumTextPosition="Right", intTextOffset=1,
               style="SmallControlLabellerStyle", kids=[
-                  N("TextBox", "BarsTextBox", (0, 0, 52, 19), displayName="Bars", id=100000, style="DefaultEditBoxStyle"),
-                  N("TextBox", "BeatsTextBox", (82, 0, 52, 19), displayName="Beats", id=100000, style="DefaultEditBoxStyle")]),
-            N("Labeller", "SecondsPanel", (0, 21, 120, 19), id=100003, enumTextPosition="Right", intTextOffset=2,
+                  N("TextBox", "BarsTextBox", (0, 0, 60, 20), displayName="Bars", id=100000, style="DefaultEditBoxStyle"),
+                  N("TextBox", "BeatsTextBox", (83, 0, 50, 20), displayName="Beats", id=100000, style="DefaultEditBoxStyle")]),
+            N("Labeller", "SecondsPanel", (0, 22, 120, 20), id=100003, enumTextPosition="Right", intTextOffset=1,
               style="SmallControlLabellerStyle", kids=[
-                  N("TextBox", "SecsTextBox", (0, 0, 70, 19), displayName="Seconds", id=100000, style="DefaultEditBoxStyle")])]),
-        N("Panel", None, (W - 42, 3, 40, 42), pin="r", style="InvisibleStyle", kids=[
+                  N("TextBox", "SecsTextBox", (0, 0, 80, 20), displayName="Seconds", id=100000, style="DefaultEditBoxStyle")])]),
+        N("Panel", None, (W - 42, 2, 40, 42), pin="r", style="InvisibleStyle", kids=[
             btn("ArmButton", (0, 0, 40, 20), "Arm", "Wait for the start condition", momentary=False, id=100027, flashing=True),
             btn("RecButton", (0, 22, 40, 20), "Rec", "Record now", momentary=False, id=100027, flashing=True)]),
     ])
@@ -137,7 +139,7 @@ def sampler():
 
 def slicer():
     W, H = 870, 740
-    tools = N("ButtonGroup", "ToolsButton", (8, 8, 83, 20), displayName="Slice tool", intIntraSpacing=1, optIsVertical=False,
+    tools = N("ButtonGroup", "ToolsButton", (10, 8, 86, 20), displayName="Slice tool", intIntraSpacing=1, optIsVertical=False,
               intLeftSpacing=0, intRightSpacing=0, intTopSpacing=0, intBottomSpacing=0, kids=[
                   N("Button", None, (i * 21, 0, 20, 20), displayName=tip, style=st, text=g)
                   for i, (g, tip, st) in enumerate([("", "Insert tool (Alt-click deletes the slice point to the left)", "ExExLargeIconRadioButtonLeft"),

@@ -950,6 +950,109 @@ fn song_part_select_move_duplicate() {
     assert_eq!(song(&ed).tracks[0].len(), 2);
 }
 
+/// Clicks as the window delivers them (press, release, the editor's
+/// handling and frame) repaint only what changed: each frame equals a full
+/// render, and opening and closing menus or toggling header and mixer
+/// buttons repaints no whole window.
+#[test]
+fn clicks_repaint_like_full_renders() {
+    use dreist_gui::app::MouseButton;
+    let Ok(mut ed) = Editor::new(dreist_gui::skin::default_theme(), Model::new(project::new_document())) else { return };
+    ed.sync();
+    for scale in [1.0, 2.0] {
+        let _ = ed.render(scale);
+        let frame = |ed: &mut Editor, evs: Vec<UiEvent>, what: &str, partial_only: bool| {
+            for e in evs {
+                ed.handle(&e);
+            }
+            let path = ed.app.tooltip_target();
+            ed.handle(&UiEvent::ToolTip { path });
+            let _ = ed.take_commands();
+            ed.animate();
+            assert!(!partial_only || !ed.app.dirty, "scale {scale}: {what} repaints the whole window");
+            let partial = ed.render_frame(scale).clone();
+            let full = ed.render(scale);
+            // As `damaged_frames_match_full_renders`: shapes cut at a
+            // repainted region's edge may differ in a few anti-aliased pixels.
+            let px = |d: &[u8]| d.chunks(4).map(|c| [c[0], c[1], c[2]]).collect::<Vec<_>>();
+            let (a, b) = (px(partial.data()), px(full.data()));
+            let off = a.iter().zip(&b).filter(|(x, y)| x.iter().zip(y.iter()).any(|(p, q)| p.abs_diff(*q) > 1)).count();
+            assert!(off * 1000 <= a.len(), "scale {scale}: {what}: {off} pixels differ");
+        };
+        let click = |ed: &mut Editor, x: f32, y: f32, what: &str, partial_only: bool| {
+            let ev = ed.app.mouse_move(x, y);
+            frame(ed, ev, &format!("{what} move"), false);
+            let ev = ed.app.mouse_down(MouseButton::Left);
+            frame(ed, ev, &format!("{what} press"), partial_only);
+            let ev = ed.app.mouse_up(MouseButton::Left);
+            frame(ed, ev, &format!("{what} release"), partial_only);
+        };
+        let centre = |ed: &Editor, p: &[usize]| {
+            let r = ed.app.abs_rect(p);
+            (r.x as f32 + r.w as f32 / 2.0, r.y as f32 + r.h as f32 / 2.0)
+        };
+        let (gx, gy) = centre(&ed, &ed.app.root.path_of("HelpButton").unwrap());
+        // The Help menu: closed by a click beside it, then its MIDI console
+        // item shown.
+        click(&mut ed, gx, gy, "menu open", true);
+        assert!(ed.app.menu.is_some());
+        click(&mut ed, 5.0, 5.0, "menu close", true);
+        assert!(ed.app.menu.is_none());
+        // (The console then covers the menu's button.)
+        {
+            click(&mut ed, gx, gy, "menu open", true);
+            let m = ed.app.menu.clone().unwrap();
+            let i = m.items.iter().position(|t| t.contains("MIDI Console")).unwrap();
+            click(&mut ed, m.x + 10.0, m.y + i as f32 * 20.0 + 10.0, "MIDI console item", false);
+        }
+        // Buttons whose clicks change code-drawn panels (zoom, follow,
+        // the pattern tools): those panels repaint, nothing else.
+        for name in ["ZoomInButton", "ZoomOutButton", "Div2Button", "x2Button", "FollowButton", "MultiButton", "EraseButton"] {
+            let Some(p) = ed.app.root.path_of(name).filter(|p| ed.app.shown(p)) else { continue };
+            let (x, y) = centre(&ed, &p);
+            click(&mut ed, x, y, name, false);
+            click(&mut ed, x, y, name, false);
+        }
+        // A knob pressed, then double-clicked (reset to its default).
+        fn knobs(c: &dreist_gui::Ctrl, path: &mut Vec<usize>, out: &mut Vec<Vec<usize>>) {
+            if !c.visible || !c.enabled {
+                return;
+            }
+            if c.class == "CtrlKnob" && !c.passive {
+                out.push(path.clone());
+            }
+            for (i, k) in c.children.iter().enumerate() {
+                path.push(i);
+                knobs(k, path, out);
+                path.pop();
+            }
+        }
+        let mut found = Vec::new();
+        knobs(&ed.app.root, &mut Vec::new(), &mut found);
+        let mut resets = 0;
+        for k in found.iter().take(3) {
+            let (x, y) = centre(&ed, k);
+            click(&mut ed, x, y, "knob", true);
+            // Two more clicks at once: one of the presses (the first or,
+            // after a slow frame, the second) is a double click.
+            let mut ev = Vec::new();
+            for _ in 0..2 {
+                ev.extend(ed.app.mouse_down(MouseButton::Left));
+                ev.extend(ed.app.mouse_up(MouseButton::Left));
+            }
+            resets += ev.iter().filter(|e| matches!(e, UiEvent::DoubleClicked { .. })).count();
+            frame(&mut ed, ev, "knob double click", true);
+        }
+        assert!(found.is_empty() || resets > 0, "no double click");
+        for name in ["MetroButton", "MuteButton"] {
+            let Some(p) = ed.app.root.path_of(name).filter(|p| ed.app.shown(p)) else { continue };
+            let (x, y) = centre(&ed, &p);
+            click(&mut ed, x, y, name, true);
+            click(&mut ed, x, y, name, true);
+        }
+    }
+}
+
 #[test]
 fn damaged_frames_match_full_renders() {
     let p = demo("Presets/Hollow.geist");
@@ -3110,17 +3213,18 @@ fn utility_splitter_drags_and_collapses() {
     let c = ed.app.ctrl(&sp).unwrap();
     let p0 = c.children.iter().find(|k| k.display_name == "SplitterPanel0").unwrap();
     assert_eq!(p0.rect.w, start + 50);
-    // Clamped at intMaxSize0 = 600.
+    // Clamped where the main column keeps its 832 px (1390 − 8 − 832; in
+    // a wider window, at intMaxSize0 = 600).
     std::thread::sleep(std::time::Duration::from_millis(450));
     let bx = bx + 50.0;
     ed.app.mouse_move(bx, by);
     ed.app.mouse_down(MouseButton::Left);
     ed.app.mouse_move(bx + 900.0, by);
     ed.app.mouse_up(MouseButton::Left);
-    assert_eq!(dreist_gui::splitter::position(ed.app.ctrl(&sp).unwrap()), 600);
+    assert_eq!(dreist_gui::splitter::position(ed.app.ctrl(&sp).unwrap()), 550);
     // A double click collapses panel 0 (optDbClkCollapse1 false), animated.
     std::thread::sleep(std::time::Duration::from_millis(450));
-    let bx = (ox + 600 + bar.w / 2) as f32;
+    let bx = (ox + 550 + bar.w / 2) as f32;
     ed.app.mouse_move(bx, by);
     for _ in 0..2 {
         ed.app.mouse_down(MouseButton::Left);
@@ -3451,9 +3555,11 @@ fn browser_source_list_item_menu() {
     ed.handle(&UiEvent::MenuSelected { anchor: list.clone(), name: String::new(), index: yes });
     assert!(row(&ed, &new).is_none());
     // Places rows offer Reveal only.
-    let (r, _) = row(&ed, "Home").unwrap();
+    let (r, _) = row(&ed, "Desktop").unwrap();
     ed.handle(&UiEvent::Mouse { path: list.clone(), overload: "BrowserSourceList".into(), kind: MouseKind::RightDown, x: 5.0, y: r as f32 * 25.0 + 3.0 });
-    assert_eq!(ed.app.menu.as_ref().unwrap().items, vec!["Reveal \"Home\" in Finder".to_string()]);
+    assert_eq!(ed.app.menu.as_ref().unwrap().items, vec!["Reveal \"Desktop\" in Finder".to_string()]);
+    // Places: the app's documents folder, its takes folder, Documents, Desktop.
+    assert!(row(&ed, "Sampler Captures").is_some() && row(&ed, "Home").is_none());
     let _ = std::fs::remove_dir_all(&dir);
 }
 
@@ -4016,4 +4122,113 @@ fn tools_menu_toggles_save_samples_with_presets() {
     ed.handle(&UiEvent::MenuSelected { anchor: tb.clone(), name: "ToolButton".into(), index: items.len() - 1 });
     assert!(!project::embed_samples());
     assert_eq!(open(&mut ed).last().map(String::as_str), Some("Save samples with presets"));
+}
+
+#[test]
+fn graph_knobs_act_on_the_tracks_selected_steps() {
+    let Some(mut ed) = demo_editor("Presets/Hollow.geist") else { return };
+    if let Some(pp) = ed.pattern.as_mut() {
+        pp.multi = false;
+    }
+    ed.sync();
+    let e = ed.model.engine;
+    let t = ed.model.pad[e];
+    let other = (t + 1) % 16;
+    let vel = |ed: &Editor, tr: usize, st: usize| ed.model.pattern(e, ed.model.current_pattern(e)).tracks[tr].steps[st].lanes[0];
+    let before = [vel(&ed, t, 0), vel(&ed, t, 1), vel(&ed, t, 2), vel(&ed, other, 0)];
+    let ac = ed.app.root.path_of("SingleAutoControl").unwrap();
+    let knob = [ac.clone(), (ed.app.ctrl(&ac).unwrap()).path_of("ScaleKnob").unwrap()].concat();
+    // The graph's track has selected steps: only those move; another
+    // track's selection is not touched (no edit flag).
+    ed.pattern.as_mut().unwrap().selection = [(t, 0), (t, 2), (other, 0)].into_iter().collect();
+    ed.handle(&UiEvent::ValueChanged { path: knob, name: "ScaleKnob".into(), id: 0, value: 0.25 });
+    assert!((vel(&ed, t, 0) - (before[0] - 0.5).clamp(0.0, 1.0)).abs() < 1e-4);
+    assert!((vel(&ed, t, 2) - (before[2] - 0.5).clamp(0.0, 1.0)).abs() < 1e-4);
+    assert_eq!(vel(&ed, t, 1), before[1], "unselected step of the track");
+    assert_eq!(vel(&ed, other, 0), before[3], "selected step of another track");
+    // Without a selection on the track every step moves (Comp fully up:
+    // velocity's target, 1).
+    ed.pattern.as_mut().unwrap().selection = [(other, 0)].into_iter().collect();
+    let comp = [ac.clone(), (ed.app.ctrl(&ac).unwrap()).path_of("CompKnob").unwrap()].concat();
+    ed.handle(&UiEvent::ValueChanged { path: comp, name: "CompKnob".into(), id: 0, value: 1.0 });
+    assert_eq!(vel(&ed, t, 1), 1.0);
+    assert_eq!(vel(&ed, other, 0), before[3]);
+}
+
+#[test]
+fn graph_lane_menu_is_grouped() {
+    let Some(mut ed) = demo_editor("Presets/Hollow.geist") else { return };
+    if let Some(pp) = ed.pattern.as_mut() {
+        pp.multi = false;
+    }
+    ed.sync();
+    let e = ed.model.engine;
+    let ac = ed.app.root.path_of("SingleAutoControl").unwrap();
+    let combo = [ac.clone(), (ed.app.ctrl(&ac).unwrap()).path_of("GraphCombo").unwrap()].concat();
+    let open = |ed: &mut Editor| {
+        ed.handle(&UiEvent::Clicked { path: combo.clone(), name: "GraphCombo".into(), id: 0, on: false });
+        ed.app.menu.clone().expect("lane menu")
+    };
+    let m = open(&mut ed);
+    let labels: Vec<String> = m.items.iter().map(|s| s.trim_start_matches(dreist_gui::menu::DISABLED).trim_start_matches(dreist_gui::menu::BLOCK).to_string()).collect();
+    assert_eq!(
+        labels,
+        ["Velocity", "Pan", "Repeats", "Shift", "Reverse", "Octave", "Coarse Pitch", "Fine Pitch", "Filter... ▸", "Playback... ▸", "Sends... ▸", "Amp Envelope... ▸", "Free Envelope... ▸"]
+    );
+    // The shown lane is checked and disabled.
+    assert_eq!(m.checked, Some(0));
+    assert!(m.items[0].starts_with(dreist_gui::menu::DISABLED));
+    // Repeats only on one-shot pads.
+    assert_eq!(m.items[2].starts_with(dreist_gui::menu::DISABLED), !ed.model.pad_one_shot(e, ed.model.pad[e]));
+    ed.handle(&UiEvent::MenuSelected { anchor: m.anchor.clone(), name: "GraphCombo".into(), index: 9 });
+    let sub = ed.app.menu.clone().expect("Playback submenu");
+    assert_eq!(sub.items, ["Start Point", "Force Layer", "Probability", "Loop Start", "Loop End"]);
+    ed.handle(&UiEvent::MenuSelected { anchor: sub.anchor.clone(), name: "GraphCombo".into(), index: 2 });
+    assert_eq!(ed.model.pattern_view[e].lane, 16, "Probability");
+}
+
+/// A resized window keeps the code-laid-out cells in their grids: the
+/// scene tiles side by side in the matrix (not each stretched over it by
+/// its fill anchors), one song track header per row, the song page
+/// filling its tab, mixer strips as tall as their scroller.
+#[test]
+fn resized_window_keeps_cells_in_their_grids() {
+    let Ok(mut ed) = Editor::new(dreist_gui::skin::default_theme(), Model::new(dreist_formats::Node::new("root", None))) else { return };
+    for (w, h) in [crate::screens::RESIZED, (1500, 820), (1400, 850)] {
+        ed.app.resize(w, h);
+        for tab in 0..7 {
+            ed.model.editor_tab = tab;
+            ed.sync();
+            let _ = ed.render_frame(1.0);
+        }
+        let m = ed.app.root.find("ScenesPanel").expect("scene matrix");
+        let tiles: Vec<dreist_gui::Rect> = m.children.iter().filter(|c| c.attr("cell").is_some()).map(|c| c.rect).collect();
+        assert_eq!(tiles.len(), 16);
+        for (i, a) in tiles.iter().enumerate() {
+            assert!(a.w > 0 && a.h > 0 && a.x >= 0 && a.y >= 0 && a.x + a.w <= m.rect.w && a.y + a.h <= m.rect.h, "{w}x{h}: tile {i} {a:?} outside {:?}", m.rect);
+            for b in &tiles[i + 1..] {
+                assert!(a.x + a.w <= b.x || b.x + b.w <= a.x || a.y + a.h <= b.y || b.y + b.h <= a.y, "{w}x{h}: tiles {a:?} and {b:?} overlap");
+            }
+        }
+        let hp = ed.app.root.find("TrackHeaderPanel").expect("song headers");
+        let ys: Vec<(i32, i32)> = hp.children.iter().map(|c| (c.rect.y, c.rect.h)).collect();
+        assert_eq!(ys.len(), crate::model::ENGINES);
+        for p in ys.windows(2) {
+            assert_eq!(p[1].0, p[0].0 + p[0].1, "{w}x{h}: song headers {ys:?} not one per row");
+        }
+        assert!(ys.last().map(|(y, h)| y + h <= hp.rect.h).unwrap_or(false), "{w}x{h}: song headers {ys:?} below {:?}", hp.rect);
+        let host = ed.app.ctrl(&ed.song.as_ref().expect("song").page).expect("song tab");
+        let root = host.children.first().expect("song page").rect;
+        assert_eq!(root, dreist_gui::Rect::new(0, 0, host.rect.w, host.rect.h), "{w}x{h}: the song page does not fill its tab");
+        let mut strips = 0;
+        ed.app.root.walk_mut(&mut |c| {
+            if c.name == "ChannelScroller" && c.visible {
+                for s in &c.children {
+                    assert_eq!(s.rect.h, c.rect.h, "{w}x{h}: mixer strip {:?} in {:?}", s.rect, c.rect);
+                    strips += 1;
+                }
+            }
+        });
+        assert!(strips > 0);
+    }
 }

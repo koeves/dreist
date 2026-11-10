@@ -334,7 +334,13 @@ impl Transmod {
                     l.text = format!("Slot {}", slot + 1);
                 }
             } else {
-                c.display_name = format!("{} {}", slot + 1, c.display_name);
+                // [re:63213f]: "<long name> ( Slot n )", with the
+                // modulator's own name before the slot when it was renamed.
+                let renamed = modulator(model, slot).and_then(|n| n.attr("modName")).filter(|s| !s.is_empty());
+                c.display_name = match renamed {
+                    Some(n) => format!("{} ( {n} - Slot {} )", c.display_name, slot + 1),
+                    None => format!("{} ( Slot {} )", c.display_name, slot + 1),
+                };
             }
             y += h + 2;
             sc.children.push(c);

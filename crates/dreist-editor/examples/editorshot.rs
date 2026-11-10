@@ -2,10 +2,12 @@
 //! (`DREIST_PAD_MODE=Sampler` sets the engine's pad mode, `DREIST_METER_SECS=t`
 //! plays the project for t seconds into the meters, `DREIST_SLICE=file` opens
 //! the slicer, `DREIST_MODAL=about|preferences|export|filefind|metadata` a dialog,
-//! `DREIST_CLICK=Ctrl/Name` clicks a control, e.g. `Header/OptionsButton`;
+//! `DREIST_CLICK=Ctrl/Name` clicks a control, e.g. `Header/OptionsButton`
+//! (`a;b` clicks a, then b; `DREIST_SELECT_ALL=1` first selects every step);
 //! `DREIST_RIGHT=1` right-clicks it instead, `DREIST_MENU=a|b` then picks the
 //! open menu's items ending in a, then b (`#3` picks index 3),
-//! `DREIST_HOVER=1` leaves the pointer there and shows its tooltip).
+//! `DREIST_HOVER=1` leaves the pointer there and shows its tooltip;
+//! `DREIST_SIZE=WxH` resizes the window to W x H points first).
 
 use dreist_editor::{Editor, Model};
 
@@ -27,6 +29,9 @@ fn main() {
     if let Some(t) = args.get(6).and_then(|s| s.parse().ok()) {
         ed.model.source = t;
     }
+    if let Some((w, h)) = std::env::var("DREIST_SIZE").ok().and_then(|v| v.split_once('x').and_then(|(w, h)| Some((w.trim().parse().ok()?, h.trim().parse().ok()?)))) {
+        ed.app.resize(w, h);
+    }
     if let Ok(mode) = std::env::var("DREIST_PAD_MODE") {
         let e = ed.model.engine;
         ed.model.engine_mut(e).set("EnginePadMode", &mode);
@@ -41,7 +46,17 @@ fn main() {
         std::thread::sleep(std::time::Duration::from_millis(600));
         ed.animate();
     }
-    if let Ok(spec) = std::env::var("DREIST_CLICK") {
+    if std::env::var("DREIST_SELECT_ALL").is_ok() {
+        ed.handle(&dreist_gui::app::UiEvent::Shortcut { key: "a".into(), cmd: true, shift: false, alt: false, ctrl: false });
+    }
+    let clicks = std::env::var("DREIST_CLICK").unwrap_or_default();
+    let mut clicks: Vec<&str> = clicks.split(';').filter(|s| !s.is_empty()).collect();
+    let last = clicks.pop();
+    for spec in clicks {
+        dreist_editor::screens::click(&mut ed, spec, dreist_gui::app::MouseButton::Left);
+        ed.sync();
+    }
+    if let Some(spec) = last {
         // "Parent/Name": the first Name under the first Parent.
         let mut path = Vec::new();
         for part in spec.split('/') {
@@ -69,7 +84,8 @@ fn main() {
         for pick in std::env::var("DREIST_MENU").unwrap_or_default().split('|').filter(|s| !s.is_empty()) {
             let m = ed.app.menu.clone().expect("open menu");
             let i = pick.strip_prefix('#').and_then(|n| n.parse().ok()).or_else(|| m.items.iter().position(|s| s.ends_with(pick))).unwrap_or_else(|| panic!("{pick} in {:?}", m.items));
-            ed.handle(&dreist_gui::app::UiEvent::MenuSelected { anchor: m.anchor.clone(), name: String::new(), index: i });
+            let name = ed.app.ctrl(&m.anchor).map(|c| c.name.clone()).unwrap_or_default();
+            ed.handle(&dreist_gui::app::UiEvent::MenuSelected { anchor: m.anchor.clone(), name, index: i });
         }
     }
     if let Ok(f) = std::env::var("DREIST_SLICE") {

@@ -124,7 +124,7 @@ FONTS = [
 
 # ---------------------------------------------------------------- styles
 
-R_SMALL, R_MED, R_LARGE = 3, 4, 6
+R_SMALL, R_MED, R_LARGE = 3, 3, 5
 NO_ROUND = dict(optRoundTopLeft="false", optRoundTopRight="false", optRoundBottomLeft="false", optRoundBottomRight="false")
 
 
@@ -222,6 +222,7 @@ S("InvisibleEditBoxStyle", optDrawShadow="false", optDrawBorder="false", colFill
 S("InvisibleCenteredEditBoxStyle", "InvisibleEditBoxStyle", enumTextHorizontalAlign="center")
 S("DarkTextInvisibleEditBoxStyle", "InvisibleEditBoxStyle", colText="EditorDarkest")
 S("LightTextInvisibleEditBoxStyle", "InvisibleEditBoxStyle", colText="PanelBrightest")
+S("EmptyLayerTextStyle", "InvisibleEditBoxStyle", colText="PanelMedium")
 S("FieldEditorStyle", enumTextHorizontalAlign="left", font="Standard")
 S("ListViewSyle", "DefaultEditBoxStyle", enumTextHorizontalAlign="left", font="Standard")
 
@@ -247,8 +248,8 @@ S("AltKnobStyle", "KnobStyle", colFill="PanelMediumAlpha03", colFillHighlight="E
 TM = dict(optDrawBorder="false", colBorder="Transparent", colModulationIndication="EditorAltBrightest", colModTrackFill="PanelMediumAlpha05",
           colFill="PanelAltDark", colAltFill="EditorMedium", colHandleBorder="PanelBrightest", colHandleFill="PanelDarkest",
           colModulationPos="EditorAltDarkest", colDepth="EditorAltBrightestAlpha05")
-S("TransmodStyle", kind="CtrlTransmodStyle", **TM)
-S("TransmodSliderStyle", "TransmodStyle", "CtrlTransmodStyle")
+S("TransmodStyle", kind="CtrlTransmodStyle", optDrawModTrack="true", **TM)
+S("TransmodSliderStyle", "TransmodStyle", "CtrlTransmodStyle", optModStrip="true")
 S("MiniSequencerStyle", colFill="EditorAltMedium", colBorder="EditorAltMedium", colAltFill="EditorBrightest", colDisabledOverlay="PanelMediumAlpha05")
 
 section("Tables")
@@ -352,10 +353,10 @@ S("EngineSelectorMuteIndicatorStyle", "CornerRoundingStyle", colAltFill="MuteSpa
 S("EngineSelectorSoloIndicatorStyle", "CornerRoundingStyle", colAltFill="SoloSpark", **INDI)
 
 section("Pads")
-S("PadStyle", "CornerRounding5Style", optDrawBorder="false", realBorderWidth="1", realDisabledAlpha="0.5", font="StandardBold", enumTextShortenAlgorithm="middle",
+S("PadStyle", "CornerRounding5Style", realCornerRounding=5, optDrawBorder="false", realBorderWidth="1", realDisabledAlpha="0.5", font="StandardBold", enumTextShortenAlgorithm="middle",
   colFill="EditorMedium", colBorder="EditorMedium", colText="PanelBrightest", colAltFill="PanelBrightest")
 S("PadSelectedStyle", "PadStyle", colFill="EditorAltBrightest", colBorder="EditorAltBrightest")
-S("PadOverlayStyle", "CornerRounding5Style", optDrawBorder="false", realDisabledAlpha="0.2", colFill="PanelBright", colAltFill="PanelBright")
+S("PadOverlayStyle", "CornerRounding5Style", realCornerRounding=5, optDrawBorder="false", realDisabledAlpha="0.2", colFill="PanelBright", colAltFill="PanelBright")
 RING = dict(optDrawBorder="true", realBorderWidth="2", colBorder="PanelBrightest", colAltBorder="PanelBrightest")
 S("PadOnStyle", "PadStyle", colFill="EditorAltMedium", colBorder="EditorAltMedium")
 S("PadOnSelectedStyle", "PadStyle", colFill="EditorAltMedium", **RING)
@@ -367,7 +368,9 @@ S("PadNameLabelStyle", "InvisibleStyle", enumDisabledDrawMode="NormalDrawing", e
 S("PadNameLabelSelectedStyle", "PadNameLabelStyle", colText="EditorDarkest")
 S("PadStepNameLabelStyle", "PadNameLabelStyle", font="Small", colText="PanelBrightest")
 S("PadStepNameLabelSelectedStyle", "PadStepNameLabelStyle", colText="EditorDarkest")
-S("PadLayerIndicatorStyle", "ShadowStyle", optDrawBorder="true", enumDisabledDrawMode="NormalDrawing", colFill="EditorDarkestAlpha03", colBorder="EditorDarkestAlpha03",
+# Empty slots: a flat 30 % square (an alpha border over the alpha fill
+# would read as a darker outlined box).
+S("PadLayerIndicatorStyle", "ShadowStyle", optDrawBorder="true", enumDisabledDrawMode="NormalDrawing", colFill="EditorDarkestAlpha03", colBorder="Transparent",
   colAltFill="EditorAltBrightest", colAltBorder="EditorAltBrightest")
 S("PadLayerIndicatorSelectedStyle", "PadLayerIndicatorStyle", colFill="EditorAltDarkestAlpha075", colBorder="EditorAltDarkest", colAltFill="EditorDarkest", colAltBorder="EditorDarkest")
 S("PadLayerMutedIndicatorStyle", "PadLayerIndicatorStyle", colAltFill="MuteSpark", colAltBorder="MuteSpark")

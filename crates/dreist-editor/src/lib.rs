@@ -251,6 +251,9 @@ pub struct Editor {
     convertor: convertor::Convertor,
     patmenu: patmenu::PatMenu,
     clipboard: padmenu::Clipboard,
+    /// The code-laid-out pages' sizes at the last sync (`render_frame`
+    /// syncs again when a window resize or a splitter changed them).
+    laid_out: Vec<(i32, i32)>,
     modals: modal::Modals,
     learn: learn::Learn,
     /// The popup buttons `popups::sync` labels.
@@ -275,6 +278,14 @@ fn err(e: impl std::fmt::Display) -> EditorError {
 impl Editor {
     /// Build the editor from the installed resources (`theme`, e.g. "Dreist").
     pub fn new(theme: &str, model: Model) -> Result<Editor, EditorError> {
+        // Unit tests restore no user's layout.
+        let o = if cfg!(test) { options::Options::default() } else { options::Options::load() };
+        Self::with_layout(theme, model, &o)
+    }
+
+    /// [`Editor::new`] with the window size and splitter positions the
+    /// options `layout` saved (see [`Editor::restore_layout`]).
+    pub fn with_layout(theme: &str, model: Model, layout: &options::Options) -> Result<Editor, EditorError> {
         let mut skin = Skin::load(&Skin::resources_dir(), theme).map_err(err)?;
         let mut root = skin.load_skin("RootSkin.skin").map_err(err)?;
         let header = header::Header::build(&mut skin, &mut root)?;
@@ -397,6 +408,7 @@ impl Editor {
             convertor,
             patmenu: patmenu::PatMenu::default(),
             clipboard: padmenu::Clipboard::default(),
+            laid_out: Vec::new(),
         };
         // `LastEditorScaleFactor` (Preferences › UI scaling), applied when
         // the window opens.
@@ -405,18 +417,8 @@ impl Editor {
         // `LastEditorSize` (window pixels, "0,0" = the default size).
         ed.app.set_has_window_sizer();
         let default = ed.app.size();
-        let mut size = default;
-        if !cfg!(test) {
-            let o = ed.modals.options.clone();
-            if let Some((w, h)) = parse_size(&o.string("LastEditorSize", "0,0")) {
-                let ui = ed.app.ui_scale.max(0.25);
-                size = ((w as f32 / ui).round() as i32, (h as f32 / ui).round() as i32);
-                ed.app.resize(size.0, size.1);
-            }
-            restore_splits(&mut ed.app.root, &o);
-        }
-        let ui = ed.app.ui_scale;
-        ed.window_size = (default, ((size.0 as f32 * ui).floor() as i32, (size.1 as f32 * ui).floor() as i32));
+        ed.window_size = (default, default);
+        ed.restore_layout(layout);
         // [re:f98edd] (messaging initialized).
         let startup = sampler::Sampler::startup_messages(&mut ed.model);
         // The document follows, as the engine's does (`mirror_message`).
@@ -436,6 +438,24 @@ impl Editor {
         }
         ed.sync();
         Ok(ed)
+    }
+
+    /// Opening the editor: the saved window size (`LastEditorSize`, window
+    /// pixels; "0,0" = the skin's size) and splitter positions, as the
+    /// options `o` have them.
+    fn restore_layout(&mut self, o: &options::Options) {
+        let mut size = self.app.size();
+        if let Some((w, h)) = parse_size(&o.string("LastEditorSize", "0,0")) {
+            let ui = self.app.ui_scale.max(0.25);
+            // No smaller than the window sizer allows (the host's frame is
+            // held to it too).
+            let min = dreist_gui::app::MIN_WINDOW;
+            size = (((w as f32 / ui).round() as i32).max(min.0), ((h as f32 / ui).round() as i32).max(min.1));
+            self.app.resize(size.0, size.1);
+        }
+        restore_splits(&mut self.app.root, o);
+        let ui = self.app.ui_scale;
+        self.window_size.1 = ((size.0 as f32 * ui).floor() as i32, (size.1 as f32 * ui).floor() as i32);
     }
 
     /// Turn MIDI learn mode on or off (header LearnButton).
@@ -567,5 +587,7 @@ pub mod screens;
 #[cfg(test)]
 mod screens_test;
 
+#[cfg(test)]
+mod resize_tests;
 #[cfg(test)]
 mod tests;
