@@ -1,5 +1,14 @@
 # Changelog
 
+## [0.2.1] - 2026-11-10
+
+v0.2.0's release run stopped at the generated-UI check; this release carries the same changes
+(see 0.2.0) plus the fix.
+
+### Fixes
+
+- **ci:** Uigen --check skips the review contact sheet
+
 ## [0.2.0] - 2026-11-10
 
 A parity pass from the vendor's Geist2 tutorial videos (each change checked against the shipped
