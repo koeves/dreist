@@ -67,7 +67,7 @@ def toolbar():
                style="SmallControlLabellerStyle", kids=[
                    tempo,
                    N("Knob", "SwingKnob", (80, 0, 20, 20), displayName="Swing", **SMALL_KNOB),
-                   btn("SwingDrop", (102, 6, 10, 10), "▾", None, style="HeaderBarMenuDropButtonStyle"),
+                   btn("SwingDrop", (102, 6, 10, 10), "▼", None, style="HeaderBarMenuDropButtonStyle"),
                    N("Knob", "InstoGraph", (126, 0, 20, 20), displayName="Graph Rec", **SMALL_KNOB)])
     left = N("Labeller", None, (0, 0, W - SEL, H), pin="lrtb", enumTextPosition="Below", style="SmallControlLabellerStyle", kids=[
         N("Panel", "ViewPanel", (6, 6, 46, 20), displayName="View", style="InvisibleStyle", kids=[

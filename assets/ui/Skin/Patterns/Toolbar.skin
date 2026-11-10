@@ -35,7 +35,7 @@
                     <CtrlValueBox name="TempoDenom" rect="28, 0, 18, 20" displayName="Tempo Modifier" optSingleClickEdit="false" placeholder="1" realIncDecRange="1" realMaxValue="16" realMinValue="1" style="InvisibleCenteredEditBoxStyle" />
                 </CtrlPanel>
                 <CtrlKnob name="SwingKnob" rect="80, 0, 20, 20" displayName="Swing" realDialThickness="0.3000" style="KnobStyle" />
-                <CtrlButton name="SwingDrop" rect="102, 6, 10, 10" optIsMomentary="true" style="HeaderBarMenuDropButtonStyle" text="▾" />
+                <CtrlButton name="SwingDrop" rect="102, 6, 10, 10" optIsMomentary="true" style="HeaderBarMenuDropButtonStyle" text="▼" />
                 <CtrlKnob name="InstoGraph" rect="126, 0, 20, 20" displayName="Graph Rec" realDialThickness="0.3000" style="KnobStyle" />
             </CtrlLabeller>
         </CtrlLabeller>

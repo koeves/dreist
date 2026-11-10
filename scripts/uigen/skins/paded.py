@@ -81,7 +81,7 @@ def inspector():
         N("Panel", None, (0, -5, LW, 60), pin="t", style="InvisibleStyle", kids=[
             N("Panel", "PadSelButton", (0, 0, LW, 60), pin="lr", overloadClass="PadSelectionButton")]),
         N("Button", "ShowSplits", (0, 57, LW, 22), pin="lrt", displayName="Velocity splits and pad options",
-          style="VSplitButtonStyle", text="Pad options ▸"),
+          style="VSplitButtonStyle", text="Pad options ▶"),
         N("TableView", "LayerTable", (0, 79, LW, H - 79), pin="lrtb", style="InvisibleStyle", HScrollBarStyle="", VScrollBarStyle="",
           ScrollViewStyle="InvisibleStyle", TableHeaderPanelStyle="InvisibleStyle", TablePanelStyle="InspectorTableStyle",
           intHeaderHeight=0, intScrollBarDim=10),

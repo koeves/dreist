@@ -3,10 +3,10 @@
 
     <!-- Base -->
     <CtrlStyle name="ShadowStyle" parentStyle0="ApplicationStyle" realCornerRounding="0" optDrawShadow="false" />
-    <CtrlStyle name="CornerRoundingStyle" parentStyle0="ShadowStyle" realCornerRounding="4" />
+    <CtrlStyle name="CornerRoundingStyle" parentStyle0="ShadowStyle" realCornerRounding="3" />
     <CtrlStyle name="CornerRounding2Style" parentStyle0="ShadowStyle" realCornerRounding="2" />
     <CtrlStyle name="CornerRounding3Style" parentStyle0="ShadowStyle" realCornerRounding="3" />
-    <CtrlStyle name="CornerRounding5Style" parentStyle0="ShadowStyle" realCornerRounding="6" />
+    <CtrlStyle name="CornerRounding5Style" parentStyle0="ShadowStyle" realCornerRounding="5" />
 
     <!-- Tooltips and menus -->
     <CtrlStyle name="TooltipStyle" parentStyle0="ShadowStyle" optDrawShadow="true" enumDisabledDrawMode="NormalDrawing" colFill="ToolTipPanelColour" colBorder="ToolTipBorderColour" colText="ToolTipTextColour" font="Standard" />
@@ -20,9 +20,9 @@
     <CtrlStyle name="BasicPanelStyle" parentStyle0="ShadowStyle" optDrawBorder="true" colFill="PanelBrightest" colBorder="PanelBrightest" />
     <CtrlStyle name="SplitterStyle" parentStyle0="BackPanelStyle" colAltBorder="PanelMedium" />
     <CtrlStyle name="DarkPanelStyle" parentStyle0="ApplicationStyle" optDrawBorder="true" colFill="PanelDark" colBorder="PanelDark" />
-    <CtrlStyle name="LayerPanelStyle" parentStyle0="BasicPanelStyle" realCornerRounding="6" optRoundTopLeft="true" optRoundTopRight="false" optRoundBottomLeft="false" optRoundBottomRight="false" />
-    <CtrlStyle name="SidebarPanelStyle" parentStyle0="BasicPanelStyle" realCornerRounding="6" optRoundTopLeft="false" optRoundTopRight="false" optRoundBottomLeft="false" optRoundBottomRight="true" />
-    <CtrlStyle name="TopRightPanelStyle" parentStyle0="DarkPanelStyle" realCornerRounding="6" optRoundTopLeft="false" optRoundTopRight="false" optRoundBottomLeft="true" optRoundBottomRight="false" />
+    <CtrlStyle name="LayerPanelStyle" parentStyle0="BasicPanelStyle" realCornerRounding="5" optRoundTopLeft="true" optRoundTopRight="false" optRoundBottomLeft="false" optRoundBottomRight="false" />
+    <CtrlStyle name="SidebarPanelStyle" parentStyle0="BasicPanelStyle" realCornerRounding="5" optRoundTopLeft="false" optRoundTopRight="false" optRoundBottomLeft="false" optRoundBottomRight="true" />
+    <CtrlStyle name="TopRightPanelStyle" parentStyle0="DarkPanelStyle" realCornerRounding="5" optRoundTopLeft="false" optRoundTopRight="false" optRoundBottomLeft="true" optRoundBottomRight="false" />
     <CtrlStyle name="LightDividerStyle" parentStyle0="ApplicationStyle" optDrawBorder="true" colFill="PanelBright" colBorder="PanelBright" />
 
     <!-- Collapsible panels -->
@@ -103,15 +103,15 @@
     <CtrlStyle name="DefaultTableViewHeaderStyle" parentStyle0="ApplicationStyle" optDrawBorder="true" colFill="PanelMedium" colBorder="Transparent" colAltBorder="PanelDark" colText="EditorDarkest" colAltText="PanelDarkest" />
     <CtrlStyle name="DefaultTableViewScrollStyle" parentStyle0="ApplicationStyle" colFill="Transparent" colBorder="Transparent" />
     <CtrlTableViewPanelStyle name="InspectorTableStyle" parentStyle0="ApplicationStyle" optDrawBorder="false" optColourAlternate="false" colFill="PanelDark" colBorder="PanelDark" colColDivider="Transparent" colColSelection="Transparent" colRowDivider="PanelDarkest" colSelectedRowDivider="PanelDarkest" colRowSelection="PanelBrightest" colSecRowSelection="PanelAltMedium" />
-    <CtrlStyle name="VSplitButtonStyle" parentStyle0="InspectorTableStyle" optDrawBorder="true" realBorderWidth="1" realCornerRounding="6" colBorder="PanelDarkest" colAltFill="EditorAltBrightest" colText="PanelBrightest" font="SmallStd" enumTextHorizontalAlign="left" realTextOffset="4" realDisabledAlpha="0.7" optRoundTopLeft="true" optRoundTopRight="false" optRoundBottomLeft="false" optRoundBottomRight="false" />
+    <CtrlStyle name="VSplitButtonStyle" parentStyle0="InspectorTableStyle" optDrawBorder="true" realBorderWidth="1" realCornerRounding="5" colBorder="PanelDarkest" colAltFill="EditorAltBrightest" colText="PanelBrightest" font="SmallStd" enumTextHorizontalAlign="left" realTextOffset="4" realDisabledAlpha="0.7" optRoundTopLeft="true" optRoundTopRight="false" optRoundBottomLeft="false" optRoundBottomRight="false" />
     <CtrlStyle name="VSplitStyle" parentStyle0="ApplicationStyle" colFill="EditorAltDarkest" colBorder="PanelBright" colAltFill="EditorAltBrightest" colAltBorder="PanelDark" />
     <CtrlStyle name="LinkPanelStyle" parentStyle0="LayerPanelStyle" colBorder="PanelDarkest" />
 
     <!-- Main tabs -->
     <CtrlStyle name="TabPanelStyle" parentStyle0="BackPanelStyle" optDrawBorder="true" />
     <CtrlStyle name="TabPanelHeaderStyle" parentStyle0="ShadowStyle" optDrawBorder="true" colFill="PanelDark" colBorder="PanelDark" />
-    <CtrlStyle name="TabPanelHeaderLeftStyle" parentStyle0="TabPanelHeaderStyle" realCornerRounding="6" optRoundTopLeft="false" optRoundTopRight="true" optRoundBottomLeft="false" optRoundBottomRight="false" />
-    <CtrlStyle name="TabPanelHeaderRightStyle" parentStyle0="TabPanelHeaderStyle" realCornerRounding="6" optRoundTopLeft="true" optRoundTopRight="false" optRoundBottomLeft="false" optRoundBottomRight="false" />
+    <CtrlStyle name="TabPanelHeaderLeftStyle" parentStyle0="TabPanelHeaderStyle" realCornerRounding="5" optRoundTopLeft="false" optRoundTopRight="true" optRoundBottomLeft="false" optRoundBottomRight="false" />
+    <CtrlStyle name="TabPanelHeaderRightStyle" parentStyle0="TabPanelHeaderStyle" realCornerRounding="5" optRoundTopLeft="true" optRoundTopRight="false" optRoundBottomLeft="false" optRoundBottomRight="false" />
     <CtrlStyle name="TabButtonStyle" parentStyle0="CornerRounding3Style" optDrawBorder="true" optRoundBottomLeft="false" optRoundBottomRight="false" font="SmallBold" colFill="Transparent" colBorder="Transparent" colText="PanelBrightest" colAltFill="PanelBrightest" colAltBorder="PanelBrightest" colAltText="PanelDarkest" />
 
     <!-- Browser -->

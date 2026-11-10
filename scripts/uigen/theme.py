@@ -124,7 +124,7 @@ FONTS = [
 
 # ---------------------------------------------------------------- styles
 
-R_SMALL, R_MED, R_LARGE = 3, 4, 6
+R_SMALL, R_MED, R_LARGE = 3, 3, 5
 NO_ROUND = dict(optRoundTopLeft="false", optRoundTopRight="false", optRoundBottomLeft="false", optRoundBottomRight="false")
 
 
