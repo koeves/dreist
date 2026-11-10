@@ -11,8 +11,8 @@
 //!   and track separators in `colGridBar` α0.35 ([re:60f2b5], [re:ecd2fe]);
 //! - steps ([re:cef393], [re:b3cfd7]): inset
 //!   2/1/4/3 when the row is ≥ 10 px, rounded rect radius 2 (or h/4 when
-//!   small) in `colStep` at alpha `vel·0.85 + 0.15`; repeats subdivide
-//!   one-shot steps;
+//!   small) in `colStep` (selected steps `colSelected`) at alpha
+//!   `vel·0.85 + 0.15`; repeats subdivide one-shot steps;
 //! - beyond the track length: `colOverlay` (track drawing);
 //! - the current step column in `colPosition` ([re:bfe463]);
 //! - pattern power off: `colPowerOverlay` α0.3 and "Pattern power off"
@@ -2297,6 +2297,7 @@ impl PatternPanel {
         }
         // Steps.
         let step_col = s.colour(TRACK_STYLE, "colStep", Colour::BLACK);
+        let selected_col = s.colour(TRACK_STYLE, "colSelected", pink);
         let overlay = s.colour(TRACK_STYLE, "colOverlay", pink);
         for row in 0..lay.tracks {
             let Some(t) = pat.tracks.get(lay.first_track + row) else { continue };
@@ -2318,7 +2319,8 @@ impl PatternPanel {
                 };
                 let vel = step.lanes[lane::VELOCITY].clamp(0.0, 1.0);
                 let radius = if a.h * 0.5 < 2.0 { (a.h * 0.25).floor().max(0.0) } else { 2.0 };
-                p.fill_rounded(a, radius, [true; 4], step_col.with_alpha(vel * 0.85 + 0.15));
+                let col = if self.selection.contains(&(lay.first_track + row, st)) { selected_col } else { step_col };
+                p.fill_rounded(a, radius, [true; 4], col.with_alpha(vel * 0.85 + 0.15));
             }
             // Beyond the track length.
             let len = t.length as usize;
@@ -2338,14 +2340,8 @@ impl PatternPanel {
             let col = s.colour("PatternTrackMarkerStyle", if drag.is_some() { "colAltFill" } else { "colFill" }, Colour::rgba(40, 40, 40, 255));
             p.fill_polygon(&[(mx + 1.0, cy), (mx + MARKER_W * 0.7, cy - half), (mx + MARKER_W * 0.7, cy + half)], col);
         }
-        // Selected steps and the rubber band.
+        // The rubber band.
         let sel = s.colour("PatternTrackMarkerStyle", "colAltFill", Colour::rgba(0, 200, 255, 255));
-        for &(t, st) in &self.selection {
-            if t >= lay.first_track && t < lay.first_track + lay.tracks && lay.step_range().contains(&st) {
-                let a = lay.step_rect(t - lay.first_track, st).inset(1.0);
-                p.stroke_rect(a, sel, 2.0);
-            }
-        }
         if let Some(((t0, s0), (t1, s1))) = self.band {
             let r0 = lay.row_y(t0.min(t1).saturating_sub(lay.first_track));
             let r1 = lay.row_y(t0.max(t1).saturating_sub(lay.first_track)) + lay.row_h;
