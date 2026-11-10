@@ -12,6 +12,6 @@ modal-filefind 4dcf013e84bd8489
 modal-metadata 2a4f98d3239a1160
 modal-preferences 5d2cab95ef7c0df5
 options-menu e7019ee62b3d7ed5
-sampler-pads 51a14aba55350e43
+sampler-pads 1c6e3240cb01232a
 transmod 095aed3179c53169
 transmod-source 194800e0b06f3a5c

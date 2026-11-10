@@ -93,42 +93,42 @@ def sampler():
     """The recording strip above the pads (80 px: sampler::OPEN_HEIGHT)."""
     W, H = 300, 80
     fl = dict(overloadClass="FlashingButton")
-    menus = N("LayoutBox", None, (70, 2, 184, 34), pin="r", optIsVertical=False, intLeftSpacing=0, intRightSpacing=0,
+    menus = N("LayoutBox", None, (69, 2, 184, 35), pin="r", optIsVertical=False, intLeftSpacing=0, intRightSpacing=0,
               intTopSpacing=0, intBottomSpacing=0, style="InvisibleStyle", kids=[
-                  N("Labeller", None, (i * 62, 0, 60, 34), enumTextPosition="Below", intTextOffset=1,
+                  N("Labeller", None, (i * 62, 0, 60, 35), enumTextPosition="Below", intTextOffset=1,
                     style="SmallControlLabellerStyle", kids=[
-                        N("PopupButton", n, (0, 0, 60, 19), pin="lr", displayName=cap, id=i_d, style="DefaultPopupButtonStyle")])
+                        N("PopupButton", n, (0, 0, 60, 20), pin="lr", displayName=cap, id=i_d, style="DefaultPopupButtonStyle")])
                   for i, (n, cap, i_d) in enumerate([("SourceList", "Source", 100000), ("TriggerMode", "Trigger", None),
                                                      ("Follow", "Assign", None)])])
     lab = N("Labeller", None, (0, 0, W, H), pin="lrtb", enumTextPosition="Below", intTextOffset=1, style="SmallControlLabellerStyle", kids=[
-        N("Slider", "InputGain", (4, 3, 15, 62), pin="tb", displayName="Input", id=100001, style="SliderStyle", realTrackInset=0.3),
-        N("MultiChannelDBMeter", "VUMeter", (21, 3, 14, 62), pin="tb", id=100003, optIsLinear=True, style="DefaultVUMeterStyle"),
-        N("Panel", None, (40, 3, 24, 42), style="InvisibleStyle", kids=[
+        N("Slider", "InputGain", (4, 3, 15, 63), pin="tb", displayName="Input", id=100001, style="SliderStyle", realTrackInset=0.3),
+        N("MultiChannelDBMeter", "VUMeter", (22, 2, 15, 64), pin="tb", id=100003, optIsLinear=True, style="DefaultVUMeterStyle"),
+        N("Panel", None, (40, 2, 24, 42), style="InvisibleStyle", kids=[
             btn("MonoButton", (2, 0, 20, 20), "M", "Recording channels", id=100028, flashing=True),
             icon("ThruButton", (2, 22, 20, 20), "", "Hear the input", momentary=False, id=100028, flashing=True)]),
         N("Knob", "PreviewVolume", (42, 47, 20, 20), displayName="Thru", id=100001, style="KnobStyle", realDialThickness=0.3),
         menus,
-        N("Labeller", "ThresholdPanel", (70, 37, 184, 40), pin="r", id=100001, enumTextPosition="Left", style="SmallControlLabellerStyle", kids=[
-            N("Slider", "StartThresholdSlider", (30, 0, 154, 12), pin="rt", displayName="Start", id=100004, overloadClass="SamplerSlider",
+        N("Labeller", "ThresholdPanel", (69, 36, 184, 40), pin="r", id=100001, enumTextPosition="Left", style="SmallControlLabellerStyle", kids=[
+            N("Slider", "StartThresholdSlider", (28, 0, 156, 12), pin="rt", displayName="Start", id=100004, overloadClass="SamplerSlider",
               style="SliderStyle", realTrackInset=0.3),
-            N("MultiChannelDBMeter", "ThresholdVU", (30, 14, 154, 12), pin="rtb", id=100004, optIsLinear=True,
+            N("MultiChannelDBMeter", "ThresholdVU", (28, 14, 156, 12), pin="rtb", id=100004, optIsLinear=True,
               style="DefaultHorizontalVUMeterStyle"),
-            N("Slider", "StopThresholdSlider", (30, 28, 154, 12), pin="rtb", displayName="Stop", id=100004, overloadClass="SamplerSlider",
+            N("Slider", "StopThresholdSlider", (28, 28, 156, 12), pin="rtb", displayName="Stop", id=100004, overloadClass="SamplerSlider",
               style="SliderStyle", realTrackInset=0.3)]),
-        N("Panel", "SyncPanel", (70, 37, 184, 42), id=100005, style="InvisibleStyle", kids=[
-            N("ButtonGroup", "SyncButtonGroup", (0, 0, 120, 18), id=100003, optIsVertical=False, intLeftSpacing=0, intRightSpacing=0,
+        N("Panel", "SyncPanel", (69, 36, 180, 42), id=100005, style="InvisibleStyle", kids=[
+            N("ButtonGroup", "SyncButtonGroup", (0, 0, 122, 20), id=100003, optIsVertical=False, intLeftSpacing=0, intRightSpacing=0,
               intTopSpacing=0, intBottomSpacing=0, kids=[
-                  N("Button", "BeatsButton", (0, 0, 58, 18), displayName="Length in bars and beats", id=1, style="DefaultButtonStyle",
+                  N("Button", "BeatsButton", (0, 0, 60, 20), displayName="Length in bars and beats", id=1, style="DefaultButtonStyle",
                     text="Beats", **fl),
-                  N("Button", "SecsButton", (60, 0, 60, 18), displayName="Length in seconds", style="DefaultButtonStyle", text="Seconds", **fl)]),
-            N("Labeller", "BeatsPanel", (0, 21, 170, 19), pin="l", id=100002, enumTextPosition="Right", intTextOffset=2,
+                  N("Button", "SecsButton", (62, 0, 60, 20), displayName="Length in seconds", style="DefaultButtonStyle", text="Seconds", **fl)]),
+            N("Labeller", "BeatsPanel", (0, 22, 170, 20), pin="l", id=100002, enumTextPosition="Right", intTextOffset=1,
               style="SmallControlLabellerStyle", kids=[
-                  N("TextBox", "BarsTextBox", (0, 0, 52, 19), displayName="Bars", id=100000, style="DefaultEditBoxStyle"),
-                  N("TextBox", "BeatsTextBox", (82, 0, 52, 19), displayName="Beats", id=100000, style="DefaultEditBoxStyle")]),
-            N("Labeller", "SecondsPanel", (0, 21, 120, 19), id=100003, enumTextPosition="Right", intTextOffset=2,
+                  N("TextBox", "BarsTextBox", (0, 0, 60, 20), displayName="Bars", id=100000, style="DefaultEditBoxStyle"),
+                  N("TextBox", "BeatsTextBox", (83, 0, 50, 20), displayName="Beats", id=100000, style="DefaultEditBoxStyle")]),
+            N("Labeller", "SecondsPanel", (0, 22, 120, 20), id=100003, enumTextPosition="Right", intTextOffset=1,
               style="SmallControlLabellerStyle", kids=[
-                  N("TextBox", "SecsTextBox", (0, 0, 70, 19), displayName="Seconds", id=100000, style="DefaultEditBoxStyle")])]),
-        N("Panel", None, (W - 42, 3, 40, 42), pin="r", style="InvisibleStyle", kids=[
+                  N("TextBox", "SecsTextBox", (0, 0, 80, 20), displayName="Seconds", id=100000, style="DefaultEditBoxStyle")])]),
+        N("Panel", None, (W - 42, 2, 40, 42), pin="r", style="InvisibleStyle", kids=[
             btn("ArmButton", (0, 0, 40, 20), "Arm", "Wait for the start condition", momentary=False, id=100027, flashing=True),
             btn("RecButton", (0, 22, 40, 20), "Rec", "Record now", momentary=False, id=100027, flashing=True)]),
     ])
