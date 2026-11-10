@@ -897,6 +897,11 @@ impl PatternPanel {
         x.round().min(w - MARKER_W).max(0.0)
     }
 
+    /// The track length a marker released at `x` sets: the step under it.
+    fn snapped_len(lay: &GridLayout, x: f32) -> usize {
+        (0..lay.steps).find(|&s| x >= lay.step_x(s) && x < lay.step_x(s) + lay.step_w).unwrap_or(lay.steps).max(1)
+    }
+
     /// The track length markers ([re:f32484] ctor: a 10 × 15
     /// button at the top of each track row): a press starts a drag
     /// ([re:82fafd]: clamped to the steps, shift / cmd move every track's
@@ -925,8 +930,7 @@ impl PatternPanel {
                 }
                 MouseKind::Up => {
                     self.marker_drag = None;
-                    let len = (0..lay.steps).find(|&s| x >= lay.step_x(s) && x < lay.step_x(s) + lay.step_w).unwrap_or(lay.steps).max(1);
-                    send(track, len, out);
+                    send(track, Self::snapped_len(lay, x), out);
                 }
                 _ => {}
             }
@@ -2439,8 +2443,10 @@ impl PatternPanel {
                 let col = if self.selection.contains(&(lay.first_track + row, st)) { selected_col } else { step_col };
                 p.fill_rounded(a, radius, [true; 4], col.with_alpha(vel * 0.85 + 0.15));
             }
-            // Beyond the track length.
-            let len = t.length as usize;
+            // Beyond the track length (while a marker is dragged: the
+            // length the release would set).
+            let drag = self.marker_drag.filter(|(tr, _, all)| *all || *tr == lay.first_track + row);
+            let len = drag.map(|(_, x, _)| Self::snapped_len(&lay, x)).unwrap_or(t.length as usize);
             if len < lay.steps {
                 let x = lay.step_x(len).max(0.0);
                 p.fill_rect(RectF::new(x, lay.row_y(row), w - x + 1.0, lay.row_h), overlay);
@@ -2449,7 +2455,6 @@ impl PatternPanel {
             // [re:e606aa]): a left-pointing triangle, tip at x + 1, half
             // height 0.4·min(h, 12), `PatternTrackMarkerStyle` colFill
             // (colAltFill while dragged).
-            let drag = self.marker_drag.filter(|(tr, _, all)| *all || *tr == lay.first_track + row);
             let len = if t.length > 0 { t.length as usize } else { lay.steps };
             let mx = drag.map(|(_, x, _)| x.min(c.rect.w as f32 - MARKER_W)).unwrap_or_else(|| Self::marker_x(&lay, len, c.rect.w as f32));
             let mh = lay.row_h.min(MARKER_H);
