@@ -4238,3 +4238,86 @@ fn resized_window_keeps_cells_in_their_grids() {
         assert!(strips > 0);
     }
 }
+
+/// The engine chain on a tall global mixer with these effect types (slot
+/// order), and each card's path.
+fn fx_cards(kinds: &[usize]) -> Option<(Editor, Vec<Vec<usize>>)> {
+    let mut ed = Editor::new(dreist_gui::skin::default_theme(), Model::new(project::new_document())).ok()?;
+    ed.app.resize(1600, 1000);
+    ed.model.editor_tab = 5;
+    let chain = ed.model.engine_mut(0).child_mut_or_insert("EffectChain", "EffectChain");
+    chain.children.retain(|c| c.class != "Effect");
+    for (slot, k) in kinds.iter().enumerate() {
+        let mut fx = dreist_formats::Node::new("Effect", Some(&format!("Effect{slot}")));
+        fx.set("EffectType", dreist_formats::params::EFFECT_TYPES[*k]).set("IsActive", "true");
+        chain.children.push(fx);
+    }
+    ed.sync();
+    fn panels(c: &Ctrl, path: &mut Vec<usize>, out: &mut Vec<Vec<usize>>) {
+        if c.attr("fxSlot").is_some() {
+            out.push(path.clone());
+            return;
+        }
+        for (i, k) in c.children.iter().enumerate() {
+            path.push(i);
+            panels(k, path, out);
+            path.pop();
+        }
+    }
+    let mut out = Vec::new();
+    panels(&ed.app.root, &mut Vec::new(), &mut out);
+    Some((ed, out))
+}
+
+/// The EQ / filter cards plot their response curves (one point per pixel
+/// of the plot, coloured per band, with the frequency grid), following
+/// the parameters; other cards have no plot.
+#[test]
+fn effect_plots_show_the_response_curves() {
+    let Some((mut ed, cards)) = fx_cards(&[3, 4, 5, 6, 28, 1]) else { return };
+    assert_eq!(cards.len(), 6);
+    let curves = |ed: &Editor, k: usize| ed.app.ctrl(&cards[k]).and_then(|c| c.find("Display")).and_then(|p| p.attr("curves")).map(str::to_string);
+    let colours = |a: &str| a.split(';').map(|c| c.split('|').next().unwrap().to_string()).collect::<Vec<_>>();
+    for (k, n) in [(0, 2), (1, 3), (2, 1), (3, 2), (4, 2)] {
+        let a = curves(&ed, k).expect("a plot with curves");
+        assert_eq!(colours(&a), (1..=n).map(|i| format!("EQBand{i}Colour")).collect::<Vec<_>>());
+        let plot = ed.app.ctrl(&cards[k]).unwrap().find("Display").unwrap();
+        assert_eq!(a.split(';').next().unwrap().split(' ').count(), plot.rect.w as usize);
+        assert!(plot.attr("gridX").is_some_and(|g| g.split(',').count() == 25));
+    }
+    assert!(ed.app.ctrl(&cards[5]).unwrap().find("Display").is_none());
+    // L Gain up: the Parametric EQ's first band changes.
+    let before = curves(&ed, 0).unwrap();
+    let chain = ed.model.engine_mut(0).child_mut_or_insert("EffectChain", "EffectChain");
+    chain.children.iter_mut().find(|c| c.name.as_deref() == Some("Effect0")).unwrap().set("Lowgain", "0.9");
+    ed.sync();
+    assert_ne!(curves(&ed, 0).unwrap(), before);
+}
+
+/// The dynamics cards' meters follow the effect's control output and rise
+/// by 0.01 a tick while it stays the same; the header names the type and a
+/// non-default preset.
+#[test]
+fn effect_meters_follow_the_control_output() {
+    let Some((mut ed, cards)) = fx_cards(&[8, 9, 10, 14, 1]) else { return };
+    let meter = |ed: &Editor, k: usize| ed.app.ctrl(&cards[k]).and_then(|c| c.find("VUMeter")).map(|c| c.value);
+    for k in 0..4 {
+        assert_eq!(meter(&ed, k), Some(0.0), "card {k} has its meter");
+    }
+    assert!(meter(&ed, 4).is_none());
+    let mut m = dreist_engine::Meters::default();
+    m.fx_out.push(dreist_engine::FxOut { at: [0, -1, -1], slot: 1, value: 0.5 });
+    ed.update_meters(&m);
+    assert_eq!(meter(&ed, 1), Some(0.5));
+    assert_eq!(meter(&ed, 0), Some(0.0));
+    ed.update_meters(&m);
+    assert!((meter(&ed, 1).unwrap() - 0.51).abs() < 1e-6, "unchanged: rises");
+    m.fx_out[0].value = 0.3;
+    ed.update_meters(&m);
+    assert_eq!(meter(&ed, 1), Some(0.3));
+    assert_eq!(ed.app.ctrl(&cards[1]).unwrap().display_name, "Bus Compressor");
+    let chain = ed.model.engine_mut(0).child_mut_or_insert("EffectChain", "EffectChain");
+    fxchain::set_effect_preset_name(chain.children.iter_mut().find(|c| c.name.as_deref() == Some("Effect1")).unwrap(), "/x/Bus Compressor/Gentle Glue On The Bus.fxpreset");
+    ed.sync();
+    assert_eq!(ed.app.ctrl(&cards[1]).unwrap().display_name, "Bus Compressor (Gentle Glue On )");
+}

@@ -228,4 +228,8 @@
     <CtrlStyle name="SongTrackPanelStyle1" parentStyle0="TrackNotSelectedStyle" colBorder="PanelMedium" />
     <CtrlStyle name="SongTrackPanelSelectedStyle" parentStyle0="TrackSelectedStyle" colBorder="PanelMedium" />
     <CtrlStyle name="SongTrackPanelPreviewingStyle" colFill="EditorAltMedium" />
+
+    <!-- Effect panel meters and plots -->
+    <CtrlMeterStyle name="EffectMeterStyle" parentStyle0="MeterStyle" colAltBorder="PanelDarkest" colLine="PanelDarkest" colText="PanelDarkest" realLineWidth="2" />
+    <CtrlStyle name="EffectEQPlotStyle" parentStyle0="PlotStyle" colGrid="EditorDarkestAlpha03" realCurveFillAlpha="0.2" realLineWidth="2" optRoundBottomLeft="false" optRoundBottomRight="false" />
 </root>

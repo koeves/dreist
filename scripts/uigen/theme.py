@@ -421,6 +421,16 @@ S("SongTrackPanelStyle1", "TrackNotSelectedStyle", colBorder="PanelMedium")
 S("SongTrackPanelSelectedStyle", "TrackSelectedStyle", colBorder="PanelMedium")
 S("SongTrackPanelPreviewingStyle", None, colFill="EditorAltMedium")
 
+# --- Effect panel meters and plots (fx.py) -------------------------------
+# Kept apart from the general control styles. The original's meter and EQ
+# plot are drawn by their classes ([re:664306], [re:faafb0], [re:b03feb]):
+# a needle meter over MeterStyle's panel, its scale, ticks, texts and needle
+# in a dark grey; an EQ plot over PlotStyle with a 1 px grid and each curve
+# 2 px wide over its own colour at alpha 0.2.
+section("Effect panel meters and plots")
+S("EffectMeterStyle", "MeterStyle", "CtrlMeterStyle", colAltBorder="PanelDarkest", colLine="PanelDarkest", colText="PanelDarkest", realLineWidth="2")
+S("EffectEQPlotStyle", "PlotStyle", colGrid="EditorDarkestAlpha03", realCurveFillAlpha="0.2", realLineWidth="2", optRoundBottomLeft="false", optRoundBottomRight="false")
+
 
 # ---------------------------------------------------------------- output
 

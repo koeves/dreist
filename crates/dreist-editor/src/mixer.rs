@@ -259,6 +259,11 @@ impl Mixer {
         self.fx.as_mut()?.save_request.take()
     }
 
+    /// The effect chain panel, when this page has one.
+    pub(crate) fn fx_panel(&self) -> Option<&crate::fxchain::FxPanel> {
+        self.fx.as_ref()
+    }
+
     fn fx_target(&self, model: &Model) -> crate::fxchain::Target {
         let e = model.engine;
         match self.kind {

@@ -27,7 +27,8 @@ def chain():
 
 def card():
     """One effect: header (type menu, preset arrows), the input/mix/output
-    column, the effect's own panel and the on switch."""
+    column, the effect's own panel and the on switch. The header buttons
+    carry their icon glyphs as the shipped skin's do ([re:ee3c0f])."""
     W, Hc = 250, 182
     icon = dict(style="DefaultIconButtonStyle", optIsMomentary=True)
     column = N("Labeller", "SetupPanel", (0, 20, 40, 140), pin="ltb", id=100001, style="SmallControlLabellerStyle",
@@ -36,9 +37,9 @@ def card():
                    for (n, cap, i_d), y in zip([("TrimKnob", "Input", 100005), ("MixKnob", "Mix", 100004),
                                                 ("OutputKnob", "Output", 100005)], (3, 49, 94))])
     return N("CollapsePanel", "CtrlPanel", (0, 0, W, Hc), pin="tb", iconicTarget="ARLeft", style="EffectCollapsePanelStyle", kids=[
-        N("Button", "EffectTypeCombo", (2, 2, 16, 16), pin="lt", text="", displayName="Choose effect", id=100002, **icon),
-        N("Button", "LastPresetButton", (W - 27, 2, 12, 16), pin="lr", text="", displayName="Previous preset", id=100000, **icon),
-        N("Button", "NextPresetButton", (W - 14, 2, 12, 16), pin="lr", text="", displayName="Next preset", id=100001, **icon),
+        N("Button", "EffectTypeCombo", (2, 2, 16, 16), pin="lt", text="\ue902", displayName="Choose effect", id=100002, **icon),
+        N("Button", "LastPresetButton", (W - 27, 2, 12, 16), pin="lr", text="\ue906", displayName="Previous preset", id=100000, **icon),
+        N("Button", "NextPresetButton", (W - 14, 2, 12, 16), pin="lr", text="\ue907", displayName="Next preset", id=100001, **icon),
         # The header between the buttons: drag it left or right to move the
         # effect in the chain.
         N("Panel", "HeaderGrip", (20, 0, W - 49, 20), pin="lrt", overloadClass="EffectHeaderGrip", style="InvisibleStyle"),
