@@ -212,11 +212,13 @@ S("ExExLargeIconRadioButtonLeft", "ExExLargeIconButtonStyle", optRoundTopRight="
 S("ExExLargeIconRadioButtonRight", "ExExLargeIconButtonStyle", optRoundTopLeft="false", optRoundBottomLeft="false")
 S("ExExLargeIconRadioButtonCenter", "ExExLargeIconButtonStyle", **NO_ROUND)
 S("DefaultCheckboxButtonStyle", "DefaultButtonStyle", "CheckBoxButtonRendererStyle", colTick="PanelDarkest")
-S("DefaultPopupButtonStyle", "DefaultButtonStyle", enumTextHorizontalAlign="left")
+# (`optStepperArrows`: value steppers in these styles draw the stepper
+# triangles.)
+S("DefaultPopupButtonStyle", "DefaultButtonStyle", enumTextHorizontalAlign="left", optStepperArrows="true")
 S("ShorteningPopupButtonStyle", "DefaultPopupButtonStyle", enumTextShortenAlgorithm="middle")
 
 section("Text fields")
-S("DefaultEditBoxStyle", "CornerRoundingStyle", font="Standard", colText="EditorDarkest", colFill="PanelAltMedium", colAltFill="PanelAltMedium", colBorder="PanelAltMedium", colAltBorder="PanelAltMedium")
+S("DefaultEditBoxStyle", "CornerRoundingStyle", optStepperArrows="true", font="Standard", colText="EditorDarkest", colFill="PanelAltMedium", colAltFill="PanelAltMedium", colBorder="PanelAltMedium", colAltBorder="PanelAltMedium")
 S("SearchBoxStyle", "DefaultEditBoxStyle", enumTextHorizontalAlign="left", colAltFill="EditorDarkest")
 S("InvisibleEditBoxStyle", optDrawShadow="false", optDrawBorder="false", colFill="Transparent", enumTextHorizontalAlign="left", font="SmallStd")
 S("InvisibleCenteredEditBoxStyle", "InvisibleEditBoxStyle", enumTextHorizontalAlign="center")
@@ -238,7 +240,8 @@ S("DefaultVerticalVUMeterStyle", "DefaultVUMeterStyle", "CtrlMultiChannelDBMeter
 S("BigVerticalVUMeterStyle", "DefaultVUMeterStyle", "CtrlMultiChannelDBMeterStyle", intChannelSpacing="2", intMarkingSize="12")
 S("DefaultHorizontalVUMeterStyle", "DefaultVUMeterStyle", "CtrlMultiChannelDBMeterStyle", optHideMarkingText="true")
 S("DefaultLighterHorizontalVUMeterStyle", "DefaultHorizontalVUMeterStyle", "CtrlMultiChannelDBMeterStyle", colChannelBack="EditorMedium")
-S("ScrollbarStyle", "CornerRounding3Style", colFill="Transparent", colBorder="Transparent", colAltFill="PanelMedium", colAltBorder="PanelMedium")
+# The thumb inset 2 px and framed (dreist-gui `optFramedThumb`).
+S("ScrollbarStyle", "CornerRounding3Style", optFramedThumb="true", colFill="Transparent", colBorder="Transparent", colAltFill="PanelMedium", colAltBorder="PanelMedium")
 
 section("Sliders, knobs, modulation")
 DIAL = dict(optDrawBorder="false", colFill="PanelMedium", colFillHighlight="EditorMedium", colAltFill="PanelDarkest", colBorder="PanelDarkest", colAltBorder="PanelBrightest")
@@ -248,7 +251,9 @@ S("AltKnobStyle", "KnobStyle", colFill="PanelMediumAlpha03", colFillHighlight="E
 TM = dict(optDrawBorder="false", colBorder="Transparent", colModulationIndication="EditorAltBrightest", colModTrackFill="PanelMediumAlpha05",
           colFill="PanelAltDark", colAltFill="EditorMedium", colHandleBorder="PanelBrightest", colHandleFill="PanelDarkest",
           colModulationPos="EditorAltDarkest", colDepth="EditorAltBrightestAlpha05")
-S("TransmodStyle", kind="CtrlTransmodStyle", optDrawModTrack="true", **TM)
+# All seven transmod layers: depth zones, handles, the selected-source
+# indication and the modulated outline (dreist-gui `optTransmodLayers`).
+S("TransmodStyle", kind="CtrlTransmodStyle", optDrawModTrack="true", optTransmodLayers="true", **TM)
 S("TransmodSliderStyle", "TransmodStyle", "CtrlTransmodStyle", optModStrip="true")
 S("MiniSequencerStyle", colFill="EditorAltMedium", colBorder="EditorAltMedium", colAltFill="EditorBrightest", colDisabledOverlay="PanelMediumAlpha05")
 

@@ -510,6 +510,7 @@ impl Inspector {
                 let source = model.source;
                 let src = dreist_formats::TransmodSource::ALL.get(source).copied().unwrap_or(dreist_formats::TransmodSource::ActualParameter);
                 let node = model.layer_node(e, p, l);
+                let polar = crate::model::source_bipolar(model, source);
                 fn walk(c: &mut Ctrl, f: &dyn Fn(&mut Ctrl)) {
                     for k in &mut c.children {
                         f(k);
@@ -529,6 +530,7 @@ impl Inspector {
                     let base = model.layer_param(e, p, l, par);
                     match k.class.as_str() {
                         "CtrlTransmodKnob" | "CtrlTransmodSlider" => {
+                            crate::model::mark_modulation(k, crate::model::modulation_mask(node, par.name()) != 0, polar);
                             let depth = src.attr(par.name()).and_then(|a| node.and_then(|n| n.f32(&a))).unwrap_or(0.0);
                             if k.class == "CtrlTransmodKnob" {
                                 crate::model::bind_knob(k, source, base, depth);

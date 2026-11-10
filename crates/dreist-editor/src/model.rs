@@ -201,6 +201,26 @@ pub fn bind_knob(c: &mut dreist_gui::Ctrl, source: usize, base: f32, depth: f32)
     }
 }
 
+/// Mark a transmod control's modulation state for the renderer: `modulated`
+/// (any source has a depth on it; [re:3d71a8] `SetIsModulated`) and `polar`
+/// (the selected source is bipolar; [re:b80c4e] `SetPolarState`).
+pub fn mark_modulation(c: &mut dreist_gui::Ctrl, modulated: bool, polar: bool) {
+    for (k, on) in [("modulated", modulated), ("polar", polar)] {
+        if on {
+            c.set_attr(k, "true".into());
+        } else {
+            c.remove_attr(k);
+        }
+    }
+}
+
+/// Whether transmod source `source` (index into `TransmodSource::ALL`) is
+/// bipolar: its `Polar_<source>` document flag is false (unipolar is the
+/// default).
+pub fn source_bipolar(model: &Model, source: usize) -> bool {
+    source != 0 && dreist_formats::TransmodSource::ALL.get(source).is_some_and(|s| model.doc.bool(&format!("Polar_{}", s.name())) == Some(false))
+}
+
 /// The (source, value) to send for transmod knob `c` moved to `v` while
 /// `source` is selected: a primary (centre) drag edits the base.
 /// The transmod sources (bit per source 1..=28) with a non-zero depth on

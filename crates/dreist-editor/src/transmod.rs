@@ -384,6 +384,7 @@ impl Transmod {
         }
         let Some(sp) = &self.scroller else { return };
         let Some(sc) = app.ctrl_mut(sp) else { return };
+        let polar = crate::model::source_bipolar(model, source);
         for c in &mut sc.children {
             let Some(slot) = c.attr("modSlot").and_then(|v| v.parse::<usize>().ok()) else { continue };
             let Some(n) = modulator(model, slot) else { continue };
@@ -401,6 +402,8 @@ impl Transmod {
                 } else if k.class == "CtrlButton" {
                     k.on = base >= 0.5;
                 } else if k.class == "CtrlTransmodKnob" {
+                    let modulated = TransmodSource::ALL[1..].iter().any(|s| n.f32(&format!("{pn}_{}", s.name())).is_some_and(|d| d != 0.0));
+                    crate::model::mark_modulation(k, modulated, polar);
                     bind_knob(k, source, base, depth);
                 } else {
                     k.value = base;

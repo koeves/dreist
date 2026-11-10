@@ -126,7 +126,7 @@ def editor():
 def track_row():
     W, H = 200, 20
     return N("Panel", "HighlightPanel", (0, 0, W, H), pin="lrtb", style="TrackNotSelectedStyle", kids=[
-        N("DisclosureButton", "AutomateButton", (5, 0, 15, H), pin="ltb", displayName="Show graphs", id=100003, realScaling=0.5,
+        N("DisclosureButton", "AutomateButton", (5, 0, 15, H), pin="ltb", displayName="Show graphs", id=100003, realScaling=0.5, optDisclosureArrow="true",
           style="InvisibleStyle", text="A"),
         N("Label", "SelectArea", (20, 0, W - 70, H), pin="lrtb", id=100000, style="DarkTextInvisibleEditBoxStyle", text=""),
         N("Knob", "PadLevel", (W - 48, 2, 16, 16), pin="rm", displayName="Pad level", **SMALL_KNOB),
