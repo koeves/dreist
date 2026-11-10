@@ -763,6 +763,8 @@ impl PatternPanel {
             if let Some(b) = t.find_mut("Learn") {
                 b.visible = false;
             }
+            // Placed by `sync` with the graphs, as the track rows.
+            t.anchors = Default::default();
             t
         });
         let rel = skin.find("TrackControls.skin").unwrap_or_else(|| "Patterns/TrackControls.skin".into());
@@ -770,6 +772,11 @@ impl PatternPanel {
         // The track name area takes clicks (select / right-click menu).
         if let Some(sa) = row_template.as_mut().and_then(|r| r.children.iter_mut().find(|c| c.name == "SelectArea")) {
             sa.overload = "TrackSelectArea".into();
+        }
+        // The rows follow the grid's rows (`sync`), not their own fill
+        // anchors (those would stretch each over the whole list).
+        if let Some(t) = row_template.as_mut() {
+            t.anchors = Default::default();
         }
         Ok(PatternPanel {
             page: page.to_vec(),
@@ -1090,12 +1097,12 @@ impl PatternPanel {
         let multi = self.multi;
         set(app, "View", &|c| c.on = !multi);
         self.apply_view(app);
-        let sig = format!("{:?}{:?}{}", lay.track_y, lay.graphs, lay.row_h);
         let open: Vec<bool> = (0..lay.tracks).map(|r| self.auto_open.contains(&(e, lay.first_track + r))).collect();
         let (Some(rp), Some(t)) = (self.rows.clone(), self.row_template.clone()) else { return };
         let auto_t = self.auto_template.clone();
         let Some(rows) = app.ctrl_mut(&rp) else { return };
         let w = rows.rect.w;
+        let sig = format!("{:?}{:?}{}{w}", lay.track_y, lay.graphs, lay.row_h);
         if self.rows_sig != sig || rows.children.is_empty() {
             self.rows_sig = sig;
             rows.children.clear();
