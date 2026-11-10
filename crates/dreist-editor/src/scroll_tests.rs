@@ -47,6 +47,25 @@ fn hover(ed: &mut Editor, path: &[usize]) {
     ed.app.mouse_move((r.x + v.w / 2) as f32, (r.y + v.h / 2) as f32);
 }
 
+/// Point the mouse at a spot of the container's view off its transmod
+/// knobs and value boxes (those take the wheel themselves, [re:c7e2d4]).
+fn hover_off_controls(ed: &mut Editor, path: &[usize]) {
+    let r = ed.app.abs_rect(path);
+    let v = scroll::view(ed.app.ctrl(path).unwrap());
+    for y in (2..v.h).step_by(3) {
+        for x in (2..v.w).step_by(3) {
+            let (px, py) = ((r.x + x) as f32, (r.y + y) as f32);
+            let hit = ed.app.hit(px, py);
+            let takes = (0..=hit.len()).any(|n| ed.app.ctrl(&hit[..n]).is_some_and(|c| matches!(c.class.as_str(), "CtrlTransmodKnob" | "CtrlValueBox")));
+            if hit.starts_with(path) && !takes {
+                ed.app.mouse_move(px, py);
+                return;
+            }
+        }
+    }
+    panic!("no free spot in the view");
+}
+
 fn offset(ed: &Editor, path: &[usize]) -> (i32, i32) {
     scroll::offset(ed.app.ctrl(path).unwrap())
 }
@@ -144,7 +163,7 @@ fn layer_parameter_row_scrolls_sideways() {
     assert_eq!(vmax, 0);
     assert!(bar(&ed, &ps, "h").visible);
     assert!(!ed.app.ctrl(&ps).unwrap().children.iter().any(|k| k.attr(scroll::BAR) == Some("v") && k.visible));
-    hover(&mut ed, &ps);
+    hover_off_controls(&mut ed, &ps);
     // Trackpad: a swipe left (platform x negative) shows more on the right.
     wheel(&mut ed, -25.0, 0.0, false);
     assert_eq!(offset(&ed, &ps), (25, 0));
@@ -255,7 +274,7 @@ fn exercise(ed: &mut Editor, path: &[usize], what: &str) -> bool {
     if mx == 0 && my == 0 {
         return false;
     }
-    hover(ed, path);
+    hover_off_controls(ed, path);
     let r = ed.app.abs_rect(path);
     let (px, py) = ed.app.mouse_pos();
     assert!(r.contains(px as i32, py as i32), "{what}: pointer inside");

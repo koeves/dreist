@@ -269,8 +269,12 @@ fn typing_a_tempo() {
     let bp = ed.app.root.path_of("BPMTextBox").unwrap();
     let (x, y) = ed.app.origin(&bp);
     ed.app.mouse_move(x as f32 + 5.0, y as f32 + 5.0);
-    for ev in ed.app.mouse_down(dreist_gui::app::MouseButton::Left) {
-        ed.handle(&ev);
+    // [re:b0c3e9]: a press drags the tempo; a double click edits it.
+    for b in [true, false, true] {
+        let evs = if b { ed.app.mouse_down(dreist_gui::app::MouseButton::Left) } else { ed.app.mouse_up(dreist_gui::app::MouseButton::Left) };
+        for ev in evs {
+            ed.handle(&ev);
+        }
     }
     assert!(ed.app.is_editing());
     for _ in 0..8 {
@@ -2695,7 +2699,9 @@ fn modulated_knob_centre_edits_the_base_and_ring_the_depth() {
     // Centre: the base (source 0).
     let m = drag(&mut ed, (ox + r.w / 2) as f32, (oy + r.h / 2) as f32).expect("base edit");
     assert_eq!(m.value[2], 0.0);
-    // Corner (outside the centre circle): the depth for source 5.
+    // Corner (outside the centre circle): the depth for source 5 (a
+    // press apart from the first: a double click starts no drag).
+    std::thread::sleep(std::time::Duration::from_millis(410));
     let m = drag(&mut ed, ox as f32 + 1.0, oy as f32 + 1.0).expect("depth edit");
     assert_eq!(m.value[2], 5.0);
 }

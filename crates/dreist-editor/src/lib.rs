@@ -412,6 +412,11 @@ impl Editor {
         };
         // `LastEditorScaleFactor` (Preferences › UI scaling), applied when
         // the window opens.
+        // The second-generation stock controls ([re:5a71e0] and the
+        // notes in dreist_gui::v2ctl) and control-click as a right click
+        // ([re:9e4f27]).
+        ed.app.v2_controls = true;
+        ed.app.ctrl_click_right = true;
         ed.app.ui_scale = (ed.modals.options.int("LastEditorScaleFactor", 100).clamp(50, 300) as f32) / 100.0;
         // Opening the editor: the window sizer; startup size [re:4aa577]:
         // `LastEditorSize` (window pixels, "0,0" = the default size).
@@ -587,6 +592,8 @@ pub mod screens;
 #[cfg(test)]
 mod screens_test;
 
+#[cfg(test)]
+mod behave_tests;
 #[cfg(test)]
 mod resize_tests;
 #[cfg(test)]
