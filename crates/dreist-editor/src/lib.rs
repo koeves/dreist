@@ -251,6 +251,9 @@ pub struct Editor {
     convertor: convertor::Convertor,
     patmenu: patmenu::PatMenu,
     clipboard: padmenu::Clipboard,
+    /// The code-laid-out pages' sizes at the last sync (`render_frame`
+    /// syncs again when a window resize or a splitter changed them).
+    laid_out: Vec<(i32, i32)>,
     modals: modal::Modals,
     learn: learn::Learn,
     /// The popup buttons `popups::sync` labels.
@@ -397,6 +400,7 @@ impl Editor {
             convertor,
             patmenu: patmenu::PatMenu::default(),
             clipboard: padmenu::Clipboard::default(),
+            laid_out: Vec::new(),
         };
         // `LastEditorScaleFactor` (Preferences › UI scaling), applied when
         // the window opens.

@@ -229,13 +229,14 @@ impl Mixer {
                 sc.children.push(s);
             }
         }
-        // Lay the strips out from the scroll offset.
+        // Lay the strips out from the scroll offset, as tall as the
+        // scroller (it changes with the window within one size index).
         let total: i32 = sc.children.iter().map(|c| c.rect.w + 2).sum();
         self.scroll_x = self.scroll_x.clamp(0, (total - sc.rect.w).max(0));
         let mut x = -self.scroll_x;
         for c in &mut sc.children {
-            if c.rect.x != x {
-                let r = Rect::new(x, 0, c.rect.w, c.rect.h);
+            if c.rect.x != x || c.rect.h != h {
+                let r = Rect::new(x, 0, c.rect.w, h);
                 c.set_rect(r);
             }
             x += c.rect.w + 2;

@@ -366,6 +366,12 @@ impl Editor {
         self.app.invalidate_changes(&before);
     }
 
+    /// Sizes of the pages whose cells the editor lays out itself.
+    fn page_sizes(&self) -> Vec<(i32, i32)> {
+        let pages = self.mixers.iter().map(|m| &m.page).chain(self.scenes.as_ref().map(|s| &s.page)).chain(self.song.as_ref().map(|s| &s.page));
+        pages.map(|p| self.app.ctrl(p).map(|c| (c.rect.w, c.rect.h)).unwrap_or_default()).collect()
+    }
+
     /// Render a frame (with the code-drawn panels).
     /// A complete fresh frame.
     pub fn render(&mut self, scale: f32) -> dreist_gui::tiny_skia::Pixmap {
@@ -376,6 +382,13 @@ impl Editor {
     /// The window's frame: only damaged parts are repainted unless the
     /// whole window is dirty (`App::render_frame_with`).
     pub fn render_frame(&mut self, scale: f32) -> &dreist_gui::tiny_skia::Pixmap {
+        // Code-laid-out cells (scene tiles, song track headers, mixer
+        // strips) follow a window resize or a splitter move.
+        let sizes = self.page_sizes();
+        if sizes != self.laid_out {
+            self.sync();
+            self.laid_out = sizes;
+        }
         if let Some(pp) = &self.pattern {
             pp.begin_frame();
         }

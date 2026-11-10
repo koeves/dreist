@@ -26,7 +26,7 @@ pub fn key_name(n: usize) -> String {
 }
 
 pub struct Scenes {
-    page: Vec<usize>,
+    pub(crate) page: Vec<usize>,
     matrix: Option<Vec<usize>>,
     bank: usize,
     selected: usize,
@@ -68,6 +68,24 @@ fn find_path(root: &Ctrl, base: &[usize], name: &str) -> Option<Vec<usize>> {
     rec(c, name, &mut p).then_some(p)
 }
 
+/// Lay the scene cells out in the `ScenesPanel` matrix's grid
+/// (`intNumberOfCols` x `intNumberOfRows`, `intIntraSpacing` apart): at
+/// build and whenever the matrix changes size (a window resize).
+fn layout_matrix(m: &mut Ctrl) {
+    let (cols, rows) = (m.attr_i32("intNumberOfCols", 4).max(1), m.attr_i32("intNumberOfRows", 4).max(1));
+    let sp = m.attr_i32("intIntraSpacing", 5);
+    let top = m.attr_i32("intTopSpacing", 0);
+    let w = ((m.rect.w - (cols - 1) * sp) / cols).max(0);
+    let h = ((m.rect.h - top - (rows - 1) * sp) / rows).max(0);
+    for s in &mut m.children {
+        let Some(i) = s.attr("cell").and_then(|v| v.parse::<i32>().ok()) else { continue };
+        let r = Rect::new((i % cols) * (w + sp), top + (i / cols) * (h + sp), w, h);
+        if s.rect != r {
+            s.set_rect(r);
+        }
+    }
+}
+
 impl Scenes {
     pub fn build(skin: &mut Skin, root: &mut Ctrl, page: &[usize]) -> Result<Scenes, EditorError> {
         {
@@ -90,17 +108,16 @@ impl Scenes {
                         c.passive = true;
                     }
                 }
-                let (cols, rows) = (m.attr_i32("intNumberOfCols", 4), m.attr_i32("intNumberOfRows", 4));
-                let sp = m.attr_i32("intIntraSpacing", 5);
-                let top = m.attr_i32("intTopSpacing", 0);
-                let w = (m.rect.w - (cols - 1) * sp) / cols;
-                let h = (m.rect.h - top - (rows - 1) * sp) / rows;
-                for i in 0..cols * rows {
+                // The matrix lays its cells out itself (below), so the
+                // cells' own fill anchors must not stretch them over it.
+                t.anchors = Default::default();
+                let cells = (m.attr_i32("intNumberOfCols", 4) * m.attr_i32("intNumberOfRows", 4)).max(0);
+                for i in 0..cells {
                     let mut s = t.clone();
                     s.set_attr("cell", i.to_string());
-                    s.set_rect(Rect::new((i % cols) * (w + sp), top + (i / cols) * (h + sp), w, h));
                     m.children.push(s);
                 }
+                layout_matrix(m);
             }
         }
         let matrix = find_path(root, page, "ScenesPanel");
@@ -115,7 +132,15 @@ impl Scenes {
         Ok(Scenes { page: page.to_vec(), matrix, bank: 0, selected: 0, held: None, clipboard: None, menu: None, anim: vec![None; 96], last_tick: None })
     }
 
+    /// Follow a resize of the scene matrix (cheap when unchanged).
+    fn layout(&self, app: &mut App) {
+        if let Some(m) = self.matrix.as_ref().and_then(|mp| app.ctrl_mut(mp)) {
+            layout_matrix(m);
+        }
+    }
+
     pub fn sync(&mut self, app: &mut App, model: &Model) {
+        self.layout(app);
         // The scene panel's pattern selectors (`ScenePanel.skin` Selectors,
         // a [re:6f2709]): same keys as the pattern panel's.
         if let Some(sp) = find_path(&app.root, &self.page, "Selectors") {
