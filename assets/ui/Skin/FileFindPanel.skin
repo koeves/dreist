@@ -8,18 +8,18 @@
                     <CtrlTableView name="FileList" rect="0, 0, 638, 343" ARLeft="FNear 0.0000" ARRight="FNear 0.0000" ARTop="FNear 0.0000" ARBottom="FNear 0.0000" HScrollBarStyle="" ScrollViewStyle="DefaultTableViewScrollStyle" TableHeaderPanelStyle="DefaultTableViewHeaderStyle" TablePanelStyle="DefaultTableViewStyle" VScrollBarStyle="" id="100000" style="DefaultTableViewScrollStyle" />
                 </CtrlPanel>
             </CtrlPanel>
-            <CtrlButton name="ManualButton" rect="5, 350, 100, 20" ARLeft="FNear 5.0000" ARTop="FFar 25.0000" ARBottom="FFar 20.0000" id="100006" optIsMomentary="true" style="DefaultButtonStyle" text="Locate..." />
-            <CtrlButton name="AutoButton" rect="110, 350, 100, 20" ARLeft="FNear 110.0000" ARTop="FFar 25.0000" ARBottom="FFar 20.0000" id="100005" optIsMomentary="true" style="DefaultButtonStyle" text="Search" />
-            <CtrlButton name="RemoveButton" rect="215, 350, 100, 20" ARLeft="FNear 215.0000" ARTop="FFar 25.0000" ARBottom="FFar 20.0000" id="100005" optIsMomentary="true" style="DefaultButtonStyle" text="Remove" />
-            <CtrlButton name="SelectAll" rect="380, 350, 70, 20" ARLeft="FNear 380.0000" ARTop="FFar 25.0000" ARBottom="FFar 20.0000" id="100005" optIsMomentary="true" style="DefaultButtonStyle" text="All" />
-            <CtrlButton name="SelectNone" rect="455, 350, 70, 20" ARLeft="FNear 455.0000" ARTop="FFar 25.0000" ARBottom="FFar 20.0000" id="100005" optIsMomentary="true" style="DefaultButtonStyle" text="None" />
-            <CtrlButton name="Finished" rect="575, 350, 70, 20" ARLeft="FFar 75.0000" ARRight="FFar 70.0000" ARTop="FFar 25.0000" ARBottom="FFar 20.0000" id="100004" optIsMomentary="true" style="DefaultButtonStyle" text="Done" />
+            <CtrlButton name="ManualButton" rect="5, 350, 100, 20" ARLeft="FNear 5.0000" ARTop="FFar 25.0000" ARBottom="FFar 20.0000" id="100006" optIsMomentary="true" style="DefaultButtonStyle" text="Find Selected" />
+            <CtrlButton name="AutoButton" rect="110, 350, 100, 20" ARLeft="FNear 110.0000" ARTop="FFar 25.0000" ARBottom="FFar 20.0000" id="100005" optIsMomentary="true" style="DefaultButtonStyle" text="Auto Find" />
+            <CtrlButton name="RemoveButton" rect="215, 350, 100, 20" ARLeft="FNear 215.0000" ARTop="FFar 25.0000" ARBottom="FFar 20.0000" id="100005" optIsMomentary="true" style="DefaultButtonStyle" text="Remove Selected" />
+            <CtrlButton name="SelectAll" rect="380, 350, 70, 20" ARLeft="FNear 380.0000" ARTop="FFar 25.0000" ARBottom="FFar 20.0000" id="100005" optIsMomentary="true" style="DefaultButtonStyle" text="Select All" />
+            <CtrlButton name="SelectNone" rect="455, 350, 70, 20" ARLeft="FNear 455.0000" ARTop="FFar 25.0000" ARBottom="FFar 20.0000" id="100005" optIsMomentary="true" style="DefaultButtonStyle" text="Select None" />
+            <CtrlButton name="Finished" rect="575, 350, 70, 20" ARLeft="FFar 75.0000" ARRight="FFar 70.0000" ARTop="FFar 25.0000" ARBottom="FFar 20.0000" id="100004" optIsMomentary="true" style="DefaultButtonStyle" text="Finished" />
         </CtrlPanel>
         <CtrlPanel name="ScanningPanel" rect="5, 25, 640, 60" ARLeft="FNear 5.0000" ARRight="FNear 5.0000" ARTop="FNear 25.0000" style="InvisibleStyle">
-            <CtrlLabel name="CurrentScan" rect="5, 5, 115, 20" ARLeft="FNear 5.0000" ARTop="FNear 5.0000" id="100004" style="DialogPanelLeftLabelStyle" text="Searching" />
+            <CtrlLabel name="CurrentScan" rect="5, 5, 115, 20" ARLeft="FNear 5.0000" ARTop="FNear 5.0000" id="100004" style="DialogPanelLeftLabelStyle" text="Currently scanning" />
             <CtrlLabel name="ScanLabel" rect="120, 5, 515, 20" ARLeft="FNear 120.0000" ARRight="FNear 5.0000" ARTop="FNear 5.0000" id="100003" style="DialogPanelLeftLabelStyle" />
             <CtrlProgressBar name="ProgressBar" rect="5, 35, 575, 20" ARLeft="FNear 5.0000" ARRight="FNear 60.0000" ARTop="FFar 25.0000" ARBottom="FFar 20.0000" style="DialogProgressBarStyle" />
-            <CtrlButton name="AbortButton" rect="585, 35, 50, 20" ARLeft="FFar 55.0000" ARRight="FFar 50.0000" ARTop="FFar 25.0000" ARBottom="FFar 20.0000" id="100002" optIsMomentary="true" style="DefaultButtonStyle" text="Stop" />
+            <CtrlButton name="AbortButton" rect="585, 35, 50, 20" ARLeft="FFar 55.0000" ARRight="FFar 50.0000" ARTop="FFar 25.0000" ARBottom="FFar 20.0000" id="100002" optIsMomentary="true" style="DefaultButtonStyle" text="Abort" />
         </CtrlPanel>
     </CtrlPanel>
 </root>
