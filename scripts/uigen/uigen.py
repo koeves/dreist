@@ -849,6 +849,10 @@ def main():
         old = open(path, "rb").read() if os.path.exists(path) else None
         if old == data:
             continue
+        # The contact sheet is for review only and draws its labels with the
+        # system's DejaVu Sans, so it differs between machines: not checked.
+        if check and rel == "preview.png":
+            continue
         if check:
             stale.append(rel)
             continue
