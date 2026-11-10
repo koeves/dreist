@@ -128,6 +128,9 @@ impl Inbox {
 
 #[derive(Default)]
 pub struct Bridge {
+    /// A size the host resized the editor's view to (window pixels,
+    /// `w << 32 | h`; 0 = none pending), for the open editor to follow.
+    pub host_size: AtomicU64,
     /// Commands for the audio thread, each with the number of rebuilds
     /// requested when it was queued: the documents of those rebuilds
     /// predate it (see `DreistPlugin::replay`).
@@ -355,14 +358,28 @@ pub struct DreistEditor {
     pub size: Arc<std::sync::atomic::AtomicU64>,
 }
 
+/// The UI scale (Preferences › UI scaling).
+fn ui_scale() -> f64 {
+    dreist_editor::options::Options::load().int("LastEditorScaleFactor", 100).clamp(50, 300) as f64 / 100.0
+}
+
+/// The smallest window (pixels): the window sizer's minimum × the UI scale.
+fn min_size() -> (u32, u32) {
+    let ui = ui_scale();
+    let (w, h) = dreist_gui::app::MIN_WINDOW;
+    ((w as f64 * ui).round() as u32, (h as f64 * ui).round() as u32)
+}
+
 /// [re:46068f]: `LastEditorSize` (window pixels) or the
-/// default size × the UI scale.
+/// default size × the UI scale, no smaller than the minimum.
 fn startup_size() -> (u32, u32) {
     let o = dreist_editor::options::Options::load();
-    let ui = o.int("LastEditorScaleFactor", 100).clamp(50, 300) as f64 / 100.0;
+    let ui = ui_scale();
     let saved = o.string("LastEditorSize", "0,0");
     let parsed = saved.split_once(',').and_then(|(w, h)| Some((w.trim().parse::<u32>().ok()?, h.trim().parse::<u32>().ok()?))).filter(|(w, h)| *w > 0 && *h > 0);
-    parsed.unwrap_or(((SIZE.0 as f64 * ui).round() as u32, (SIZE.1 as f64 * ui).round() as u32))
+    let (w, h) = parsed.unwrap_or(((SIZE.0 as f64 * ui).round() as u32, (SIZE.1 as f64 * ui).round() as u32));
+    let min = min_size();
+    (w.max(min.0), h.max(min.1))
 }
 
 /// Store the editor's document in the bridge and the persisted session
@@ -447,13 +464,25 @@ impl Editor for DreistEditor {
         // one, and must not be the one to free it.
         let mut previews: std::collections::VecDeque<Arc<dreist_dsp::voice::SampleData>> = Default::default();
         let link = Box::new(move |ed: &mut DreistGui, cmds: Vec<Command>| {
-            // A new UI scale: ask the host for the new size (`size()` reads it).
+            // The host resized the view (its window's frame): the editor
+            // follows, and the window with the next frame.
+            let host = bridge.host_size.swap(0, Ordering::AcqRel);
+            if host != 0 {
+                let ui = ed.app.ui_scale.max(0.25);
+                ed.app.resize(((host >> 32) as f32 / ui).round() as i32, ((host & 0xffff_ffff) as f32 / ui).round() as i32);
+                ed.app.resize_request = true;
+                ed.app.dirty = true;
+            }
+            // A new UI scale or the window sizer: ask the host for the new
+            // size (`size()` reads it), unless it is the host's own.
             if ed.app.resize_request {
                 let (w, h) = ed.app.size();
                 let ui = ed.app.ui_scale.max(0.25);
                 let px = (((w as f32 * ui).round() as u64) << 32) | (h as f32 * ui).round() as u64;
                 size.store(px, std::sync::atomic::Ordering::Relaxed);
-                context.request_resize();
+                if px != host {
+                    context.request_resize();
+                }
             }
             let (mut structural, rt): (Vec<Command>, Vec<Command>) = cmds.into_iter().partition(Command::is_structural);
             if bridge.needs_newer_rebuild(&rt, &structural) {
@@ -618,6 +647,21 @@ impl Editor for DreistEditor {
         startup_size()
     }
 
+    fn min_size(&self) -> Option<(u32, u32)> {
+        Some(min_size())
+    }
+
+    /// Host->Plugin resizing (the host window's frame dragged): the editor
+    /// lays itself out at that size, at least the minimum.
+    fn set_size(&self, width: u32, height: u32) -> bool {
+        let min = min_size();
+        let (w, h) = (width.max(min.0), height.max(min.1));
+        let px = ((w as u64) << 32) | h as u64;
+        self.size.store(px, Ordering::Relaxed);
+        self.bridge.host_size.store(px, Ordering::Release);
+        (w, h) == (width, height)
+    }
+
     fn set_scale_factor(&self, _factor: f32) -> bool {
         // baseview follows the system scale factor itself.
         false
@@ -723,6 +767,22 @@ mod tests {
         *params.session.write().unwrap() = None;
         b.headless_sync();
         assert!(params.session.read().unwrap().is_none());
+    }
+
+    /// Host->Plugin resizing: the host may resize the editor down to the
+    /// window sizer's minimum; a smaller size is held there, and the size
+    /// reaches the open editor through the bridge.
+    #[test]
+    fn host_resizes_follow_with_a_minimum() {
+        let ed = DreistEditor { bridge: Arc::new(Bridge::default()), theme: String::new(), params: Arc::new(crate::DreistParams::default()), size: Default::default() };
+        let (mw, mh) = ed.min_size().expect("resizable");
+        let (w, h) = dreist_gui::app::MIN_WINDOW;
+        assert!(mw >= (w as f64 * 0.5) as u32 && mh >= (h as f64 * 0.5) as u32);
+        assert!(ed.set_size(mw + 300, mh + 200));
+        assert_eq!(ed.size(), (mw + 300, mh + 200));
+        assert_eq!(ed.bridge.host_size.swap(0, Ordering::AcqRel), ((mw as u64 + 300) << 32) | (mh as u64 + 200));
+        assert!(!ed.set_size(600, 400), "held at the minimum");
+        assert_eq!(ed.size(), (mw, mh));
     }
 
     /// Engines the audio thread retires are freed by the worker.
