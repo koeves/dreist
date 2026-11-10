@@ -557,6 +557,16 @@ impl FxPanel {
     pub fn sync(&mut self, app: &mut App, model: &Model, t: Target) {
         let fx = effects(model, t);
         self.rebuild(app, t, &fx);
+        // The chain fills its host whatever size the host has now (window
+        // resizes, splitters, the mixer's compact layout).
+        if let Some(host) = app.ctrl_mut(&self.host) {
+            let r = Rect::new(0, 0, host.rect.w, host.rect.h);
+            for c in host.children.iter_mut() {
+                if c.rect != r {
+                    c.set_rect(r);
+                }
+            }
+        }
         // Chain header: Active / Mix, and the next / previous buttons
         // [re:100883] — prev / next enabled with two or more presets while the
         // chain is active.

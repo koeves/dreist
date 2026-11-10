@@ -389,3 +389,111 @@ fn stage_view() {
     let _ = ed.render_frame(1.0);
     stage(&env("NAME").unwrap_or_else(|| "view".into()), &ed.render(1.0));
 }
+
+/// Every scroll container under `c` (paths).
+fn scrollables(ed: &Editor) -> Vec<Vec<usize>> {
+    fn rec(c: &Ctrl, path: &mut Vec<usize>, out: &mut Vec<Vec<usize>>) {
+        if dreist_gui::scroll::scrollable(c) {
+            out.push(path.clone());
+        }
+        for (i, k) in c.children.iter().enumerate() {
+            path.push(i);
+            rec(k, path, out);
+            path.pop();
+        }
+    }
+    let mut out = Vec::new();
+    rec(&ed.app.root, &mut Vec::new(), &mut out);
+    out
+}
+
+/// Each scroll container's offset within its range, and its children
+/// spanning a one-axis view.
+fn check_scrolled(ed: &Editor, what: &str) {
+    for p in scrollables(ed) {
+        let c = ed.app.ctrl(&p).unwrap();
+        let (cw, ch) = dreist_gui::scroll::content(c);
+        let v = dreist_gui::scroll::view(c);
+        let (sx, sy) = dreist_gui::scroll::offset(c);
+        assert!(sx <= (cw - v.w).max(0) && sy <= (ch - v.h).max(0), "{what}: {} offset ({sx},{sy}) past content {cw}x{ch} in view {v:?}", c.name);
+    }
+}
+
+/// Click the shown mixer mode button `mode` (Mix / Sends / Effects).
+fn mixer_mode(ed: &mut Editor, mode: usize) {
+    let shown: Vec<Vec<usize>> = {
+        fn rec(app: &dreist_gui::app::App, c: &Ctrl, path: &mut Vec<usize>, out: &mut Vec<Vec<usize>>) {
+            if c.name == "ModeGroup" && app.shown(path) {
+                out.push(path.clone());
+            }
+            for (i, k) in c.children.iter().enumerate() {
+                path.push(i);
+                rec(app, k, path, out);
+                path.pop();
+            }
+        }
+        let mut v = Vec::new();
+        rec(&ed.app, &ed.app.root, &mut Vec::new(), &mut v);
+        v
+    };
+    if let Some(g) = shown.first() {
+        let b = [g.clone(), vec![mode]].concat();
+        if ed.app.ctrl(&b).is_some_and(|c| c.enabled) {
+            ed.handle(&dreist_gui::app::UiEvent::Clicked { path: b, name: String::new(), id: 0, on: true });
+        }
+    }
+    ed.sync();
+    let _ = ed.render_frame(1.0);
+}
+
+/// Scrolled views follow live resizes and splitter drags: offsets stay in
+/// range after every step, and scrolled back they look like an editor
+/// opened at the final size (mixers in every mode, transmod, the layer
+/// parameter row).
+#[test]
+fn scrolled_views_follow_live_resizes() {
+    // Short editor tabs so the mixers are compact (Effects mode exists).
+    let user = layout((1150, 650), &[("padSplitterAS", 200)]);
+    for (tab, mode, ut) in [(5, 2, 1), (5, 1, 0), (5, 0, 0), (4, 2, 0), (4, 0, 1), (3, 2, 0), (3, 1, 0)] {
+        let Some(mut ed) = opened(&user, tab, false) else { return };
+        ed.model.utility_tab = ut;
+        mixer_mode(&mut ed, mode);
+        let what = format!("tab {tab} mode {mode} utility {ut}");
+        let scroll_all = |ed: &mut Editor, x: i32, y: i32| {
+            for p in scrollables(ed) {
+                if let Some(c) = ed.app.ctrl_mut(&p) {
+                    dreist_gui::scroll::scroll_to(c, x, y);
+                }
+            }
+            ed.app.dirty = true;
+            let _ = ed.render_frame(1.0);
+        };
+        scroll_all(&mut ed, 100_000, 100_000);
+        for (w, h) in [(1400, 760), (1920, 1200), (1300, 700), (1150, 650)] {
+            resize_steps(&mut ed, (w, h), 3);
+            ed.sync();
+            check_scrolled(&ed, &format!("{what} at {w}x{h}"));
+            scroll_all(&mut ed, 100_000, 100_000);
+        }
+        drag_split(&mut ed, "utilitySplitAS", 420);
+        drag_split(&mut ed, "padSplitterAS", 240);
+        ed.sync();
+        check_scrolled(&ed, &format!("{what} after splitters"));
+        resize_steps(&mut ed, (1250, 700), 2);
+        // A tall panel goes back to Mix; pick the mode again.
+        mixer_mode(&mut ed, mode);
+        scroll_all(&mut ed, 0, 0);
+        let live = ed.render(1.0);
+        let s = splits(&ed);
+        let mut fresh = opened(&layout(ed.app.size(), &s), tab, false).unwrap();
+        fresh.model.utility_tab = ut;
+        mixer_mode(&mut fresh, mode);
+        let want = fresh.render(1.0);
+        let (n, worst, at) = diff(&live, &want);
+        if n > 4 {
+            stage(&format!("scrolled-live-{tab}-{mode}-{ut}"), &live);
+            stage(&format!("scrolled-fresh-{tab}-{mode}-{ut}"), &want);
+        }
+        assert!(n <= 4, "{what}: {n} pixels off (worst by {worst} in {at:?}), splitters {s:?}");
+    }
+}

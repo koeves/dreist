@@ -72,8 +72,8 @@ size-1920x1200-tab-3-normal bd18c5ca0bbf2d39
 size-1920x1200-tab-3-sampler b4ff36674228d37b
 size-1920x1200-tab-4-normal eaabf8c32eb903a2
 size-1920x1200-tab-4-sampler 4f40f5903be57a24
-size-1920x1200-tab-5-normal d96bae63b1eca7b5
-size-1920x1200-tab-5-sampler 285ca79ca36c230f
+size-1920x1200-tab-5-normal 95a8663716d1b2e4
+size-1920x1200-tab-5-sampler a79da7d8a8e312ba
 size-1920x1200-tab-6-normal 2086b2d3f5f73056
 size-1920x1200-tab-6-sampler e1da6fb831a62710
 transmod d37e33e54f0ab44a
