@@ -33,8 +33,9 @@ dreist-engine = { path = "commons/crates/dreist-engine" }
 dreist-gui = { path = "commons/crates/dreist-gui" }
 dreist-editor = { path = "crates/dreist-editor" }
 dreist-testkit = { path = "commons/crates/dreist-testkit" }
-roxmltree = "0.20"
-thiserror = "2"
+# The system side (audio, MIDI, dialogs, session file, local time): it owns
+# the third-party versions, so none are declared here.
+dreist-host = { path = "commons/crates/dreist-host" }
 
 [profile.release]
 strip = false

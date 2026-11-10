@@ -11,11 +11,10 @@ dreist-formats.workspace = true
 dreist-engine.workspace = true
 dreist-dsp.workspace = true
 dreist-gui.workspace = true
-libc = "0.2"
-rfd = { version = "0.18", optional = true }
+dreist-host.workspace = true
 
 [features]
-window = ["dreist-gui/window", "dep:rfd"]
+window = ["dreist-gui/window", "dreist-host/dialog"]
 
 [[example]]
 name = "editor"

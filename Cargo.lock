@@ -841,9 +841,8 @@ dependencies = [
  "dreist-engine",
  "dreist-formats",
  "dreist-gui",
+ "dreist-host",
  "dreist-testkit",
- "libc",
- "rfd",
 ]
 
 [[package]]
@@ -880,20 +879,29 @@ dependencies = [
 ]
 
 [[package]]
-name = "dreist-plugin"
+name = "dreist-host"
 version = "0.2.2"
 dependencies = [
  "clap-sys",
  "cpal",
+ "libc",
+ "midir",
+ "rfd",
+ "serde",
+ "serde_json",
+]
+
+[[package]]
+name = "dreist-plugin"
+version = "0.2.2"
+dependencies = [
  "dreist-dsp",
  "dreist-editor",
  "dreist-engine",
  "dreist-formats",
  "dreist-gui",
- "midir",
+ "dreist-host",
  "nih_plug",
- "serde",
- "serde_json",
 ]
 
 [[package]]

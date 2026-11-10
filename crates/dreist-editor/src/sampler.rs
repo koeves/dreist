@@ -93,43 +93,8 @@ pub enum TakeAction {
 pub fn record_dir(opts: &crate::options::Options) -> std::path::PathBuf {
     let custom = opts.string("SamplerRecordPath", "");
     let base = if custom.is_empty() { crate::options::documents_dir().join("Sampler Captures") } else { std::path::PathBuf::from(custom) };
-    let (y, mo, d, _, _, _) = now_local();
+    let (y, mo, d, _, _, _) = dreist_host::time::now_local();
     base.join(format!("{y:04}-{mo:02}-{d:02}"))
-}
-
-/// Local civil time (year, month, day, hour, minute, second), as the
-/// original's `strftime` formats; UTC when the C library cannot tell.
-fn now_local() -> (i64, u32, u32, u32, u32, u32) {
-    let secs = std::time::SystemTime::now().duration_since(std::time::UNIX_EPOCH).map(|d| d.as_secs() as i64).unwrap_or(0);
-    let t = secs as libc::time_t;
-    // SAFETY: `tm` is plain data; the C call fills it from `t`.
-    let mut tm: libc::tm = unsafe { std::mem::zeroed() };
-    #[cfg(unix)]
-    let ok = !unsafe { libc::localtime_r(&t, &mut tm) }.is_null();
-    #[cfg(windows)]
-    let ok = unsafe { libc::localtime_s(&mut tm, &t) } == 0;
-    #[cfg(not(any(unix, windows)))]
-    let ok = false;
-    if ok {
-        return (tm.tm_year as i64 + 1900, tm.tm_mon as u32 + 1, tm.tm_mday as u32, tm.tm_hour as u32, tm.tm_min as u32, tm.tm_sec as u32);
-    }
-    civil_utc(secs)
-}
-
-/// UTC civil time of a Unix time.
-fn civil_utc(secs: i64) -> (i64, u32, u32, u32, u32, u32) {
-    let (days, rem) = (secs.div_euclid(86400), secs.rem_euclid(86400));
-    // Howard Hinnant's civil_from_days.
-    let z = days + 719_468;
-    let era = z.div_euclid(146_097);
-    let doe = z - era * 146_097;
-    let yoe = (doe - doe / 1460 + doe / 36524 - doe / 146_096) / 365;
-    let doy = doe - (365 * yoe + yoe / 4 - yoe / 100);
-    let mp = (5 * doy + 2) / 153;
-    let d = (doy - (153 * mp + 2) / 5 + 1) as u32;
-    let m = if mp < 10 { mp + 3 } else { mp - 9 } as u32;
-    let y = yoe + era * 400 + (m <= 2) as i64;
-    (y, m, d, (rem / 3600) as u32, (rem / 60 % 60) as u32, (rem % 60) as u32)
 }
 
 /// [re:324b22]: a take's file name, `<target pad name> Take <n> <HH-MM-SS>`
@@ -308,7 +273,7 @@ impl Sampler {
         let dir = record_dir(opts);
         std::fs::create_dir_all(&dir).ok()?;
         self.taken += 1;
-        let (_, _, _, h, mi, se) = now_local();
+        let (_, _, _, h, mi, se) = dreist_host::time::now_local();
         let e = model.engine;
         let target = self.target.unwrap_or((e, model.pad[e], model.layer[e]));
         let pad = model.pad_name(target.0, target.1).unwrap_or_else(|| format!("Pad {}", target.1 + 1));
@@ -569,8 +534,8 @@ mod tests {
     #[test]
     fn take_names_lead_with_the_pad() {
         assert_eq!(take_name("Pad 1", 1, (12, 58, 24)), "Pad 1 Take 1 12-58-24");
-        assert_eq!(civil_utc(0), (1970, 1, 1, 0, 0, 0));
-        assert_eq!(civil_utc(1_452_171_504), (2016, 1, 7, 12, 58, 24));
+        assert_eq!(dreist_host::time::civil_utc(0), (1970, 1, 1, 0, 0, 0));
+        assert_eq!(dreist_host::time::civil_utc(1_452_171_504), (2016, 1, 7, 12, 58, 24));
     }
 
     #[test]
