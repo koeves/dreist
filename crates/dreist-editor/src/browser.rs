@@ -691,6 +691,20 @@ fn hidden(p: &Path) -> bool {
     p.file_name().map(|n| n.to_string_lossy().starts_with('.')).unwrap_or(true)
 }
 
+/// [re:5a7796]: the app's documents folder, its "Sampler Captures"
+/// (where takes are saved), the user's Documents and Desktop, listed
+/// whether they exist yet or not. The first is labelled with the app's
+/// name, the others with their folder names.
+fn places(home: &Path) -> Vec<(String, PathBuf)> {
+    let docs = crate::options::documents_dir();
+    vec![
+        (dreist_formats::profile::get().product.to_string(), docs.clone()),
+        ("Sampler Captures".to_string(), docs.join("Sampler Captures")),
+        ("Documents".to_string(), home.join("Documents")),
+        ("Desktop".to_string(), home.join("Desktop")),
+    ]
+}
+
 fn sources(favourites: &[PathBuf], searches: &[String], shortlists: &[(String, Vec<PathBuf>)]) -> Vec<Source> {
     let mut v = Vec::new();
     let home = dreist_formats::paths::home();
@@ -699,7 +713,7 @@ fn sources(favourites: &[PathBuf], searches: &[String], shortlists: &[(String, V
         v.push(Source { label: cat.into(), path: None, header: true, cat, colour: 0 });
         let items: Vec<(String, PathBuf)> = match cat {
             "Content" => subdirs(&content_dir()).into_iter().map(|p| (p.file_name().unwrap().to_string_lossy().into_owned(), p)).collect(),
-            "Places" => ["", "Desktop", "Documents", "Music"].iter().map(|d| (if d.is_empty() { "Home".to_string() } else { d.to_string() }, home.join(d))).filter(|(_, p)| p.is_dir()).collect(),
+            "Places" => places(&home),
             "Drives" => subdirs(Path::new("/Volumes")).into_iter().map(|p| (p.file_name().unwrap().to_string_lossy().into_owned(), p)).collect(),
             "Favourites" => favourites.iter().map(|p| (p.file_name().map(|n| n.to_string_lossy().into_owned()).unwrap_or_default(), p.clone())).collect(),
             // Searches carry the terms in a pseudo path.

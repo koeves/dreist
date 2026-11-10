@@ -3451,9 +3451,11 @@ fn browser_source_list_item_menu() {
     ed.handle(&UiEvent::MenuSelected { anchor: list.clone(), name: String::new(), index: yes });
     assert!(row(&ed, &new).is_none());
     // Places rows offer Reveal only.
-    let (r, _) = row(&ed, "Home").unwrap();
+    let (r, _) = row(&ed, "Desktop").unwrap();
     ed.handle(&UiEvent::Mouse { path: list.clone(), overload: "BrowserSourceList".into(), kind: MouseKind::RightDown, x: 5.0, y: r as f32 * 25.0 + 3.0 });
-    assert_eq!(ed.app.menu.as_ref().unwrap().items, vec!["Reveal \"Home\" in Finder".to_string()]);
+    assert_eq!(ed.app.menu.as_ref().unwrap().items, vec!["Reveal \"Desktop\" in Finder".to_string()]);
+    // Places: the app's documents folder, its takes folder, Documents, Desktop.
+    assert!(row(&ed, "Sampler Captures").is_some() && row(&ed, "Home").is_none());
     let _ = std::fs::remove_dir_all(&dir);
 }
 
