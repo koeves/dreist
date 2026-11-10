@@ -133,6 +133,11 @@ struct SliceState {
     multi_layer: bool,
 }
 
+/// The slicing sensitivity until the user moves the slider: the allocation
+/// manager starts at 0.75 [re:18456f] [re:2b9862] and keeps it for the
+/// session (16 chops alike).
+pub const DEFAULT_SENSITIVITY: f32 = 0.75;
+
 /// Grab distance of the Start and End markers, in pixels.
 const REGION_GRAB: f32 = 6.0;
 /// The smallest region, in frames.
@@ -173,7 +178,7 @@ impl Slicer {
             analysis: SliceFile::new(0),
             slices: Vec::new(),
             mode: 0,
-            sensitivity: 0.5,
+            sensitivity: DEFAULT_SENSITIVITY,
             divisions: 16,
             auto_tempo: true,
             multi_layer: false,
@@ -270,7 +275,13 @@ impl Slicer {
                 a.bars = c.bars;
                 a
             }
-            None => SliceFile::load(&gsa).unwrap_or_else(|| SliceFile::analyze(&data.left, data.right.as_deref())),
+            // No `.gsa` ([re:3df5f2]): a fresh analysis whose tempo, bars and
+            // beats are guessed from the length or the file name.
+            None => SliceFile::load(&gsa).unwrap_or_else(|| {
+                let mut a = SliceFile::analyze(&data.left, data.right.as_deref());
+                (a.bpm, a.bars, a.beats, _) = dreist_engine::engine::guess_key_data(n as u32, data.sample_rate, Some(file));
+                a
+            }),
         };
         self.rex = rex;
         if analysis.end == 0 || analysis.end as usize > n {
@@ -290,9 +301,8 @@ impl Slicer {
         self.region_drag = None;
         self.drag_slice = None;
         self.timeline_beats = crate::timeline::beats_mode("Slicer");
-        if self.auto_tempo {
-            self.tempo_from_bars();
-        }
+        // The panel shows the analysis' tempo, bars and beats as they are;
+        // Auto only links them when one is edited ([re:168d6a]).
         self.reslice();
         true
     }
