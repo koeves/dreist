@@ -148,6 +148,9 @@ pub struct Inspector {
     zoom_mode: i64,
     /// The layer and file the auto zoom last ran for.
     zoom_key: Option<(usize, usize, usize, PathBuf)>,
+    /// Views zoomed by hand with the auto zoom off, per (engine, pad,
+    /// layer) and the file shown ([re:1b1720]).
+    zoom_memory: std::collections::HashMap<(usize, usize, usize), (PathBuf, (f32, f32))>,
     /// Envelope overlays (options `AmpEnvVisible` / `FreeEnvVisible`).
     env_visible: (bool, bool),
     /// Envelope handle drag: (Amp?, handle 0..7).
@@ -202,6 +205,7 @@ impl Inspector {
                 zoom_drag: None,
                 zoom_mode: 0,
                 zoom_key: None,
+                zoom_memory: Default::default(),
                 env_visible: (true, true),
                 env_drag: None,
                 timeline_beats: crate::timeline::beats_mode("PadEdit"),
@@ -266,6 +270,7 @@ impl Inspector {
             zoom_drag: None,
             zoom_mode: crate::options::Options::load().int("WaveDisplayZoomMode", 0),
             zoom_key: None,
+            zoom_memory: Default::default(),
             env_visible: {
                 let o = crate::options::Options::load();
                 (o.bool("AmpEnvVisible", true), o.bool("FreeEnvVisible", true))
@@ -371,6 +376,16 @@ impl Inspector {
         }
     }
 
+    /// [re:1b1720]: a view zoomed by hand with the auto zoom off is kept
+    /// for the selected layer.
+    fn remember_view(&mut self) {
+        if self.zoom_mode == 0 {
+            if let Some((e, p, l, f)) = &self.zoom_key {
+                self.zoom_memory.insert((*e, *p, *l), (f.clone(), self.view));
+            }
+        }
+    }
+
     /// SP / EP / LS / LE (the toolbar names PS / PE / LS / LE):
     /// hidden, shown only in MIDI learn mode ([re:7fd1e4]
     /// [re:cca449]) as learn targets for the markers.
@@ -416,6 +431,14 @@ impl Inspector {
                 self.zoom_key = key;
                 self.view = (0.0, 1.0);
                 self.apply_auto_zoom(model);
+                // [re:a29974]: with the auto zoom off the layer's own view
+                // comes back; a new sample in the pad or layer starts from
+                // the whole file again ([re:4de987]).
+                if let Some((e, p, l, f)) = self.zoom_key.as_ref().filter(|_| self.zoom_mode == 0) {
+                    if let Some((_, v)) = self.zoom_memory.get(&(*e, *p, *l)).filter(|(mf, _)| mf == f) {
+                        self.view = *v;
+                    }
+                }
             }
         }
         // Zoom bar states: the mode group, and Zoom in only while the
@@ -653,6 +676,7 @@ impl Inspector {
                 let at = (self.view.0 + mx * self.view.1).clamp(0.0, 1.0);
                 let tw = find_tagged(&app.root, "WaveZoomSlider").map(|c| c.rect.w as f32).unwrap_or(w);
                 self.view = crate::zoomslider::zoom_in(self.view, if *dy > 0.0 { 2.0 } else { 0.5 }, at, tw, frames);
+                self.remember_view();
                 true
             }
             // Zoom bar (zoom in by 2 / 0.5 around 0.5).
@@ -660,6 +684,7 @@ impl Inspector {
                 let Some((_, frames)) = self.layer_frames(model) else { return true };
                 let tw = find_tagged(&app.root, "WaveZoomSlider").map(|c| c.rect.w as f32).unwrap_or(1.0);
                 self.view = crate::zoomslider::zoom_in(self.view, if name == "ZoomInButton" { 2.0 } else { 0.5 }, 0.5, tw, frames);
+                self.remember_view();
                 true
             }
             // A / F: [re:682bc8] reads `AmpEnvVisible` /
@@ -697,6 +722,7 @@ impl Inspector {
                         let Some((mode, last)) = self.zoom_drag else { return false };
                         self.view = crate::zoomslider::drag(self.view, tw, mode, last, *x, min);
                         self.zoom_drag = Some((mode, *x));
+                        self.remember_view();
                         true
                     }
                     dreist_gui::app::MouseKind::Up => self.zoom_drag.take().is_some(),
@@ -706,12 +732,14 @@ impl Inspector {
             // Double click [re:009295]: the whole file.
             UiEvent::DoubleClicked { path, .. } if app.ctrl(path).is_some_and(|c| c.overload == "WaveDisplayZoomSlider" && c.attr("layerZoom").is_some()) => {
                 self.view = (0.0, 1.0);
+                self.remember_view();
                 true
             }
             // Wheel [re:207f1c]: the thumb moves 5 px.
             UiEvent::Wheel { path, overload, dy } if overload == "WaveDisplayZoomSlider" && app.ctrl(path).is_some_and(|c| c.attr("layerZoom").is_some()) => {
                 let Some(tw) = app.ctrl(path).map(|c| c.rect.w as f32) else { return false };
                 self.view = crate::zoomslider::clamp((self.view.0 + (if *dy > 0.0 { 5.0 } else { -5.0 }) / tw.max(1.0), self.view.1));
+                self.remember_view();
                 true
             }
             UiEvent::ValueChanged { path, name, value, .. } => {
