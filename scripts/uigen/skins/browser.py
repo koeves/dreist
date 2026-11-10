@@ -18,7 +18,9 @@ def browser():
         icon("PrevLocnButton", (W - 31, 24, 14, 22), "", "Back", style="TransparentIconButtonStyle", pin="rt", id=100000),
         icon("NextLocnButton", (W - 16, 24, 14, 22), "", "Forward", style="TransparentIconButtonStyle", pin="rt", id=100000),
         N("SplitterPanel", "SplitView", (0, 46, W, H - 46), pin="lrtb", style="InvisibleStyle", SplitterPanelStyle="SplitterStyle",
-          intSplitPosition=115, intSplitterDim=3, intMinSize1=125, optIsVertical=False, optDbClkCollapse1=False,
+          # The file pane keeps room for its toolbar (182 px) in the
+          # narrowest left column; the source list gives way first.
+          intSplitPosition=115, intSplitterDim=3, intMinSize1=182, optIsVertical=False, optDbClkCollapse1=False,
           optSnapCollapse1=False, kids=[
               N("Panel", "SourceList", (0, 0, 115, H - 46), pin="lrtb", displayName="SplitterPanel0",
                 overloadClass="BrowserSourceList", style="InvisibleStyle"),
