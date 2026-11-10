@@ -1,5 +1,70 @@
 # Changelog
 
+## [0.2.2] - 2026-11-10
+
+A UI pass against the shipped original (skins, manual, tutorial videos and the decompiled
+binary): scrolling where panels overflow, the effect panels, control drawing, page and dialog
+layouts and the controls' behaviour.
+
+### Summary
+
+- **Scrolling**: the transmod list, the layer parameter row, every mixer (Mix, Sends,
+  Effects), effect chains, the browser's source list, the scene table and the device lists
+  scroll with the wheel, shift + wheel and trackpad swipes, with the skin's scroll bars; they
+  keep their place and fill their panels through window resizes and splitter moves.
+- **Effects**: all 47 effect panels follow the shipped layouts (knob sizes and positions,
+  captions, popups, the Input / Mix / Output column), with gain-reduction meters on the
+  compressors and limiter and live response curves on the EQs and filters; card headers in
+  title case with the preset name and the type menu / preset arrows.
+- **Controls**: transmod knobs and sliders draw the modulation ring, depth zone and handles
+  and a position mark; framed scroll thumbs, stepper and disclosure arrows as the original.
+- **Pages and dialogs**: dialogs, browser, sampler, slicer, mixer strip variants, pattern
+  toolbar, scenes, song, mapping, pad editor and transmod buttons follow the shipped skins.
+- **Behaviour**: knobs drag relative to the pointer (shift for fine), transmod depth drags
+  clamp and snap to the base, option-drags keep the modulation end, sliders jump to a press,
+  the wheel steps controls, double clicks reset without dragging, ctrl-click opens the context
+  menu, popups open on press and menu items are picked on release, Escape closes menus, the
+  steps buttons and the tempo box (drag, tap, double-click to type, 20–250) work as the
+  original.
+
+### Features
+
+- **editor:** Scroll the transmod list, layer parameters and effect chains
+- **editor:** Scroll every mixer view, the browser sources, the scene table and device lists
+- **ui:** Transmod layers, framed scroll thumbs, stepper and disclosure arrows
+- **editor:** Stock controls behave as the original's
+- **fx:** Effect panels follow the shipped skins
+- **ui:** Dialogs follow the shipped layouts and captions
+- **ui:** Browser, sampler and slicer follow the shipped skins
+- **ui:** Shipped tab strip rects; header console anchors
+- **ui:** Song, scenes, mapping and engine selector follow the shipped skins
+- **ui:** Mixer strips laid out as the shipped size variants
+- **ui:** Pattern toolbar, keys, graph lanes and convertor as shipped
+- **ui:** Pad editor headers, wave toolbar, splits and metadata as shipped
+- **ui:** Transmod retrigger and step-shape icons, Gain captions, trigger dialog
+- **editor:** Option-drags of a knob's base keep the modulation end
+- **ui:** Effect panel meters, plots, popups and knob marks as the original
+
+### Fixes
+
+- **editor:** Scrolled views and effect chains follow resizes
+
+### Documentation
+
+- **readme:** New screenshots
+
+### Tests
+
+- **editor:** Fxshot renders effect cards to PNG
+- **editor:** Screens golden for the shipped page layouts
+- **editor:** Menu items are picked on release
+- **editor:** Screens golden for the knob marks and effect panels
+- **editor:** The tap tempo test tolerates late wake-ups on a loaded machine
+
+### Build and CI
+
+- Dreist-commons v0.2.1
+
 ## [0.2.1] - 2026-11-10
 
 v0.2.0's release run stopped at the generated-UI check; this release carries the same changes
