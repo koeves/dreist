@@ -64,6 +64,129 @@ fn main() {
         }
     }
     println!("mouse move {:.3} ms ({evs} events)", t.elapsed().as_secs_f64() * 1000.0 / 400.0);
+    menu_hover(&mut ed, scale, n);
+    clicks(&mut ed, scale, n);
+}
+
+/// One input event as the window delivers it: the editor's handling, the
+/// tooltip query, the editor link's frame and the repaint. Returns the
+/// time and whether the whole window was repainted.
+fn deliver(ed: &mut Editor, scale: f32, events: Vec<dreist_gui::app::UiEvent>, t: std::time::Instant) -> (f64, bool) {
+    for ev in events {
+        ed.handle(&ev);
+    }
+    let path = ed.app.tooltip_target();
+    ed.handle(&dreist_gui::app::UiEvent::ToolTip { path });
+    let _ = ed.take_commands();
+    ed.animate();
+    ed.set_playback(false, [None; 8], None);
+    ed.update_meters(&dreist_engine::Meters::default());
+    let full = ed.app.dirty;
+    let _ = ed.render_frame(scale);
+    (t.elapsed().as_secs_f64() * 1000.0, full)
+}
+
+/// A press and release at (x, y): (press ms, release ms, full repaints).
+fn click(ed: &mut Editor, scale: f32, x: f32, y: f32) -> (f64, f64, usize) {
+    use dreist_gui::app::MouseButton;
+    let t = std::time::Instant::now();
+    let ev = ed.app.mouse_move(x, y);
+    let _ = deliver(ed, scale, ev, t);
+    let t = std::time::Instant::now();
+    let ev = ed.app.mouse_down(MouseButton::Left);
+    let (down, f0) = deliver(ed, scale, ev, t);
+    let t = std::time::Instant::now();
+    let ev = ed.app.mouse_up(MouseButton::Left);
+    let (up, f1) = deliver(ed, scale, ev, t);
+    (down, up, f0 as usize + f1 as usize)
+}
+
+/// Clicks: the main menu opened and closed again by a click beside it, a
+/// knob pressed and released, the first visible plain buttons toggled
+/// twice (on and back off).
+fn clicks(ed: &mut Editor, scale: f32, n: usize) {
+    let centre = |ed: &Editor, p: &[usize]| {
+        let r = ed.app.abs_rect(p);
+        (r.x as f32 + r.w as f32 / 2.0, r.y as f32 + r.h as f32 / 2.0)
+    };
+    fn report(ed: &mut Editor, n: usize, what: &str, f: &mut dyn FnMut(&mut Editor) -> (f64, f64, usize)) {
+        let (mut d, mut u, mut full) = (0.0, 0.0, 0);
+        let k = n.clamp(1, 10);
+        for _ in 0..k {
+            let (a, b, c) = f(ed);
+            d += a;
+            u += b;
+            full += c;
+        }
+        println!("click {what}: press {:.2} ms, release {:.2} ms (sums per round), {full} full repaints in {k} rounds", d / k as f64, u / k as f64);
+    }
+    let Some(menu) = ed.app.root.path_of("ToolButton") else { return };
+    let (mx, my) = centre(ed, &menu);
+    report(ed, n, "menu open + close", &mut |ed| {
+        let a = click(ed, scale, mx, my);
+        let b = click(ed, scale, 5.0, 5.0);
+        (a.0 + b.0, a.1 + b.1, a.2 + b.2)
+    });
+    fn find(c: &dreist_gui::Ctrl, class: &str, path: &mut Vec<usize>, out: &mut Vec<Vec<usize>>) {
+        if !c.visible || !c.enabled {
+            return;
+        }
+        if c.class == class && !c.passive {
+            out.push(path.clone());
+        }
+        for (i, k) in c.children.iter().enumerate() {
+            path.push(i);
+            find(k, class, path, out);
+            path.pop();
+        }
+    }
+    let mut knobs = Vec::new();
+    find(&ed.app.root, "CtrlKnob", &mut Vec::new(), &mut knobs);
+    if let Some(k) = knobs.first() {
+        let (x, y) = centre(ed, k);
+        report(ed, n, "knob", &mut |ed| click(ed, scale, x, y));
+    }
+    for name in ["MetroButton", "MuteButton"] {
+        let Some(p) = ed.app.root.path_of(name).filter(|p| ed.app.shown(p)) else { continue };
+        let (x, y) = centre(ed, &p);
+        report(ed, n, name, &mut |ed| {
+            let a = click(ed, scale, x, y);
+            let b = click(ed, scale, x, y);
+            (a.0 + b.0, a.1 + b.1, a.2 + b.2)
+        });
+    }
+}
+
+/// The main menu open, the pointer moving from item to item as the window
+/// drives it: the move and its tooltip query, the editor link's frame
+/// (animations, transport, meters) and the repaint.
+fn menu_hover(ed: &mut Editor, scale: f32, n: usize) {
+    use dreist_gui::app::UiEvent;
+    let Some(p) = ed.app.root.path_of("ToolButton") else { return };
+    ed.handle(&UiEvent::Clicked { path: p, name: "ToolButton".into(), id: 0, on: false });
+    let Some(m) = ed.app.menu.clone() else { return };
+    let rows: Vec<f32> = (0..m.items.len()).filter(|&i| !m.items[i].is_empty()).map(|i| m.y + i as f32 * 20.0 + 10.0).collect();
+    let _ = ed.render_frame(scale);
+    let (mut full, mut ms) = (0, Vec::new());
+    for k in 0..n.max(rows.len()) {
+        let t = std::time::Instant::now();
+        for ev in ed.app.mouse_move(m.x + m.w / 2.0, rows[k % rows.len()]) {
+            ed.handle(&ev);
+        }
+        let path = ed.app.tooltip_target();
+        ed.handle(&UiEvent::ToolTip { path });
+        let _ = ed.take_commands();
+        ed.animate();
+        ed.set_playback(false, [None; 8], None);
+        ed.update_meters(&dreist_engine::Meters::default());
+        full += ed.app.dirty as usize;
+        let _ = ed.render_frame(scale);
+        ms.push(t.elapsed().as_secs_f64() * 1000.0);
+    }
+    ms.sort_by(f64::total_cmp);
+    let mean = ms.iter().sum::<f64>() / ms.len() as f64;
+    println!("menu hover {mean:.2} ms (max {:.2}), {full} full repaints of {}", ms[ms.len() - 1], ms.len());
+    ed.app.menu = None;
 }
 
 /// Playback frames as the plugin's editor link drives them: `PLAYBENCH=1`.
