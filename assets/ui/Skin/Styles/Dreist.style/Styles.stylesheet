@@ -177,9 +177,9 @@
     <CtrlStyle name="EngineSelectorSoloIndicatorStyle" parentStyle0="CornerRoundingStyle" colAltFill="SoloSpark" optDrawShadow="false" optDrawBorder="false" realCornerRounding="3" colFill="Transparent" />
 
     <!-- Pads -->
-    <CtrlStyle name="PadStyle" parentStyle0="CornerRounding5Style" optDrawBorder="false" realBorderWidth="1" realDisabledAlpha="0.5" font="StandardBold" enumTextShortenAlgorithm="middle" colFill="EditorMedium" colBorder="EditorMedium" colText="PanelBrightest" colAltFill="PanelBrightest" />
+    <CtrlStyle name="PadStyle" parentStyle0="CornerRounding5Style" realCornerRounding="5" optDrawBorder="false" realBorderWidth="1" realDisabledAlpha="0.5" font="StandardBold" enumTextShortenAlgorithm="middle" colFill="EditorMedium" colBorder="EditorMedium" colText="PanelBrightest" colAltFill="PanelBrightest" />
     <CtrlStyle name="PadSelectedStyle" parentStyle0="PadStyle" colFill="EditorAltBrightest" colBorder="EditorAltBrightest" />
-    <CtrlStyle name="PadOverlayStyle" parentStyle0="CornerRounding5Style" optDrawBorder="false" realDisabledAlpha="0.2" colFill="PanelBright" colAltFill="PanelBright" />
+    <CtrlStyle name="PadOverlayStyle" parentStyle0="CornerRounding5Style" realCornerRounding="5" optDrawBorder="false" realDisabledAlpha="0.2" colFill="PanelBright" colAltFill="PanelBright" />
     <CtrlStyle name="PadOnStyle" parentStyle0="PadStyle" colFill="EditorAltMedium" colBorder="EditorAltMedium" />
     <CtrlStyle name="PadOnSelectedStyle" parentStyle0="PadStyle" colFill="EditorAltMedium" optDrawBorder="true" realBorderWidth="2" colBorder="PanelBrightest" colAltBorder="PanelBrightest" />
     <CtrlStyle name="PadOffStyle" parentStyle0="PadStyle" />
@@ -190,7 +190,7 @@
     <CtrlStyle name="PadNameLabelSelectedStyle" parentStyle0="PadNameLabelStyle" colText="EditorDarkest" />
     <CtrlStyle name="PadStepNameLabelStyle" parentStyle0="PadNameLabelStyle" font="Small" colText="PanelBrightest" />
     <CtrlStyle name="PadStepNameLabelSelectedStyle" parentStyle0="PadStepNameLabelStyle" colText="EditorDarkest" />
-    <CtrlStyle name="PadLayerIndicatorStyle" parentStyle0="ShadowStyle" optDrawBorder="true" enumDisabledDrawMode="NormalDrawing" colFill="EditorDarkestAlpha03" colBorder="EditorDarkestAlpha03" colAltFill="EditorAltBrightest" colAltBorder="EditorAltBrightest" />
+    <CtrlStyle name="PadLayerIndicatorStyle" parentStyle0="ShadowStyle" optDrawBorder="true" enumDisabledDrawMode="NormalDrawing" colFill="EditorDarkestAlpha03" colBorder="Transparent" colAltFill="EditorAltBrightest" colAltBorder="EditorAltBrightest" />
     <CtrlStyle name="PadLayerIndicatorSelectedStyle" parentStyle0="PadLayerIndicatorStyle" colFill="EditorAltDarkestAlpha075" colBorder="EditorAltDarkest" colAltFill="EditorDarkest" colAltBorder="EditorDarkest" />
     <CtrlStyle name="PadLayerMutedIndicatorStyle" parentStyle0="PadLayerIndicatorStyle" colAltFill="MuteSpark" colAltBorder="MuteSpark" />
     <CtrlStyle name="PadLayerSoloedIndicatorStyle" parentStyle0="PadLayerIndicatorStyle" colAltFill="SoloSpark" colAltBorder="SoloSpark" />

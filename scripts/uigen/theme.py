@@ -352,10 +352,10 @@ S("EngineSelectorMuteIndicatorStyle", "CornerRoundingStyle", colAltFill="MuteSpa
 S("EngineSelectorSoloIndicatorStyle", "CornerRoundingStyle", colAltFill="SoloSpark", **INDI)
 
 section("Pads")
-S("PadStyle", "CornerRounding5Style", optDrawBorder="false", realBorderWidth="1", realDisabledAlpha="0.5", font="StandardBold", enumTextShortenAlgorithm="middle",
+S("PadStyle", "CornerRounding5Style", realCornerRounding=5, optDrawBorder="false", realBorderWidth="1", realDisabledAlpha="0.5", font="StandardBold", enumTextShortenAlgorithm="middle",
   colFill="EditorMedium", colBorder="EditorMedium", colText="PanelBrightest", colAltFill="PanelBrightest")
 S("PadSelectedStyle", "PadStyle", colFill="EditorAltBrightest", colBorder="EditorAltBrightest")
-S("PadOverlayStyle", "CornerRounding5Style", optDrawBorder="false", realDisabledAlpha="0.2", colFill="PanelBright", colAltFill="PanelBright")
+S("PadOverlayStyle", "CornerRounding5Style", realCornerRounding=5, optDrawBorder="false", realDisabledAlpha="0.2", colFill="PanelBright", colAltFill="PanelBright")
 RING = dict(optDrawBorder="true", realBorderWidth="2", colBorder="PanelBrightest", colAltBorder="PanelBrightest")
 S("PadOnStyle", "PadStyle", colFill="EditorAltMedium", colBorder="EditorAltMedium")
 S("PadOnSelectedStyle", "PadStyle", colFill="EditorAltMedium", **RING)
@@ -367,7 +367,9 @@ S("PadNameLabelStyle", "InvisibleStyle", enumDisabledDrawMode="NormalDrawing", e
 S("PadNameLabelSelectedStyle", "PadNameLabelStyle", colText="EditorDarkest")
 S("PadStepNameLabelStyle", "PadNameLabelStyle", font="Small", colText="PanelBrightest")
 S("PadStepNameLabelSelectedStyle", "PadStepNameLabelStyle", colText="EditorDarkest")
-S("PadLayerIndicatorStyle", "ShadowStyle", optDrawBorder="true", enumDisabledDrawMode="NormalDrawing", colFill="EditorDarkestAlpha03", colBorder="EditorDarkestAlpha03",
+# Empty slots: a flat 30 % square (an alpha border over the alpha fill
+# would read as a darker outlined box).
+S("PadLayerIndicatorStyle", "ShadowStyle", optDrawBorder="true", enumDisabledDrawMode="NormalDrawing", colFill="EditorDarkestAlpha03", colBorder="Transparent",
   colAltFill="EditorAltBrightest", colAltBorder="EditorAltBrightest")
 S("PadLayerIndicatorSelectedStyle", "PadLayerIndicatorStyle", colFill="EditorAltDarkestAlpha075", colBorder="EditorAltDarkest", colAltFill="EditorDarkest", colAltBorder="EditorDarkest")
 S("PadLayerMutedIndicatorStyle", "PadLayerIndicatorStyle", colAltFill="MuteSpark", colAltBorder="MuteSpark")

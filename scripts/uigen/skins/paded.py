@@ -8,19 +8,19 @@ from .pages import btn
 
 def pads_panel():
     W, H = 400, 400
-    bank = N("ButtonGroup", "PadBank", (88, 2, 92, 20), intIntraSpacing=1, optIsVertical=False, intLeftSpacing=0,
+    bank = N("ButtonGroup", "PadBank", (88, 2, 90, 20), intIntraSpacing=1, optIsVertical=False, intLeftSpacing=0,
              intRightSpacing=0, intTopSpacing=0, intBottomSpacing=0, style="InvisibleStyle",
-             kids=[N("Button", None, (i * 18, 0, 17 if t != "All" else 20, 20), style="TransmodButtonStyle", text=t)
+             kids=[N("Button", None, (i * 18, 0, 17, 20), style="TransmodButtonStyle", text=t)
                    for i, t in enumerate(["A", "B", "C", "D", "All"])])
     bar = N("Panel", "PadControl", (0, 0, W, 24), pin="lrt", style="InvisibleStyle", kids=[
-        N("PopupButton", "PadMode", (2, 2, 82, 20), displayName="Pad mode", style="HeaderBarPopupButtonStyle"),
+        N("PopupButton", "PadMode", (2, 2, 83, 20), displayName="Pad mode", style="HeaderBarPopupButtonStyle"),
         bank,
-        N("Button", "EraseButton", (190, 2, 20, 20), displayName="Erase: hold a pad to clear its steps", id=100002,
+        N("Button", "EraseButton", (192, 2, 20, 20), displayName="Erase: hold a pad to clear its steps", id=100002,
           style="HeaderBarIconButtonStyle", text=""),
-        N("Button", "RepeatButton", (220, 2, 42, 20), displayName="Note repeat", id=100001, style="TransmodButtonStyle", text="Rpt"),
-        btn("RepeatCount", (264, 2, 32, 20), "1/16", "Note repeat rate", style="TransmodButtonStyle", id=100000),
-        N("Button", "FullLevelButton", (304, 2, 30, 20), displayName="Fixed velocity", id=100000, style="TransmodButtonStyle", text="Full"),
-        N("Knob", "FullLevelKnob", (338, 2, 20, 20), displayName="Fixed velocity", id=100001, style="AltKnobStyle", realDialThickness=0.3),
+        N("Button", "RepeatButton", (224, 2, 40, 20), displayName="Note repeat", id=100001, style="TransmodButtonStyle", text="Repeat"),
+        btn("RepeatCount", (266, 2, 30, 20), "1/16", "Note repeat rate", style="TransmodButtonStyle", id=100000),
+        N("Button", "FullLevelButton", (307, 2, 30, 20), displayName="Fixed velocity", id=100000, style="TransmodButtonStyle", text="Full"),
+        N("Knob", "FullLevelKnob", (341, 2, 20, 20), displayName="Fixed velocity", id=100001, style="AltKnobStyle", realDialThickness=0.3),
         btn("Options", (W - 22, 2, 20, 20), "", "More pad options", style="HeaderBarIconButtonStyle", pin="r"),
     ])
     return N("Panel", None, (0, 0, W, H), pin="lrtb", style="InvisibleStyle", kids=[
