@@ -137,7 +137,7 @@ def sampler():
 
 def slicer():
     W, H = 870, 740
-    tools = N("ButtonGroup", "ToolsButton", (8, 8, 83, 20), displayName="Slice tool", intIntraSpacing=1, optIsVertical=False,
+    tools = N("ButtonGroup", "ToolsButton", (10, 8, 86, 20), displayName="Slice tool", intIntraSpacing=1, optIsVertical=False,
               intLeftSpacing=0, intRightSpacing=0, intTopSpacing=0, intBottomSpacing=0, kids=[
                   N("Button", None, (i * 21, 0, 20, 20), displayName=tip, style=st, text=g)
                   for i, (g, tip, st) in enumerate([("", "Insert tool (Alt-click deletes the slice point to the left)", "ExExLargeIconRadioButtonLeft"),
