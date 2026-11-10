@@ -12,6 +12,13 @@ modal-filefind 6a05c3cfe06cc543
 modal-metadata 7cae4c7bfa02d43f
 modal-preferences 144d089246cae972
 options-menu 6c8d8b958dd88c77
+resized-tab-0 6e3b72153496513c
+resized-tab-1 05379e5d27b5a21d
+resized-tab-2 f04549b4ad7714fc
+resized-tab-3 f97552506425e453
+resized-tab-4 d1cece2ec16cc5d8
+resized-tab-5 29564e3cb4f58137
+resized-tab-6 a9dc4a4ac880b525
 sampler-pads b72ee69887c70070
 transmod 4616d175e28e5248
 transmod-source 2e21b37cebda1075

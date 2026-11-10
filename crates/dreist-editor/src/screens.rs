@@ -1,5 +1,6 @@
 //! Pixel regression: fingerprints of the editor rendered in fixed states
-//! (every editor and utility tab, a transmod source, the sampler pad mode,
+//! (every editor and utility tab, every editor tab in a resized window,
+//! a transmod source, the sampler pad mode,
 //! the dialogs, a menu) so refactors are checked pixel for pixel
 //! (`tests/golden/screens.txt`; `UPDATE_GOLDEN=1` rewrites it). Skipped
 //! without the factory content. Apps run [`check_screens`] with their own
@@ -41,6 +42,9 @@ pub fn click(ed: &mut Editor, spec: &str, button: dreist_gui::app::MouseButton) 
     }
 }
 
+/// A window size other than the default (a user's saved one).
+pub const RESIZED: (i32, i32) = (1351, 879);
+
 pub fn shot(ed: &mut Editor) -> u64 {
     fnv_bytes(ed.render(1.0).data())
 }
@@ -59,6 +63,17 @@ pub fn check_screens(name: &str) {
         ed.model.editor_tab = tab;
         ed.sync();
         golden.check(&format!("editor-tab-{tab}"), shot(&mut ed), &[]);
+    }
+    // A resized window (narrower and taller than the default): the
+    // code-laid-out cells (scene tiles with used scenes, song track
+    // headers beside the parts, mixer strips, transmod cards) follow.
+    for tab in 0..7 {
+        let mut ed = editor().unwrap();
+        ed.app.resize(RESIZED.0, RESIZED.1);
+        ed.model.editor_tab = tab;
+        ed.model.utility_tab = 1;
+        ed.sync();
+        golden.check(&format!("resized-tab-{tab}"), shot(&mut ed), &[]);
     }
     let mut ed = editor().unwrap();
     ed.model.utility_tab = 1;

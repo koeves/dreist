@@ -4082,3 +4082,49 @@ fn graph_lane_menu_is_grouped() {
     ed.handle(&UiEvent::MenuSelected { anchor: sub.anchor.clone(), name: "GraphCombo".into(), index: 2 });
     assert_eq!(ed.model.pattern_view[e].lane, 16, "Probability");
 }
+
+/// A resized window keeps the code-laid-out cells in their grids: the
+/// scene tiles side by side in the matrix (not each stretched over it by
+/// its fill anchors), one song track header per row, the song page
+/// filling its tab, mixer strips as tall as their scroller.
+#[test]
+fn resized_window_keeps_cells_in_their_grids() {
+    let Ok(mut ed) = Editor::new(dreist_gui::skin::default_theme(), Model::new(dreist_formats::Node::new("root", None))) else { return };
+    for (w, h) in [crate::screens::RESIZED, (1500, 820), (1400, 850)] {
+        ed.app.resize(w, h);
+        for tab in 0..7 {
+            ed.model.editor_tab = tab;
+            ed.sync();
+            let _ = ed.render_frame(1.0);
+        }
+        let m = ed.app.root.find("ScenesPanel").expect("scene matrix");
+        let tiles: Vec<dreist_gui::Rect> = m.children.iter().filter(|c| c.attr("cell").is_some()).map(|c| c.rect).collect();
+        assert_eq!(tiles.len(), 16);
+        for (i, a) in tiles.iter().enumerate() {
+            assert!(a.w > 0 && a.h > 0 && a.x >= 0 && a.y >= 0 && a.x + a.w <= m.rect.w && a.y + a.h <= m.rect.h, "{w}x{h}: tile {i} {a:?} outside {:?}", m.rect);
+            for b in &tiles[i + 1..] {
+                assert!(a.x + a.w <= b.x || b.x + b.w <= a.x || a.y + a.h <= b.y || b.y + b.h <= a.y, "{w}x{h}: tiles {a:?} and {b:?} overlap");
+            }
+        }
+        let hp = ed.app.root.find("TrackHeaderPanel").expect("song headers");
+        let ys: Vec<(i32, i32)> = hp.children.iter().map(|c| (c.rect.y, c.rect.h)).collect();
+        assert_eq!(ys.len(), crate::model::ENGINES);
+        for p in ys.windows(2) {
+            assert_eq!(p[1].0, p[0].0 + p[0].1, "{w}x{h}: song headers {ys:?} not one per row");
+        }
+        assert!(ys.last().map(|(y, h)| y + h <= hp.rect.h).unwrap_or(false), "{w}x{h}: song headers {ys:?} below {:?}", hp.rect);
+        let host = ed.app.ctrl(&ed.song.as_ref().expect("song").page).expect("song tab");
+        let root = host.children.first().expect("song page").rect;
+        assert_eq!(root, dreist_gui::Rect::new(0, 0, host.rect.w, host.rect.h), "{w}x{h}: the song page does not fill its tab");
+        let mut strips = 0;
+        ed.app.root.walk_mut(&mut |c| {
+            if c.name == "ChannelScroller" && c.visible {
+                for s in &c.children {
+                    assert_eq!(s.rect.h, c.rect.h, "{w}x{h}: mixer strip {:?} in {:?}", s.rect, c.rect);
+                    strips += 1;
+                }
+            }
+        });
+        assert!(strips > 0);
+    }
+}
