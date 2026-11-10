@@ -12,7 +12,7 @@ dreist-engine.workspace = true
 dreist-dsp.workspace = true
 dreist-gui.workspace = true
 libc = "0.2"
-rfd = { version = "0.16", optional = true }
+rfd = { version = "0.18", optional = true }
 
 [features]
 window = ["dreist-gui/window", "dep:rfd"]
