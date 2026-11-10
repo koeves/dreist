@@ -1171,19 +1171,9 @@ impl Slicer {
                 true
             }
             "WaveDisplayZoomSlider" => {
-                // [re:867658]: the thumb in
-                // colFill, 2 px white edge lines, and on each edge a white
-                // 10 px disc with a black 6 px centre.
-                let (tx, tw) = self.zoom_thumb(w);
-                p.fill_rect(RectF::new(tx, 0.0, tw, h), s.colour("WaveDisplayZoomSliderStyle", "colFill", Colour::rgba(255, 192, 203, 255)));
-                for ex in [tx, tx + tw] {
-                    p.fill_rect(RectF::new(ex - 1.0, 0.0, 2.0, h), Colour::WHITE);
-                }
-                let cy = (h as i32 / 2) as f32;
-                for ex in [tx, tx + tw] {
-                    p.fill_ellipse(RectF::new(ex - 5.0, cy - 5.0, 10.0, 10.0), Colour::WHITE);
-                    p.fill_ellipse(RectF::new(ex - 3.0, cy - 3.0, 6.0, 6.0), Colour::BLACK);
-                }
+                // The view as fractions of the file (a thumb in a unit track).
+                let overview = self.audio.as_ref().map_or(&[][..], |a| &a.buckets[..]);
+                crate::zoomslider::draw(p, s, "WaveDisplayZoomSliderStyle", w, h, self.zoom_thumb(1.0), overview);
                 true
             }
             "SliceChopStepper" => {

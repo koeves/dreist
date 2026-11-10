@@ -871,7 +871,10 @@ impl Inspector {
                 true
             }
             "WaveDisplayZoomSlider" if c.attr("layerZoom").is_some() => {
-                crate::zoomslider::draw(p, r.styles, "WaveDisplayZoomSliderStyle", c.rect.w as f32, c.rect.h as f32, self.view);
+                let e = model.engine;
+                let mut cache = self.peaks.borrow_mut();
+                let overview = model.layer_sample(e, model.pad[e], model.layer[e]).and_then(|f| cache.get(&f)).map_or(&[][..], |pk| &pk.buckets[..]);
+                crate::zoomslider::draw(p, r.styles, "WaveDisplayZoomSliderStyle", c.rect.w as f32, c.rect.h as f32, self.view, overview);
                 true
             }
             "LayerRow" => {
