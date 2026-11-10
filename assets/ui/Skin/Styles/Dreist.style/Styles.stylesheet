@@ -66,7 +66,7 @@
     <CtrlStyle name="ExExLargeIconRadioButtonRight" parentStyle0="ExExLargeIconButtonStyle" optRoundTopLeft="false" optRoundBottomLeft="false" />
     <CtrlStyle name="ExExLargeIconRadioButtonCenter" parentStyle0="ExExLargeIconButtonStyle" optRoundTopLeft="false" optRoundTopRight="false" optRoundBottomLeft="false" optRoundBottomRight="false" />
     <CheckBoxButtonRendererStyle name="DefaultCheckboxButtonStyle" parentStyle0="DefaultButtonStyle" colTick="PanelDarkest" />
-    <CtrlStyle name="DefaultPopupButtonStyle" parentStyle0="DefaultButtonStyle" enumTextHorizontalAlign="left" optStepperArrows="true" />
+    <CtrlStyle name="DefaultPopupButtonStyle" parentStyle0="DefaultButtonStyle" enumTextHorizontalAlign="left" optStepperArrows="true" optShortenToControlWidth="true" />
     <CtrlStyle name="ShorteningPopupButtonStyle" parentStyle0="DefaultPopupButtonStyle" enumTextShortenAlgorithm="middle" />
 
     <!-- Text fields -->
@@ -138,7 +138,7 @@
     <CtrlStyle name="HeaderBarMenuDropButtonStyle" parentStyle0="HeaderBarMenuButtonStyle" font="Small" realTextOffset="0" />
     <CtrlStyle name="HeaderBarButtonStyle" parentStyle0="CornerRoundingStyle" font="SmallStd" enumTextShortenAlgorithm="end" colFill="PanelMediumAlpha03" colText="PanelBrightest" colAltFill="EditorAltBrightest" colAltBorder="EditorAltBrightest" colAltText="PanelDarkest" optDrawBorder="false" realBorderWidth="0" colBorder="Transparent" />
     <CtrlStyle name="HeaderBarIconButtonStyle" parentStyle0="HeaderBarButtonStyle" font="ExExLargeIcons" />
-    <CtrlStyle name="HeaderBarPopupButtonStyle" parentStyle0="HeaderBarButtonStyle" enumTextHorizontalAlign="left" />
+    <CtrlStyle name="HeaderBarPopupButtonStyle" parentStyle0="HeaderBarButtonStyle" enumTextHorizontalAlign="left" optShortenToControlWidth="true" />
     <CtrlStyle name="HeaderBarUndoRedoDropStyle" parentStyle0="HeaderBarButtonStyle" optRoundTopLeft="false" optRoundBottomLeft="false" realTextOffset="0" font="Tiny" />
     <CtrlStyle name="RecordButtonStyle" parentStyle0="CornerRoundingStyle" font="ExExLargeIcons" colFill="PanelSparkAlpha05" colText="EditorDarkest" colAltFill="PanelSpark" colAltBorder="PanelSpark" colAltText="PanelDarkest" optDrawBorder="false" realBorderWidth="0" colBorder="Transparent" />
     <CtrlStyle name="PlayButtonStyle" parentStyle0="CornerRoundingStyle" font="ExExLargeIcons" colFill="EditorAltBrightestAlpha05" colText="EditorDarkest" colAltFill="EditorAltBrightest" colAltBorder="EditorAltBrightest" colAltText="PanelDarkest" optDrawBorder="false" realBorderWidth="0" colBorder="Transparent" />
@@ -230,6 +230,6 @@
     <CtrlStyle name="SongTrackPanelPreviewingStyle" colFill="EditorAltMedium" />
 
     <!-- Effect panel meters and plots -->
-    <CtrlMeterStyle name="EffectMeterStyle" parentStyle0="MeterStyle" colAltBorder="PanelDarkest" colLine="PanelDarkest" colText="PanelDarkest" realLineWidth="2" />
-    <CtrlStyle name="EffectEQPlotStyle" parentStyle0="PlotStyle" colGrid="EditorDarkestAlpha03" realCurveFillAlpha="0.2" realLineWidth="2" optRoundBottomLeft="false" optRoundBottomRight="false" />
+    <CtrlMeterStyle name="EffectMeterStyle" parentStyle0="MeterStyle" optMeterMarkings="true" />
+    <CtrlStyle name="EffectEQPlotStyle" parentStyle0="PlotStyle" colGrid="EditorDarkestAlpha03" realCurveFillAlpha="0.2" realLineWidth="2" optCurveClosed="true" optRoundBottomLeft="false" optRoundBottomRight="false" />
 </root>

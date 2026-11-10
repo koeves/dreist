@@ -214,7 +214,9 @@ S("ExExLargeIconRadioButtonCenter", "ExExLargeIconButtonStyle", **NO_ROUND)
 S("DefaultCheckboxButtonStyle", "DefaultButtonStyle", "CheckBoxButtonRendererStyle", colTick="PanelDarkest")
 # (`optStepperArrows`: value steppers in these styles draw the stepper
 # triangles.)
-S("DefaultPopupButtonStyle", "DefaultButtonStyle", enumTextHorizontalAlign="left", optStepperArrows="true")
+# Popup text shortened to the whole button's width and clipped to the text
+# rect, as the original draws it (dreist-gui `optShortenToControlWidth`).
+S("DefaultPopupButtonStyle", "DefaultButtonStyle", enumTextHorizontalAlign="left", optStepperArrows="true", optShortenToControlWidth="true")
 S("ShorteningPopupButtonStyle", "DefaultPopupButtonStyle", enumTextShortenAlgorithm="middle")
 
 section("Text fields")
@@ -306,7 +308,7 @@ HDR_BTN = dict(optDrawBorder="false", realBorderWidth="0", colBorder="Transparen
 S("HeaderBarButtonStyle", "CornerRoundingStyle", font="SmallStd", enumTextShortenAlgorithm="end", colFill="PanelMediumAlpha03", colText="PanelBrightest",
   colAltFill="EditorAltBrightest", colAltBorder="EditorAltBrightest", colAltText="PanelDarkest", **HDR_BTN)
 S("HeaderBarIconButtonStyle", "HeaderBarButtonStyle", font="ExExLargeIcons")
-S("HeaderBarPopupButtonStyle", "HeaderBarButtonStyle", enumTextHorizontalAlign="left")
+S("HeaderBarPopupButtonStyle", "HeaderBarButtonStyle", enumTextHorizontalAlign="left", optShortenToControlWidth="true")
 S("HeaderBarUndoRedoDropStyle", "HeaderBarButtonStyle", optRoundTopLeft="false", optRoundBottomLeft="false", realTextOffset="0", font="Tiny")
 S("RecordButtonStyle", "CornerRoundingStyle", font="ExExLargeIcons", colFill="PanelSparkAlpha05", colText="EditorDarkest", colAltFill="PanelSpark", colAltBorder="PanelSpark", colAltText="PanelDarkest", **HDR_BTN)
 S("PlayButtonStyle", "CornerRoundingStyle", font="ExExLargeIcons", colFill="EditorAltBrightestAlpha05", colText="EditorDarkest", colAltFill="EditorAltBrightest", colAltBorder="EditorAltBrightest", colAltText="PanelDarkest", **HDR_BTN)
@@ -425,11 +427,13 @@ S("SongTrackPanelPreviewingStyle", None, colFill="EditorAltMedium")
 # Kept apart from the general control styles. The original's meter and EQ
 # plot are drawn by their classes ([re:664306], [re:faafb0], [re:b03feb]):
 # a needle meter over MeterStyle's panel, its scale, ticks, texts and needle
-# in a dark grey; an EQ plot over PlotStyle with a 1 px grid and each curve
-# 2 px wide over its own colour at alpha 0.2.
+# in a dark grey with the original's geometry (dreist-gui `optMeterMarkings`);
+# an EQ plot over PlotStyle with a 1 px grid and each curve 2 px wide over its
+# own colour at alpha 0.2, the line closed along the bottom (`optCurveClosed`).
 section("Effect panel meters and plots")
-S("EffectMeterStyle", "MeterStyle", "CtrlMeterStyle", colAltBorder="PanelDarkest", colLine="PanelDarkest", colText="PanelDarkest", realLineWidth="2")
-S("EffectEQPlotStyle", "PlotStyle", colGrid="EditorDarkestAlpha03", realCurveFillAlpha="0.2", realLineWidth="2", optRoundBottomLeft="false", optRoundBottomRight="false")
+S("EffectMeterStyle", "MeterStyle", "CtrlMeterStyle", optMeterMarkings="true")
+S("EffectEQPlotStyle", "PlotStyle", colGrid="EditorDarkestAlpha03", realCurveFillAlpha="0.2", realLineWidth="2", optCurveClosed="true",
+  optRoundBottomLeft="false", optRoundBottomRight="false")
 
 
 # ---------------------------------------------------------------- output
