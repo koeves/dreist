@@ -218,8 +218,8 @@ fn global_mixer_effect_row_scrolls_sideways() {
     // The chain's bar styles are empty: no bar is drawn.
     assert!(!ed.app.ctrl(&fx).unwrap().children.iter().any(|k| k.attr(scroll::BAR).is_some() && k.visible));
     hover(&mut ed, &fx);
-    wheel(&mut ed, -40.0, 0.0, false);
-    assert_eq!(offset(&ed, &fx), (40, 0));
+    wheel(&mut ed, -30.0, 0.0, false);
+    assert_eq!(offset(&ed, &fx), (30, 0));
     wheel(&mut ed, 0.0, -10_000.0, true);
     assert_eq!(offset(&ed, &fx), (max, 0));
     // The "+" slot ends at the view's right edge.

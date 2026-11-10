@@ -3,8 +3,8 @@
     <CtrlPanel name="CtrlPanel" rect="0, 0, 70, 180" ARTop="FNear 0.0000" ARBottom="FNear 0.0000" style="InvisibleStyle">
         <CtrlLabel name="NameLabel" rect="0, 2, 70, 16" ARLeft="FNear 0.0000" ARRight="FNear 0.0000" ARTop="FNear 2.0000" id="100011" style="MixerChannelEditTitleStyle" text="Master" />
         <CtrlPanel rect="0, 20, 70, 128" ARLeft="FNear 0.0000" ARRight="FNear 0.0000" ARTop="FNear 20.0000" ARBottom="FNear 32.0000" style="InvisibleStyle">
-            <CtrlSlider name="GainSlider" rect="4, 0, 15, 128" ARTop="FNear 0.0000" ARBottom="FNear 0.0000" displayName="Gain" id="100012" realTrackInset="0.3500" style="SliderStyle" />
-            <CtrlMultiChannelDBMeter name="VUMeter" rect="22, 0, 16, 128" ARTop="FNear 0.0000" ARBottom="FNear 0.0000" style="DefaultVerticalVUMeterStyle" />
+            <CtrlSlider name="GainSlider" rect="4, 0, 15, 128" ARBottom="FNear 0.0000" ARTop="FNear 0.0000" displayName="Gain" id="100012" realTrackInset="0.3500" style="SliderStyle" />
+            <CtrlMultiChannelDBMeter name="VUMeter" rect="22, 0, 16, 128" ARBottom="FNear 0.0000" ARTop="FNear 0.0000" style="DefaultVerticalVUMeterStyle" />
             <CtrlLabeller name="PitchPanel" rect="40, 0, 30, 50" enumTextPosition="Below" intTextOffset="0" style="SmallControlLabellerStyle">
                 <CtrlKnob name="Pitch" rect="2, 0, 25, 25" displayName="Pitch" id="100000" optCentered="true" realDialThickness="0.3000" style="KnobStyle" />
             </CtrlLabeller>
