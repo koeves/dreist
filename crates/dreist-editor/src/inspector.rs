@@ -262,6 +262,9 @@ impl Inspector {
                 c.set_rect(Rect::new(0, 0, w, h));
                 sc.children.push(c);
             }
+            // [re:3c0f5e]: the parameter row scrolls sideways.
+            sc.set_attr("scrollAxes", "h".into());
+            dreist_gui::scroll::place(sc);
         }
         // The layer wave display's zoom bar (tagged so the slicer's
         // identically named controls are left alone).

@@ -590,4 +590,6 @@ mod screens_test;
 #[cfg(test)]
 mod resize_tests;
 #[cfg(test)]
+mod scroll_tests;
+#[cfg(test)]
 mod tests;

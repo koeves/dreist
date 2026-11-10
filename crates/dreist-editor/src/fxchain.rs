@@ -440,6 +440,8 @@ impl FxPanel {
             let mut x = 0;
             // [re:6929fb] re-stacks its container when a panel folds.
             sc.set_attr("stackAxis", "h".into());
+            // [re:3c0f5e]: the slots scroll sideways.
+            sc.set_attr("scrollAxes", "h".into());
             for (slot, kind, node) in fx {
                 let Some(mut panel) = self.panel_tpl.clone() else { continue };
                 panel.display_name = dreist_formats::params::effect_label(*kind).to_uppercase();
@@ -467,6 +469,7 @@ impl FxPanel {
                 empty.set_rect(Rect::new(x, 0, w, h));
                 sc.children.push(empty);
             }
+            dreist_gui::scroll::place(sc);
         }
         host.children.push(chain);
     }
