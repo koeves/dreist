@@ -1132,9 +1132,12 @@ impl PatternPanel {
             let Some(r) = row.attr("trackRow").and_then(|v| v.parse::<usize>().ok()) else { continue };
             let track = lay.first_track + r;
             let is_open = open.get(r).copied().unwrap_or(false);
+            // The disclosure button draws an arrow, not its skin text:
+            // right when closed, down when the graphs are open.
             if let Some(b) = row.find_mut("AutomateButton") {
                 b.on = is_open;
                 b.visible = multi;
+                b.text = if is_open { "▼" } else { "►" }.into();
             }
             let td = pat.tracks.get(track);
             row.set_attr("track", track.to_string());
