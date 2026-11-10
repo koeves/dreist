@@ -179,3 +179,48 @@ fn option_drag_of_the_base_keeps_the_modulation_end() {
     ed.handle(&UiEvent::Clicked { path: undo, name: "UndoButton".into(), id: 0, on: false });
     assert_eq!(ed.model.doc, orig);
 }
+
+/// [re:9c68e5] / [re:e72b4d]: the pad mode menu opens on the press; a
+/// press on an item picks nothing until its release, and a drag from the
+/// opening press picks the item it is released over.
+#[test]
+fn menu_items_are_picked_on_release() {
+    let Some(mut ed) = hollow() else { return };
+    let pad_mode = |ed: &Editor| ed.model.pad_mode(ed.model.engine);
+    let normal = pad_mode(&ed);
+    let row = |ed: &Editor, i: usize| {
+        let m = ed.app.menu.as_ref().expect("menu open");
+        (m.x + 20.0, m.y + 3.0 + 18.0 * (i as f32 + 0.5))
+    };
+    // Click the button: the menu opens and stays.
+    point_at(&mut ed, "PadMode", 0.0);
+    click(&mut ed);
+    assert!(ed.app.menu.is_some());
+    // A press on "Chromatic": nothing yet.
+    let (x, y) = row(&ed, 1);
+    let ev = ed.app.mouse_move(x, y);
+    feed(&mut ed, ev);
+    let ev = ed.app.mouse_down(MouseButton::Left);
+    assert!(!ev.iter().any(|e| matches!(e, UiEvent::MenuSelected { .. })));
+    feed(&mut ed, ev);
+    assert_eq!(pad_mode(&ed), normal);
+    assert!(ed.app.menu.is_some());
+    // Its release picks it.
+    let ev = ed.app.mouse_up(MouseButton::Left);
+    feed(&mut ed, ev);
+    assert_eq!(pad_mode(&ed), dreist_engine::live::PadMode::Chromatic);
+    assert!(ed.app.menu.is_none());
+    // Press on the button, drag to the first item, release: picked.
+    std::thread::sleep(std::time::Duration::from_millis(410));
+    point_at(&mut ed, "PadMode", 0.0);
+    let ev = ed.app.mouse_down(MouseButton::Left);
+    feed(&mut ed, ev);
+    assert!(ed.app.menu.is_some(), "opens on the press");
+    let (x, y) = row(&ed, 0);
+    let ev = ed.app.mouse_move(x, y);
+    feed(&mut ed, ev);
+    let ev = ed.app.mouse_up(MouseButton::Left);
+    feed(&mut ed, ev);
+    assert_eq!(pad_mode(&ed), normal);
+    assert!(ed.app.menu.is_none());
+}
