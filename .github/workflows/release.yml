@@ -72,7 +72,7 @@ jobs:
           mv Dreist-CLAP Dreist && 7z a -tzip "Dreist-$TAG-${{ matrix.name }}-CLAP.zip" Dreist && mv Dreist Dreist-CLAP
           mv Dreist-App Dreist && 7z a -tzip "Dreist-$TAG-${{ matrix.name }}-App.zip" Dreist && mv Dreist Dreist-App
           7z a -tzip "Dreist-$TAG-${{ matrix.name }}-VST3.zip" Dreist.vst3
-      - uses: actions/upload-artifact@v4
+      - uses: actions/upload-artifact@v7
         with:
           name: Dreist-${{ env.TAG }}-${{ matrix.name }}
           path: target/bundled/Dreist-*.zip
