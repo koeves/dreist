@@ -390,9 +390,23 @@ impl Editor {
     }
 
     /// Sizes of the pages whose cells the editor lays out itself.
+    /// What the code-laid-out cells depend on: the window size, every
+    /// splitter's size and position, the code-laid-out pages' sizes.
     fn page_sizes(&self) -> Vec<(i32, i32)> {
+        fn splits(c: &Ctrl, out: &mut Vec<(i32, i32)>) {
+            if c.class == "CtrlSplitterPanel" {
+                out.push((c.rect.w, c.rect.h));
+                out.push((dreist_gui::splitter::position(c), 0));
+            }
+            for k in &c.children {
+                splits(k, out);
+            }
+        }
+        let mut out = vec![self.app.size()];
+        splits(&self.app.root, &mut out);
         let pages = self.mixers.iter().map(|m| &m.page).chain(self.scenes.as_ref().map(|s| &s.page)).chain(self.song.as_ref().map(|s| &s.page));
-        pages.map(|p| self.app.ctrl(p).map(|c| (c.rect.w, c.rect.h)).unwrap_or_default()).collect()
+        out.extend(pages.map(|p| self.app.ctrl(p).map(|c| (c.rect.w, c.rect.h)).unwrap_or_default()));
+        out
     }
 
     /// Render a frame (with the code-drawn panels).
