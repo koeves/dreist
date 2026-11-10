@@ -86,7 +86,7 @@ def inspector():
           ScrollViewStyle="InvisibleStyle", TableHeaderPanelStyle="InvisibleStyle", TablePanelStyle="InspectorTableStyle",
           intHeaderHeight=0, intScrollBarDim=10),
     ])
-    return N("Panel", None, (0, 0, W, H), style="BackPanelStyle", kids=[
+    return N("Panel", None, (0, 0, W, H), pin="lrtb", style="BackPanelStyle", kids=[
         side,
         N("Panel", "LayerPanel", (LW, 0, W - LW, H), pin="lrtb", overloadClass="LayerPanel", style="LayerPanelStyle"),
         N("Panel", "VelocitySplitPanel", (LW, 0, W - LW, H), pin="lrtb", overloadClass="VelocitySplitPanel", style="InvisibleStyle"),

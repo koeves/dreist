@@ -242,7 +242,10 @@ impl Inspector {
                     let mut r = row.clone();
                     r.overload = "LayerRow".into();
                     r.set_attr("layer", l.to_string());
-                    r.set_rect(Rect::new(0, l as i32 * (row.rect.h + 1), w, row.rect.h));
+                    let y = l as i32 * (row.rect.h + 1);
+                    r.set_rect(Rect::new(0, y, w, row.rect.h));
+                    // Keep the row where it is when the table is resized.
+                    r.anchors[1].1 = y as f32;
                     if let Some(n) = r.find_mut("SampleName") {
                         n.passive = true;
                     }
