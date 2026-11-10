@@ -11,6 +11,7 @@ dreist-formats.workspace = true
 dreist-engine.workspace = true
 dreist-dsp.workspace = true
 dreist-gui.workspace = true
+libc = "0.2"
 rfd = { version = "0.16", optional = true }
 
 [features]

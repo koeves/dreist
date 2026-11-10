@@ -1038,6 +1038,7 @@ dependencies = [
  "dreist-formats",
  "dreist-gui",
  "dreist-testkit",
+ "libc",
  "rfd",
 ]
 

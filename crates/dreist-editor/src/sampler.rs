@@ -88,17 +88,36 @@ pub enum TakeAction {
 
 /// [re:1a0972] [re:324b22]: takes
 /// go to `<record path>/<date>/` ([re:9c6245] +
-/// "Sampler Captures", unless `SamplerRecordPath` is set).
+/// "Sampler Captures", unless `SamplerRecordPath` is set; the date in local
+/// time, `%Y-%m-%d`).
 pub fn record_dir(opts: &crate::options::Options) -> std::path::PathBuf {
     let custom = opts.string("SamplerRecordPath", "");
     let base = if custom.is_empty() { crate::options::documents_dir().join("Sampler Captures") } else { std::path::PathBuf::from(custom) };
-    let (y, mo, d, _, _, _) = now_utc();
+    let (y, mo, d, _, _, _) = now_local();
     base.join(format!("{y:04}-{mo:02}-{d:02}"))
 }
 
-/// UTC civil time (year, month, day, hour, minute, second).
-fn now_utc() -> (i64, u32, u32, u32, u32, u32) {
+/// Local civil time (year, month, day, hour, minute, second), as the
+/// original's `strftime` formats; UTC when the C library cannot tell.
+fn now_local() -> (i64, u32, u32, u32, u32, u32) {
     let secs = std::time::SystemTime::now().duration_since(std::time::UNIX_EPOCH).map(|d| d.as_secs() as i64).unwrap_or(0);
+    let t = secs as libc::time_t;
+    // SAFETY: `tm` is plain data; the C call fills it from `t`.
+    let mut tm: libc::tm = unsafe { std::mem::zeroed() };
+    #[cfg(unix)]
+    let ok = !unsafe { libc::localtime_r(&t, &mut tm) }.is_null();
+    #[cfg(windows)]
+    let ok = unsafe { libc::localtime_s(&mut tm, &t) } == 0;
+    #[cfg(not(any(unix, windows)))]
+    let ok = false;
+    if ok {
+        return (tm.tm_year as i64 + 1900, tm.tm_mon as u32 + 1, tm.tm_mday as u32, tm.tm_hour as u32, tm.tm_min as u32, tm.tm_sec as u32);
+    }
+    civil_utc(secs)
+}
+
+/// UTC civil time of a Unix time.
+fn civil_utc(secs: i64) -> (i64, u32, u32, u32, u32, u32) {
     let (days, rem) = (secs.div_euclid(86400), secs.rem_euclid(86400));
     // Howard Hinnant's civil_from_days.
     let z = days + 719_468;
@@ -111,6 +130,12 @@ fn now_utc() -> (i64, u32, u32, u32, u32, u32) {
     let m = if mp < 10 { mp + 3 } else { mp - 9 } as u32;
     let y = yoe + era * 400 + (m <= 2) as i64;
     (y, m, d, (rem / 3600) as u32, (rem / 60 % 60) as u32, (rem % 60) as u32)
+}
+
+/// [re:324b22]: a take's file name, `<target pad name> Take <n> <HH-MM-SS>`
+/// (" Take %d " between the pad name and the local time).
+pub fn take_name(pad: &str, n: usize, (h, mi, se): (u32, u32, u32)) -> String {
+    format!("{pad} Take {n} {h:02}-{mi:02}-{se:02}")
 }
 
 /// A free sample file name [re:7d058d]: `name.wav`, then `name (2).wav` …
@@ -270,7 +295,8 @@ impl Sampler {
 
     /// A finished take ([re:c5233e] →
     /// sending it to a pad [re:b3b498]): saved as
-    /// "<HH-MM-SS> Take <n>.wav" (peaks above 0 dBFS scaled to 0.998),
+    /// "<pad> Take <n> <HH-MM-SS>.wav" ([`take_name`]; peaks above 0 dBFS
+    /// scaled to 0.998),
     /// then allocated by the Follow mode.
     pub fn take_finished(&mut self, model: &mut Model, opts: &crate::options::Options, left: &[f32], right: &[f32], sr: f32, out: &mut Vec<Command>) -> Option<TakeAction> {
         if left.is_empty() {
@@ -282,8 +308,11 @@ impl Sampler {
         let dir = record_dir(opts);
         std::fs::create_dir_all(&dir).ok()?;
         self.taken += 1;
-        let (_, _, _, h, mi, se) = now_utc();
-        let file = free_filename(&dir, &format!("{h:02}-{mi:02}-{se:02} Take {}", self.taken))?;
+        let (_, _, _, h, mi, se) = now_local();
+        let e = model.engine;
+        let target = self.target.unwrap_or((e, model.pad[e], model.layer[e]));
+        let pad = model.pad_name(target.0, target.1).unwrap_or_else(|| format!("Pad {}", target.1 + 1));
+        let file = free_filename(&dir, &take_name(&pad, self.taken, (h, mi, se)))?;
         dreist_engine::write_wav(&file, sr.round() as u32, &l, if r.is_empty() { &l } else { &r }).ok()?;
         let mode = model.sampler.auto_mode;
         match mode {
@@ -293,8 +322,6 @@ impl Sampler {
             }
             5 => Some(TakeAction::Saved),
             _ => {
-                let e = model.engine;
-                let target = self.target.unwrap_or((e, model.pad[e], model.layer[e]));
                 let used = |l: usize| model.layer(target.0, target.1, l).valid;
                 let (at, next) = allocate(mode, target, model.layer[target.0], &used);
                 crate::browser::load_sample_into_layer(model, at.0, at.1, at.2, &file);
@@ -537,6 +564,13 @@ mod tests {
         assert_eq!(allocate(4, (1, 2, 7), 0, &none), ((1, 2, 7), Some((1, 3, 0))));
         // Single uses the selected layer and disarms.
         assert_eq!(allocate(1, (0, 4, 0), 5, &none), ((0, 4, 5), None));
+    }
+
+    #[test]
+    fn take_names_lead_with_the_pad() {
+        assert_eq!(take_name("Pad 1", 1, (12, 58, 24)), "Pad 1 Take 1 12-58-24");
+        assert_eq!(civil_utc(0), (1970, 1, 1, 0, 0, 0));
+        assert_eq!(civil_utc(1_452_171_504), (2016, 1, 7, 12, 58, 24));
     }
 
     #[test]
