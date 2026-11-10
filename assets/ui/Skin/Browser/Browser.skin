@@ -3,8 +3,8 @@
     <CtrlPanel rect="0, 0, 325, 720" style="SidebarPanelStyle">
         <CtrlPanel name="Header" rect="0, 0, 325, 24" ARLeft="FNear 0.0000" ARRight="FNear 0.0000" ARTop="FNear 0.0000" overloadClass="BrowserHeader" style="InvisibleStyle" />
         <CtrlPanel name="Search" rect="0, 24, 325, 0" ARLeft="FNear 0.0000" ARRight="FNear 0.0000" ARTop="FNear 24.0000" overloadClass="BrowserSearchPane" style="InvisibleStyle" />
-        <CtrlPanel name="Navigator" rect="0, 24, 293, 22" ARLeft="FNear 0.0000" ARRight="FNear 32.0000" ARTop="FNear 24.0000" overloadClass="BrowserPathNavigator" style="BrowserPathNavStyle" />
-        <CtrlButton name="PrevLocnButton" rect="294, 24, 14, 22" ARLeft="FFar 31.0000" ARRight="FFar 14.0000" ARTop="FNear 24.0000" displayName="Back" id="100000" optIsMomentary="true" style="TransparentIconButtonStyle" text="" />
+        <CtrlPanel name="Navigator" rect="0, 24, 295, 22" ARLeft="FNear 0.0000" ARRight="FNear 30.0000" ARTop="FNear 24.0000" overloadClass="BrowserPathNavigator" style="BrowserPathNavStyle" />
+        <CtrlButton name="PrevLocnButton" rect="295, 24, 14, 22" ARLeft="FFar 30.0000" ARRight="FFar 14.0000" ARTop="FNear 24.0000" displayName="Back" id="100000" optIsMomentary="true" style="TransparentIconButtonStyle" text="" />
         <CtrlButton name="NextLocnButton" rect="309, 24, 14, 22" ARLeft="FFar 16.0000" ARRight="FFar 14.0000" ARTop="FNear 24.0000" displayName="Forward" id="100000" optIsMomentary="true" style="TransparentIconButtonStyle" text="" />
         <CtrlSplitterPanel name="SplitView" rect="0, 46, 325, 674" ARLeft="FNear 0.0000" ARRight="FNear 0.0000" ARTop="FNear 46.0000" ARBottom="FNear 0.0000" SplitterPanelStyle="SplitterStyle" intMinSize1="182" intSplitPosition="115" intSplitterDim="3" optDbClkCollapse1="false" optIsVertical="false" optSnapCollapse1="false" style="InvisibleStyle">
             <CtrlPanel name="SourceList" rect="0, 0, 115, 674" ARLeft="FNear 0.0000" ARRight="FNear 210.0000" ARTop="FNear 0.0000" ARBottom="FNear 0.0000" displayName="SplitterPanel0" overloadClass="BrowserSourceList" style="InvisibleStyle" />

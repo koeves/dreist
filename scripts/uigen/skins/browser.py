@@ -14,8 +14,8 @@ def browser():
     return N("Panel", None, (0, 0, W, H), style="SidebarPanelStyle", kids=[
         N("Panel", "Header", (0, 0, W, 24), pin="lrt", overloadClass="BrowserHeader", style="InvisibleStyle"),
         N("Panel", "Search", (0, 24, W, 0), pin="lrt", overloadClass="BrowserSearchPane", style="InvisibleStyle"),
-        N("Panel", "Navigator", (0, 24, W - 32, 22), pin="lrt", overloadClass="BrowserPathNavigator", style="BrowserPathNavStyle"),
-        icon("PrevLocnButton", (W - 31, 24, 14, 22), "", "Back", style="TransparentIconButtonStyle", pin="rt", id=100000),
+        N("Panel", "Navigator", (0, 24, W - 30, 22), pin="lrt", overloadClass="BrowserPathNavigator", style="BrowserPathNavStyle"),
+        icon("PrevLocnButton", (W - 30, 24, 14, 22), "", "Back", style="TransparentIconButtonStyle", pin="rt", id=100000),
         icon("NextLocnButton", (W - 16, 24, 14, 22), "", "Forward", style="TransparentIconButtonStyle", pin="rt", id=100000),
         N("SplitterPanel", "SplitView", (0, 46, W, H - 46), pin="lrtb", style="InvisibleStyle", SplitterPanelStyle="SplitterStyle",
           # The file pane keeps room for its toolbar (182 px) in the
@@ -36,14 +36,14 @@ def file_list():
     bar = N("Panel", None, (0, 0, W, 46), pin="lrt", style="BasicPanelStyle", kids=[
         btn("AutoAllocateButton", (2, 2, 40, 20), "A Load", "Auto load: load files onto pads when clicked", id=100004, **t),
         btn("SliceModeButton", (44, 2, 40, 20), "Slice", "Open audio files in the slicer when clicked", id=100007, **t),
-        icon("PrevFileButton", (88, 2, 12, 20), "", "Previous file", style="DefaultIconButtonStyle", id=100000),
-        icon("NextFileButton", (101, 2, 12, 20), "", "Next file", style="DefaultIconButtonStyle", id=100000),
-        icon("ParentButton", (116, 2, 20, 20), "", "Up one folder", id=100000),
-        icon("EnterButton", (138, 2, 20, 20), "", "Open the selected folder", id=100000),
-        icon("RefreshButton", (160, 2, 20, 20), "", "Refresh", id=100000),
+        icon("PrevFileButton", (86, 2, 12, 20), "", "Previous file", style="DefaultIconButtonStyle", id=100000),
+        icon("NextFileButton", (100, 2, 12, 20), "", "Next file", style="DefaultIconButtonStyle", id=100000),
+        icon("ParentButton", (114, 2, 20, 20), "", "Up one folder", id=100000),
+        icon("EnterButton", (136, 2, 20, 20), "", "Open the selected folder", id=100000),
+        icon("RefreshButton", (158, 2, 20, 20), "", "Refresh", id=100000),
         icon("PreviewButton", (2, 24, 40, 20), "", "Audition files when clicked", momentary=False, id=100007),
         icon("StopButton", (44, 24, 40, 20), "", "Stop audition", id=100001),
-        N("Slider", "PreviewVolume", (88, 27, W - 92, 15), pin="lr", displayName="Preview volume", style="SliderStyle", realTrackInset=0.3),
+        N("Slider", "PreviewVolume", (86, 27, W - 91, 15), pin="R", displayName="Preview volume", style="SliderStyle", realTrackInset=0.3),
     ])
     return N("Panel", None, (0, 0, W, H), pin="lrtb", style="InvisibleStyle", kids=[
         bar,
@@ -67,12 +67,11 @@ def header():
 def search_option():
     W = 300
     return N("Panel", None, (0, 0, W, 25), pin="lrtb", style="InvisibleStyle", kids=[
-        N("PopupButton", "SearchType", (0, 2, 100, 21), displayName="What to search", id=100004, style="DefaultPopupButtonStyle",
-          ARLeft="Relative 0.0000", ARRight="Relative 0.3333"),
-        N("PopupButton", "SubSearchType", (103, 2, 94, 21), displayName="Search by", id=100004, style="DefaultPopupButtonStyle",
-          ARLeft="Relative 0.3433", ARRight="Relative 0.6567"),
-        N("TextBox", "SearchTermBox", (200, 2, 100, 21), displayName="Search for", id=100002, style="DefaultEditBoxStyle",
-          ARLeft="Relative 0.6667", ARRight="Relative 1.0000"),
+        N("PopupButton", "SearchType", (0, 2, 102, 21), pin="lr", displayName="What to search", id=100004, style="DefaultPopupButtonStyle"),
+        N("PopupButton", "SubSearchType", (105, 2, 92, 21), displayName="Search by", id=100004, style="DefaultPopupButtonStyle",
+          ARLeft="FFar 195.0000", ARRight="FNear 103.0000"),
+        N("TextBox", "SearchTermBox", (200, 2, 100, 21), pin="r", displayName="Search for", id=100002, style="DefaultEditBoxStyle",
+          ARRight="FNear 0.0000"),
     ])
 
 
@@ -80,14 +79,14 @@ def search_pane():
     W, H = 300, 125
     box = dict(intLeftSpacing=0, intRightSpacing=0, intTopSpacing=0, intBottomSpacing=0, style="InvisibleStyle")
     return N("Panel", "CtrlPanel", (0, 0, W, H), style="InvisibleStyle", kids=[
-        N("LayoutBox", None, (2, 4, W - 4, 90), pin="lrtb", kids=[
+        N("LayoutBox", None, (2, 5, W - 4, 90), pin="lrtb", kids=[
             N("Panel", f"Option{i + 1}", (0, i * 30, W - 4, 28), pin="lr", overloadClass="BrowserSearchPaneOptionItem",
               style="InvisibleStyle") for i in range(3)], **box),
-        N("Labeller", None, (4, H - 24, 110, 20), pin="lb", enumTextPosition="Right", kids=[
-            N("Button", "MatchAllButton", (0, 2, 16, 16), displayName="Match all", id=100005, style="DefaultCheckboxButtonStyle")]),
-        N("ProgressBar", "ProgressBar", (120, H - 16, W - 180, 4), pin="lrb", id=100001, optIsIndeterminate=True,
+        N("Labeller", None, (5, H - 25, 120, 20), pin="lb", enumTextPosition="Right", kids=[
+            N("Button", "MatchAllButton", (0, 0, 20, 20), pin="tb", displayName="Match all options", id=100005, style="DefaultCheckboxButtonStyle")]),
+        N("ProgressBar", "ProgressBar", (120, H - 25, W - 180, 20), pin="lrt", id=100001, optIsIndeterminate=True,
           style="BrowserSpinnerStyle", zorder=50),
-        btn("DoSearchButton", (W - 56, H - 24, 52, 20), "Search", None, pin="rb", id=100003),
+        btn("DoSearchButton", (W - 55, H - 25, 50, 20), "Search", None, pin="rb", id=100003),
     ])
 
 
@@ -103,21 +102,21 @@ def sampler():
                   for i, (n, cap, i_d) in enumerate([("SourceList", "Source", 100000), ("TriggerMode", "Trigger", None),
                                                      ("Follow", "Assign", None)])])
     lab = N("Labeller", None, (0, 0, W, H), pin="lrtb", enumTextPosition="Below", intTextOffset=1, style="SmallControlLabellerStyle", kids=[
-        N("Slider", "InputGain", (4, 3, 15, 63), pin="tb", displayName="Input", id=100001, style="SliderStyle", realTrackInset=0.3),
+        N("Slider", "InputGain", (4, 3, 15, 63), pin="tb", displayName="In", id=100001, style="SliderStyle", realTrackInset=0.3),
         N("MultiChannelDBMeter", "VUMeter", (22, 2, 15, 64), pin="tb", id=100003, optIsLinear=True, style="DefaultVUMeterStyle"),
-        N("Panel", None, (40, 2, 24, 42), style="InvisibleStyle", kids=[
-            btn("MonoButton", (2, 0, 20, 20), "M", "Recording channels", id=100028, flashing=True),
-            icon("ThruButton", (2, 22, 20, 20), "", "Hear the input", momentary=False, id=100028, flashing=True)]),
-        N("Knob", "PreviewVolume", (42, 47, 20, 20), displayName="Thru", id=100001, style="KnobStyle", realDialThickness=0.3),
+        N("Panel", None, (42, 2, 20, 42), style="InvisibleStyle", kids=[
+            btn("MonoButton", (0, 0, 20, 20), "M", "Recording channels", id=100028, flashing=True),
+            icon("ThruButton", (0, 22, 20, 20), "", "Hear the input", momentary=False, id=100028, flashing=True)]),
+        N("Knob", "PreviewVolume", (42, 46, 20, 20), displayName="Thru", id=100001, style="KnobStyle", realDialThickness=0.3),
         menus,
-        N("Labeller", "ThresholdPanel", (69, 36, 184, 40), pin="r", id=100001, enumTextPosition="Left", style="SmallControlLabellerStyle", kids=[
-            N("Slider", "StartThresholdSlider", (28, 0, 156, 12), pin="rt", displayName="Start", id=100004, overloadClass="SamplerSlider",
+        N("Labeller", "ThresholdPanel", (69, 36, 184, 40), pin="R", id=100001, enumTextPosition="Left", style="SmallControlLabellerStyle", kids=[
+            N("Slider", "StartThresholdSlider", (28, 0, 156, 12), pin="Rt", displayName="Start", id=100004, overloadClass="SamplerSlider",
               style="SliderStyle", realTrackInset=0.3),
-            N("MultiChannelDBMeter", "ThresholdVU", (28, 14, 156, 12), pin="rtb", id=100004, optIsLinear=True,
+            N("MultiChannelDBMeter", "ThresholdVU", (28, 14, 156, 12), pin="Rtb", id=100004, optIsLinear=True,
               style="DefaultHorizontalVUMeterStyle"),
-            N("Slider", "StopThresholdSlider", (28, 28, 156, 12), pin="rtb", displayName="Stop", id=100004, overloadClass="SamplerSlider",
+            N("Slider", "StopThresholdSlider", (28, 28, 156, 12), pin="Rb", displayName="Stop", id=100004, overloadClass="SamplerSlider",
               style="SliderStyle", realTrackInset=0.3)]),
-        N("Panel", "SyncPanel", (69, 36, 180, 42), id=100005, style="InvisibleStyle", kids=[
+        N("Panel", "SyncPanel", (69, 36, 180, 50), id=100005, style="InvisibleStyle", kids=[
             N("ButtonGroup", "SyncButtonGroup", (0, 0, 122, 20), id=100003, optIsVertical=False, intLeftSpacing=0, intRightSpacing=0,
               intTopSpacing=0, intBottomSpacing=0, kids=[
                   N("Button", "BeatsButton", (0, 0, 60, 20), displayName="Length in bars and beats", id=1, style="DefaultButtonStyle",
@@ -139,45 +138,45 @@ def sampler():
 
 def slicer():
     W, H = 870, 740
-    tools = N("ButtonGroup", "ToolsButton", (10, 8, 86, 20), displayName="Slice tool", intIntraSpacing=1, optIsVertical=False,
+    tools = N("ButtonGroup", "ToolsButton", (10, 8, 86, 20), displayName="Tools...", intIntraSpacing=1, optIsVertical=False,
               intLeftSpacing=0, intRightSpacing=0, intTopSpacing=0, intBottomSpacing=0, kids=[
                   N("Button", None, (i * 21, 0, 20, 20), displayName=tip, style=st, text=g)
                   for i, (g, tip, st) in enumerate([("", "Insert tool (Alt-click deletes the slice point to the left)", "ExExLargeIconRadioButtonLeft"),
                                                     ("", "Delete tool (Alt-click inserts a slice point)", "ExExLargeIconRadioButtonCenter"),
                                                     ("", "Lock tool: click in a slice to lock its point", "ExExLargeIconRadioButtonCenter"),
                                                     ("", "Drag tool: drag a slice onto a pad (Alt adds a layer)", "ExExLargeIconRadioButtonRight")])])
-    box = lambda n, x, cap, i_d: N("TextBox", n, (x, 8, 48, 20), displayName=cap, id=i_d, style="DefaultEditBoxStyle")
-    extract = N("Panel", None, (W - 206, 8, 198, 20), pin="r", style="InvisibleStyle", kids=[
-        btn("BothButton", (0, 0, 64, 20), "Audio+Ptn", "Extract the slices to pads and the pattern"),
-        btn("AudioButton", (67, 0, 64, 20), "Audio", "Extract the slices to pads"),
-        btn("PatternButton", (134, 0, 64, 20), "Pattern", "Extract the pattern to the current pattern")])
-    controls = N("Labeller", "Controls", (0, 0, W, 46), pin="lrt", enumTextPosition="Below", style="SmallControlLabellerStyle", kids=[
+    box = lambda n, x, cap, i_d: N("TextBox", n, (x, 8, 50, 20), displayName=cap, id=i_d, style="DefaultEditBoxStyle")
+    extract = N("Panel", None, (W - 209, 8, 199, 20), pin="r", style="InvisibleStyle", kids=[
+        btn("BothButton", (0, 0, 65, 20), "Audio+Ptn", "Extract the slices to pads and the pattern"),
+        btn("AudioButton", (67, 0, 65, 20), "Audio", "Extract the slices to pads"),
+        btn("PatternButton", (134, 0, 65, 20), "Pattern", "Extract the pattern to the current pattern")])
+    controls = N("Labeller", "Controls", (0, 0, W, 45), pin="lrt", enumTextPosition="Below", style="SmallControlLabellerStyle", kids=[
         tools,
-        N("Button", "AutoDetect", (104, 10, 16, 16), displayName="Auto", style="DefaultCheckboxButtonStyle"),
-        box("BPMBox", 128, "BPM", 100014), box("BarsBox", 180, "Bars", 100015), box("BeatsBox", 232, "Beats", 100016),
-        N("Button", "SliceMode", (292, 8, 70, 20), displayName="Detection mode", id=100008, style="DefaultButtonStyle", text="Transient"),
-        N("Slider", "Sensitivity", (378, 8, 130, 20), pin="r", displayName="Sensitivity", id=100026, style="SliderStyle", realTrackInset=0.3),
-        N("ValueStepper", "ChopDivisionBox", (378, 8, 52, 20), displayName="Divisions", id=100011, style="DefaultEditBoxStyle"),
-        N("Panel", None, (W - 284, 8, 66, 20), pin="r", style="InvisibleStyle", kids=[
-            btn("MultiLayersButton", (0, 0, 66, 20), "Use layers", "Put slices beyond 64 on extra layers", momentary=False, id=100000)]),
+        N("Button", "AutoDetect", (118, 8, 20, 20), displayName="Auto", style="DefaultCheckboxButtonStyle"),
+        box("BPMBox", 142, "BPM", 100014), box("BarsBox", 195, "Bars", 100015), box("BeatsBox", 248, "Beats", 100016),
+        N("Button", "SliceMode", (313, 8, 60, 20), displayName="Extraction mode...", id=100008, style="DefaultButtonStyle", text="Transient"),
+        N("Slider", "Sensitivity", (439, 8, 126, 20), pin="R", displayName="Sensitivity", id=100026, style="SliderStyle", realTrackInset=0.3),
+        N("ValueStepper", "ChopDivisionBox", (440, 8, 50, 20), displayName="Divisions", id=100011, style="DefaultEditBoxStyle"),
+        N("Panel", None, (W - 289, 8, 65, 20), pin="r", style="InvisibleStyle", kids=[
+            btn("MultiLayersButton", (0, 0, 65, 20), "Use layers", "Put slices beyond 64 on extra layers", momentary=False, id=100000)]),
         extract,
     ])
-    wave = N("Panel", "WavePanel", (4, 50, W - 8, 412), pin="lrtb", style="WavePanelBackingStyle", kids=[
-        N("Panel", "WaveDisplay", (2, 2, W - 12, 386), pin="lrtb", overloadClass="SliceWaveEditor", style="InvisibleStyle"),
-        N("Panel", "WaveZoomSlider", (2, 390, W - 90, 20), pin="lrb", displayName="WaveZoomSlider",
+    wave = N("Panel", "WavePanel", (5, 50, W - 10, 410), pin="lrtb", style="WavePanelBackingStyle", kids=[
+        N("Panel", "WaveDisplay", (2, 2, W - 14, 386), pin="lrtb", overloadClass="SliceWaveEditor", style="InvisibleStyle"),
+        N("Panel", "WaveZoomSlider", (2, 389, W - 85, 20), pin="lrb", displayName="WaveZoomSlider",
           overloadClass="WaveDisplayZoomSlider", style="WaveDisplayZoomSliderStyle"),
-        N("Button", "PreviewWave", (W - 84, 390, 16, 20), pin="rb", displayName="Audition active portion", style="WaveDisplayZoomIconButtonStyle", text=""),
-        N("Button", "LoopPreview", (W - 67, 390, 16, 20), pin="rb", displayName="Loop active portion", style="WaveDisplayZoomIconButtonStyle",
+        N("Button", "PreviewWave", (W - 78, 389, 15, 20), pin="rb", displayName="Audition active portion", style="WaveDisplayZoomIconButtonStyle", text=""),
+        N("Button", "LoopPreview", (W - 62, 389, 15, 20), pin="rb", displayName="Loop active portion", style="WaveDisplayZoomIconButtonStyle",
           text=""),
-        btn("ZoomOutButton", (W - 46, 390, 16, 20), "-", "Zoom out", style="WaveDisplayZoomButtonStyle", pin="rb"),
-        btn("ZoomInButton", (W - 29, 390, 16, 20), "+", "Zoom in", style="WaveDisplayZoomButtonStyle", pin="rb"),
+        btn("ZoomOutButton", (W - 42, 389, 15, 20), "-", "Zoom out", style="WaveDisplayZoomButtonStyle", pin="rb"),
+        btn("ZoomInButton", (W - 27, 389, 15, 20), "+", "Zoom in", style="WaveDisplayZoomButtonStyle", pin="rb"),
     ])
-    pattern = N("Panel", None, (4, 466, W - 8, 244), pin="lrb", style="DarkPanelStyle", kids=[
-        N("Panel", "PatternView", (2, 2, W - 12, 240), pin="lrtb", id=100001, overloadClass="SlicePanelPatternDisplay")])
+    pattern = N("Panel", None, (5, 466, W - 10, 244), pin="lrb", style="DarkPanelStyle", kids=[
+        N("Panel", "PatternView", (2, 2, W - 14, 240), pin="lrt", id=100001, overloadClass="SlicePanelPatternDisplay")])
     return N("Panel", "CtrlPanel", (0, 0, W, H), pin="lrtb", style="BasicPanelStyle", kids=[
         controls, wave, pattern,
-        btn("CancelButton", (W - 132, H - 25, 62, 20), "Cancel", "Leave without slicing", pin="rb", id=100000),
-        btn("DoneButton", (W - 66, H - 25, 62, 20), "Done", "Slice", pin="rb", id=100000),
+        btn("CancelButton", (W - 130, H - 25, 60, 20), "Cancel", "Leave without slicing", pin="rb", id=100000),
+        btn("DoneButton", (W - 65, H - 25, 60, 20), "Done", "Slice", pin="rb", id=100000),
     ])
 
 
