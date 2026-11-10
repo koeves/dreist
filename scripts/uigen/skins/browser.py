@@ -52,7 +52,7 @@ def file_list():
 
 def header():
     W = 325
-    return N("Panel", "ChooserPanel", (0, 0, W, 24), pin="r", style="InvisibleStyle", kids=[
+    return N("Panel", "ChooserPanel", (0, 0, W, 24), pin="R", style="InvisibleStyle", kids=[
         icon("ToolButton", (2, 2, 20, 20), "", "Browser options"),
         btn("LockPadsButton", (26, 2, 50, 20), "Lk Pads", "Lock or unlock all pads", momentary=False, id=100001),
         btn("LockPatternsButton", (78, 2, 50, 20), "Lk Pat.", "Lock or unlock all patterns", momentary=False, id=100002),
@@ -77,7 +77,7 @@ def search_option():
 def search_pane():
     W, H = 300, 125
     box = dict(intLeftSpacing=0, intRightSpacing=0, intTopSpacing=0, intBottomSpacing=0, style="InvisibleStyle")
-    return N("Panel", "CtrlPanel", (0, 0, W, H), pin="r", style="InvisibleStyle", kids=[
+    return N("Panel", "CtrlPanel", (0, 0, W, H), style="InvisibleStyle", kids=[
         N("LayoutBox", None, (2, 4, W - 4, 90), pin="lrtb", kids=[
             N("Panel", f"Option{i + 1}", (0, i * 30, W - 4, 28), pin="lr", overloadClass="BrowserSearchPaneOptionItem",
               style="InvisibleStyle") for i in range(3)], **box),

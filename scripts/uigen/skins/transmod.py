@@ -38,7 +38,7 @@ def card(title, h, knobs, header=(), extra=(), graph="TransmodDisplayPanel", gra
     if graph:
         g["overloadClass"] = graph
     kids.append(N("Panel", graph_name, (0, 80, w, graph_h), pin="lrtb", **g))
-    return N("CollapsePanel", None, (0, 0, w, h), pin="r", kids=kids, displayName=title,
+    return N("CollapsePanel", None, (0, 0, w, h), pin="R", kids=kids, displayName=title,
              iconicTarget="ARTop", style="TransmodCollapsePanelStyle")
 
 
