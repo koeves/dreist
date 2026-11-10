@@ -15,11 +15,11 @@ def framed_table(name, rect, pin="lrtb", **kw):
             N("TableView", name, (0, 0, w - 2, h - 2), pin="lrtb", **{**TABLE, **kw})])])
 
 
-def card(title, rect, body, pin=""):
+def card(title, rect, body, pin="", cap_w=70):
     """A titled box: a tab-style caption over a framed body."""
     x, y, w, h = rect
     return N("Panel", None, rect, pin=pin, style="TabPanelHeaderStyle", kids=[
-        N("Label", None, (4, 2, 7 * len(title) + 16, 18), pin="lt", style="TabButtonStyle", text=title),
+        N("Label", None, (2, 2, cap_w, 20), pin="lt", style="TabButtonStyle", text=title),
         N("Panel", None, (2, 20, w - 4, h - 22), pin="lrtb", style="BasicPanelStyle", kids=body)])
 
 
@@ -48,20 +48,20 @@ def preferences():
             ("ExtendedKeyboardButton", "Extended keyboard shortcuts"),
             ("YAxisPadVelocityButton", "Pad velocity from click height"),
             ("RetardButton", "Use Audio Unit host timing correction")]
-    X = 290
+    X = 280
     kids = [N("Button", n, (X, 8 + i * 24, 16, 16), displayName=cap, id=100000, style="DefaultCheckboxButtonStyle")
             for i, (n, cap) in enumerate(rows)]
     y = 8 + len(rows) * 24 - 4
-    kids.append(N("ButtonGroup", "MIDIModeGroup", (X, y, 96, 20), displayName="MIDI numbering (lowest octave)", id=100000,
+    kids.append(N("ButtonGroup", "MIDIModeGroup", (X, y, 94, 20), displayName="MIDI numbering (lowest octave)", id=100000,
                   optIsVertical=False, intLeftSpacing=0, intRightSpacing=0, intTopSpacing=0, intBottomSpacing=0,
                   kids=[N("Button", None, (k * 32, 0, 30, 20), id=i, style="DefaultButtonStyle", text=t)
                         for k, (i, t) in enumerate([(0, "0"), (2, "-1"), (1, "-2")])]))
     y += 24
-    kids.append(N("ValueStepper", "UndoStages", (X, y, 56, 20), displayName="Number of undo stages", id=100001, style="DefaultPopupButtonStyle"))
+    kids.append(N("ValueStepper", "UndoStages", (X, y, 50, 20), displayName="Number of undo stages", id=100001, style="DefaultPopupButtonStyle"))
     for n, cap in [("MetroType", "Metronome"), ("ShadingMode", "Pattern shading mode"), ("UIScaling", "UI scaling"),
                    ("UIStyle", "UI style"), ("RemMod", "Modulator remove behaviour")]:
         y += 24
-        kids.append(N("PopupButton", n, (X, y, 200, 20), displayName=cap, style="DefaultPopupButtonStyle"))
+        kids.append(N("PopupButton", n, (X, y, 210, 20), displayName=cap, style="DefaultPopupButtonStyle"))
     return N("Panel", "CtrlPanel", (0, 0, W, H), style="DialogPanelStyle", kids=[
         N("Labeller", "CtrlPanel", (2, 2, W - 4, y + 28), pin="lrt", enumTextPosition="Left", id=100000,
           style="DialogPanelRightLabelStyle", intTextOffset=10, kids=kids),
@@ -113,22 +113,22 @@ def export():
 
 def file_find():
     W, H = 650, 400
-    BY = 345
-    bs = [("ManualButton", 5, 96, "Locate...", 100006), ("AutoButton", 105, 96, "Search", 100005),
-          ("RemoveButton", 205, 96, "Remove", 100005), ("SelectAll", 380, 72, "All", 100005), ("SelectNone", 456, 72, "None", 100005)]
+    BY = 350
+    bs = [("ManualButton", 5, 100, "Locate...", 100006), ("AutoButton", 110, 100, "Search", 100005),
+          ("RemoveButton", 215, 100, "Remove", 100005), ("SelectAll", 380, 70, "All", 100005), ("SelectNone", 455, 70, "None", 100005)]
     return N("Panel", "CtrlPanel", (0, 0, W, H), style="DialogPanelStyle", kids=[
-        N("Label", "TitleLabel", (6, 3, W - 12, 20), pin="lrt", id=100003, style="DialogPanelCenterLabelStyle",
-          text="These samples were not found"),
+        N("Label", "TitleLabel", (5, 2, W - 10, 20), pin="lrt", id=100003, style="DialogPanelCenterLabelStyle",
+          text="The listed audio files could not be found whilst loading"),
         N("Panel", "HoldingPanel", (0, 25, W, H - 25), pin="lrtb", style="InvisibleStyle", kids=[
-            framed_table("FileList", (5, 0, W - 10, BY - 4), id=100000, style="DefaultTableViewScrollStyle"),
+            framed_table("FileList", (5, 0, W - 10, BY - 5), id=100000, style="DefaultTableViewScrollStyle"),
             *[btn(n, (x, BY, w, 20), t, None, pin="lb", id=i) for n, x, w, t, i in bs],
-            btn("Finished", (W - 77, BY, 72, 20), "Done", None, pin="rb", id=100004),
+            btn("Finished", (W - 75, BY, 70, 20), "Done", None, pin="rb", id=100004),
         ]),
         N("Panel", "ScanningPanel", (5, 25, W - 10, 60), pin="lrt", style="InvisibleStyle", kids=[
-            N("Label", "CurrentScan", (5, 5, 110, 20), pin="lt", id=100004, style="DialogPanelLeftLabelStyle", text="Searching"),
-            N("Label", "ScanLabel", (118, 5, W - 133, 20), pin="lrt", id=100003, style="DialogPanelLeftLabelStyle"),
-            N("ProgressBar", "ProgressBar", (5, 34, W - 76, 20), pin="lrb", style="DialogProgressBarStyle"),
-            btn("AbortButton", (W - 66, 34, 52, 20), "Stop", None, pin="rb", id=100002),
+            N("Label", "CurrentScan", (5, 5, 115, 20), pin="lt", id=100004, style="DialogPanelLeftLabelStyle", text="Searching"),
+            N("Label", "ScanLabel", (120, 5, W - 135, 20), pin="lrt", id=100003, style="DialogPanelLeftLabelStyle"),
+            N("ProgressBar", "ProgressBar", (5, 35, W - 75, 20), pin="lrb", style="DialogProgressBarStyle"),
+            btn("AbortButton", (W - 65, 35, 50, 20), "Stop", None, pin="rb", id=100002),
         ]),
     ])
 
@@ -155,10 +155,10 @@ def audio_options():
         N("Panel", None, (2, 20, 296, 382), pin="lrtb", style="BasicPanelStyle", kids=[
             N("TableView", "IOTable", (0, 0, 296, 382), pin="lrtb", optOverlay=False, intScrollBarDim=10, style="InvisibleStyle", **TABLE)])])
     return N("Panel", None, (0, 0, W, H), style="BasicPanelStyle", kids=[
-        card("DEVICE", (10, 10, 300, 140), [settings], pin="lt"),
+        card("SETTINGS", (10, 10, 300, 140), [settings], pin="lt"),
         io,
-        btn("Refresh", (10, H - 30, 80, 20), "Rescan", None, pin="lb"),
-        N("Button", "CheckBox", (100, H - 28, 16, 16), style="DefaultCheckboxButtonStyle"),
+        btn("Refresh", (10, H - 30, 80, 20), "Refresh", None, pin="lb"),
+        N("Button", "CheckBox", (116, H - 29, 20, 20), style="DefaultCheckboxButtonStyle"),
         N("Button", "Close", (W - 80, H - 30, 70, 20), pin="rb", style="DefaultButtonStyle", text="Close"),
     ])
 
@@ -168,10 +168,10 @@ def midi_options():
     half = (W - 30) // 2
     tbl = lambda name: N("TableView", name, (0, 0, half - 4, 328), pin="lrtb", optOverlay=False, intScrollBarDim=10, style="InvisibleStyle", **TABLE)
     return N("Panel", None, (0, 0, W, H), style="BasicPanelStyle", kids=[
-        card("MIDI IN", (10, 10, half, 350), [tbl("InputTable")], pin="ltb"),
-        card("MIDI OUT", (20 + half, 10, half, 350), [tbl("OutputTable")], pin="rtb"),
-        btn("Refresh", (10, H - 30, 80, 20), "Rescan", None, pin="lb"),
-        N("Button", "Sync", (96, H - 30, 100, 20), pin="lb", style="DefaultButtonStyle", text="Sync to clock",
+        card("INPUT DEVICES", (10, 10, half, 350), [tbl("InputTable")], pin="ltb", cap_w=100),
+        card("OUTPUT DEVICES", (20 + half, 10, half, 350), [tbl("OutputTable")], pin="rtb", cap_w=100),
+        btn("Refresh", (10, H - 30, 80, 20), "Refresh", None, pin="lb"),
+        N("Button", "Sync", (100, H - 30, 80, 20), pin="lb", style="DefaultButtonStyle", text="Sync to clock",
           displayName="Follow the MIDI clock of the enabled input", optIsMomentary=True),
         N("Button", "Close", (W - 80, H - 30, 70, 20), pin="rb", style="DefaultButtonStyle", text="Close"),
         N("Button", "CheckBox", (200, H - 28, 16, 16), style="DefaultCheckboxButtonStyle"),
