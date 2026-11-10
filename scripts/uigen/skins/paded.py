@@ -78,7 +78,10 @@ def inspector():
     W, H = 800, 350
     LW = 120
     side = N("Panel", None, (0, 0, LW, H), pin="ltb", style="BackPanelStyle", kids=[
-        N("Panel", None, (0, -5, LW, 60), pin="t", style="InvisibleStyle", kids=[
+        # The pad name row starts at the panel's top edge (5 px above it, it
+        # was cut off under the splitter bar), its buttons end above the
+        # options button.
+        N("Panel", None, (0, 0, LW, 57), pin="t", style="InvisibleStyle", kids=[
             N("Panel", "PadSelButton", (0, 0, LW, 60), pin="lr", overloadClass="PadSelectionButton")]),
         N("Button", "ShowSplits", (0, 57, LW, 22), pin="lrt", displayName="Velocity splits and pad options",
           style="VSplitButtonStyle", text="Pad options... ▶"),
