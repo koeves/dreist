@@ -1,5 +1,111 @@
 # Changelog
 
+## [0.2.0] - 2026-11-10
+
+A parity pass from the vendor's Geist2 tutorial videos (each change checked against the shipped
+plugin's binary), the shipped skin's layout and labels with Dreist's own art, resizing that holds
+at every window size, and faster drawing.
+
+### Summary
+
+- **From the videos**: the slicer opens with slices (default sensitivity 0.75) and guesses loop
+  tempo as the original; graph Offset/Comp/Rand act on the selected steps; filled selected steps;
+  grouped graph lane menu; take names "<pad> Take n HH-MM-SS"; Places with the app folder and
+  Sampler Captures; no-slice file alert; zoom slider overview waveform; per-layer zoom memory.
+- **Look**: the shipped skin's layout, sizes and labels (header, mixer, transmod, scenes, song,
+  dialogs, pattern, pads, inspector, layer params, browser, sampler, slicer), corner radii and
+  arrows; transmod faders and knob rings drawn as the original.
+- **Resizing**: every panel and splitter lays out again on any resize; the host can resize the
+  editor down to its minimum; the main column keeps its minimum width.
+- **Sound**: analog table reads floor like the original (voice filters, vintage path, analog
+  filter effects), a porting bug shared with Einst.
+- **Speed**: menu hover, clicks and panel updates redraw only what changed.
+
+### Features
+
+- **pattern:** Graph lane menu grouped into submenus
+- **pattern:** Track length overlay follows a dragged marker
+- **browser:** Places list the app folder and Sampler Captures
+- **wave:** Whole-file waveform in the zoom sliders
+- **inspector:** Per-layer zoom memory with auto zoom off
+- **plugin:** The host can resize the editor, down to the window minimum
+
+### Fixes
+
+- **pattern:** Graph knobs act on the track's selected steps only
+- **slicer:** Start at sensitivity 0.75 and guess loop tempo
+- **sampler:** Name takes after the target pad, in local time
+- **browser:** Alert when the no-slice file cannot be created
+- **inspector:** Pad inspector layout follows its panel's size
+- **inspector:** Zoom slider wheel moves the thumb 5 px both ways
+- **song:** The song page fills its tab after a window resize
+- **editor:** Scene tiles, song track headers and mixer strips follow a resize
+- **ui:** Transmod cards and browser header roots anchored as shipped
+- **pads:** The pad grid and strip follow their area as it resizes
+- **song:** The track header column keeps its width as the page resizes
+- **pattern:** Track rows and graph lanes stay one per row as the list resizes
+- **ui:** The pad name row starts inside the pad inspector
+- **ui:** A wider left column leaves the main column its minimum width
+- **browser:** The file pane keeps room for its toolbar in a narrow column
+- **transmod:** The four macro knobs fit the smallest window
+- **scenes:** The engine table follows the panel's height
+- **mixer:** Tall strips keep mute, solo and pre below the meter
+
+### Performance
+
+- **editor:** Time menu hovers and clicks in the render bench
+- **editor:** Repaint only the code-drawn panels whose drawing changed
+- **editor:** A knob reset repaints what changed, not the window
+
+### Documentation
+
+- Move contributor notes into CONTRIBUTING.md; drop .agents
+
+### Tests
+
+- **editor:** Refresh screen fingerprints for the original-layout pass
+- **editor:** Refresh screen fingerprints after the pattern, pads, inspector, browser and sampler layout pass
+- **editor:** Editorshot DREIST_SIZE renders at a given window size
+- **editor:** Resized-window screens and cell geometry
+- **editor:** Clicks repaint like full renders
+- **editor:** Knob resets and panel buttons repaint like full renders
+- **editor:** Live resizes match a fresh editor; layout holds at every size
+
+### Build and CI
+
+- Dreist-commons 88790de (opt-in renderer additions for Einst's v1 look)
+- Dreist-commons fdc98df (resized splitters keep the far panel)
+- Dreist-commons 11bd48a (splitter bar clamped on resize)
+- Dreist-commons 7abfa72 (opt-in transmod slider strip)
+- Dreist-commons 144fe38 (opt-in looks for Einst's effect panels and controls)
+- Dreist-commons a4837fb (docs only)
+- Dreist-commons e05a1b8 (faster menu hover repaints)
+- Dreist-commons 149a70e (clicks repaint only what they change)
+- Dreist-commons 99c3274 (analog table reads floor like the original)
+- Dreist-commons 964c58b (graph record rule, panels repaint only when their drawing changes)
+- Dreist-commons 0a810a3 (resize-path independent anchoring and splitters, mounted skins fill their host, host resizing in nih-plug)
+- Dreist-commons v0.2.0
+
+### Other
+
+- **pattern:** Fill selected steps with the track style's colSelected
+- **pattern:** Track rows' disclosure button shows an arrow
+- **dreist-editor:** Editorshot clicks several controls and selects all
+- **ui:** Plain labels as in the original's sampler and transmod
+- **ui:** Original corner radii and drop arrows
+- **header:** Original console labels, menu and selector geometry
+- **mixer:** Light channel strips, transmod faders and the FX card
+- **transmod:** Original card sizes, slot titles and source labels
+- **scenes:** Original scene and song toolbars
+- **dialogs:** Original captions, titles and preference columns
+- **pattern:** Toolbar spinner, track rows and nav buttons at the shipped positions
+- **pads:** Shipped toolbar layout, flat empty layer slots, 5 px tiles
+- **inspector:** Empty layer rows, "Pad options... ▶", table at y 78
+- **layer:** Shipped layout and labels, connector lines, mod track ring
+- **browser:** Table colours, header bar, folding sources, icons
+- **sampler:** Strip geometry as shipped
+- **slicer:** Tool strip at (10, 8), 86 wide as shipped
+
 ## [0.1.0] - 2026-11-06
 
 First release: the original v2 instrument rebuilt in Rust as a thin app on dreist-commons
