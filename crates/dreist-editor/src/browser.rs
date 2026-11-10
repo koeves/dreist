@@ -2292,13 +2292,7 @@ impl Browser {
 
 /// `img` scaled into `r` (control coordinates).
 fn draw_image(p: &mut Painter, img: &dreist_gui::tiny_skia::Pixmap, r: RectF) {
-    let s = p.scale;
-    let (sx, sy) = (r.w / img.width().max(1) as f32, r.h / img.height().max(1) as f32);
-    let t = dreist_gui::tiny_skia::Transform::from_row(sx * s, 0.0, 0.0, sy * s, (p.tx + r.x) * s, (p.ty + r.y) * s);
-    let paint = dreist_gui::tiny_skia::PixmapPaint { quality: dreist_gui::tiny_skia::FilterQuality::Bilinear, ..Default::default() };
-    let b = ((p.tx + r.x) * s, (p.ty + r.y) * s, r.w * s, r.h * s);
-    let m = if p.need_mask(b) { p.mask.clone() } else { None };
-    p.pm.draw_pixmap(0, 0, img.as_ref(), &paint, t, m.as_ref());
+    p.image(img, r);
 }
 
 /// Outline folder: a tabbed body in `paper` with a 1 px `ink` edge.
