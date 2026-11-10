@@ -248,7 +248,7 @@ TM = dict(optDrawBorder="false", colBorder="Transparent", colModulationIndicatio
           colFill="PanelAltDark", colAltFill="EditorMedium", colHandleBorder="PanelBrightest", colHandleFill="PanelDarkest",
           colModulationPos="EditorAltDarkest", colDepth="EditorAltBrightestAlpha05")
 S("TransmodStyle", kind="CtrlTransmodStyle", **TM)
-S("TransmodSliderStyle", "TransmodStyle", "CtrlTransmodStyle")
+S("TransmodSliderStyle", "TransmodStyle", "CtrlTransmodStyle", optModStrip="true")
 S("MiniSequencerStyle", colFill="EditorAltMedium", colBorder="EditorAltMedium", colAltFill="EditorBrightest", colDisabledOverlay="PanelMediumAlpha05")
 
 section("Tables")

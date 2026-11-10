@@ -95,7 +95,7 @@
     <CtrlStyle name="KnobStyle" parentStyle0="ApplicationStyle" optDrawBorder="false" colFill="PanelMedium" colFillHighlight="EditorMedium" colAltFill="PanelDarkest" colBorder="PanelDarkest" colAltBorder="PanelBrightest" />
     <CtrlStyle name="AltKnobStyle" parentStyle0="KnobStyle" colFill="PanelMediumAlpha03" colFillHighlight="EditorBrightest" />
     <CtrlTransmodStyle name="TransmodStyle" parentStyle0="ApplicationStyle" optDrawBorder="false" colBorder="Transparent" colModulationIndication="EditorAltBrightest" colModTrackFill="PanelMediumAlpha05" colFill="PanelAltDark" colAltFill="EditorMedium" colHandleBorder="PanelBrightest" colHandleFill="PanelDarkest" colModulationPos="EditorAltDarkest" colDepth="EditorAltBrightestAlpha05" />
-    <CtrlTransmodStyle name="TransmodSliderStyle" parentStyle0="TransmodStyle" />
+    <CtrlTransmodStyle name="TransmodSliderStyle" parentStyle0="TransmodStyle" optModStrip="true" />
     <CtrlStyle name="MiniSequencerStyle" parentStyle0="ApplicationStyle" colFill="EditorAltMedium" colBorder="EditorAltMedium" colAltFill="EditorBrightest" colDisabledOverlay="PanelMediumAlpha05" />
 
     <!-- Tables -->

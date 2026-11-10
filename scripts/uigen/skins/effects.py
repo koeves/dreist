@@ -28,23 +28,23 @@ def chain():
 def card():
     """One effect: header (type menu, preset arrows), the input/mix/output
     column, the effect's own panel and the on switch."""
-    W, Hc = 252, 182
+    W, Hc = 250, 182
     icon = dict(style="DefaultIconButtonStyle", optIsMomentary=True)
-    column = N("Labeller", "SetupPanel", (0, 22, 40, 136), pin="ltb", id=100001, style="SmallControlLabellerStyle",
+    column = N("Labeller", "SetupPanel", (0, 20, 40, 140), pin="ltb", id=100001, style="SmallControlLabellerStyle",
                enumTextPosition="Below", intTextOffset=0, kids=[
-                   N("TransmodKnob", n, (5, 2 + i * 44, 30, 30), displayName=cap, id=i_d, style="TransmodStyle")
-                   for i, (n, cap, i_d) in enumerate([("TrimKnob", "In", 100005), ("MixKnob", "Mix", 100004),
-                                                      ("OutputKnob", "Out", 100005)])])
+                   N("TransmodKnob", n, (3, y, 32, 32), displayName=cap, id=i_d, style="TransmodStyle")
+                   for (n, cap, i_d), y in zip([("TrimKnob", "Input", 100005), ("MixKnob", "Mix", 100004),
+                                                ("OutputKnob", "Output", 100005)], (3, 49, 94))])
     return N("CollapsePanel", "CtrlPanel", (0, 0, W, Hc), pin="tb", iconicTarget="ARLeft", style="EffectCollapsePanelStyle", kids=[
-        N("Button", "EffectTypeCombo", (3, 3, 16, 16), pin="lt", text="", displayName="Choose effect", id=100002, **icon),
-        N("Button", "LastPresetButton", (W - 30, 3, 13, 16), pin="lr", text="", displayName="Previous preset", id=100000, **icon),
-        N("Button", "NextPresetButton", (W - 16, 3, 13, 16), pin="lr", text="", displayName="Next preset", id=100001, **icon),
+        N("Button", "EffectTypeCombo", (2, 2, 16, 16), pin="lt", text="", displayName="Choose effect", id=100002, **icon),
+        N("Button", "LastPresetButton", (W - 27, 2, 12, 16), pin="lr", text="", displayName="Previous preset", id=100000, **icon),
+        N("Button", "NextPresetButton", (W - 14, 2, 12, 16), pin="lr", text="", displayName="Next preset", id=100001, **icon),
         # The header between the buttons: drag it left or right to move the
         # effect in the chain.
-        N("Panel", "HeaderGrip", (21, 0, W - 53, 22), pin="lrt", overloadClass="EffectHeaderGrip", style="InvisibleStyle"),
+        N("Panel", "HeaderGrip", (20, 0, W - 49, 20), pin="lrt", overloadClass="EffectHeaderGrip", style="InvisibleStyle"),
         column,
-        N("Panel", "EffectPanel", (41, 22, 210, Hc - 22), pin="lrtb", id=100012, style="InvisibleStyle"),
-        N("Button", "ActiveButton", (3, Hc - 20, 34, 17), displayName="Effect on/off", id=100006, style="DefaultButtonStyle", text="On"),
+        N("Panel", "EffectPanel", (40, 20, 210, Hc - 20), pin="lrtb", id=100012, style="InvisibleStyle"),
+        N("Button", "ActiveButton", (2, Hc - 18, 36, 18), displayName="Effect on/off", id=100006, style="DefaultButtonStyle", text="Active"),
         N("Panel", None, (W - 1, 0, 1, Hc), pin="lrtb", style="LightDividerStyle", zorder=666),
     ])
 

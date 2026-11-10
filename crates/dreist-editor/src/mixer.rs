@@ -212,7 +212,7 @@ impl Mixer {
             self.shown = chans.clone();
             sc.set_attr("sizeIndex", size.to_string());
             sc.children.clear();
-            for ch in chans {
+            for (i, ch) in chans.into_iter().enumerate() {
                 let set = match ch {
                     Channel::Aux(_) => &self.aux,
                     Channel::Master => &self.master,
@@ -223,6 +223,9 @@ impl Mixer {
                 let w = s.rect.w;
                 s.set_rect(Rect::new(0, 0, w, h));
                 s.set_attr("channel", format!("{ch:?}"));
+                // [re:5d1918]: strips alternate the odd / even channel
+                // styles (both light panels in the shipped stylesheet).
+                s.style = if i % 2 == 0 { "MixerChannelOddStyle" } else { "MixerChannelEvenStyle" }.into();
                 sc.children.push(s);
             }
         }
