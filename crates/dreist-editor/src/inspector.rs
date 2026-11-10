@@ -802,8 +802,9 @@ impl Inspector {
                 }
                 let Some(par) = param_for_control(name) else { return false };
                 let is_tm = app.ctrl(path).is_some_and(|c| c.class == "CtrlTransmodKnob");
-                let (src, v) = crate::model::knob_edit(app.ctrl(path), if is_tm { model.source } else { 0 }, *value);
-                out.push(msg(id::SET_LAYER_PARAMETER, &idx, &[par as u8 as f32, v, src as f32]));
+                for (src, v) in crate::model::knob_edits(app.ctrl(path), if is_tm { model.source } else { 0 }, *value) {
+                    out.push(msg(id::SET_LAYER_PARAMETER, &idx, &[par as u8 as f32, v, src as f32]));
+                }
                 true
             }
             UiEvent::Mouse { path, overload, kind: dreist_gui::app::MouseKind::Down, .. } if overload == "LayerRow" => {

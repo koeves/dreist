@@ -846,8 +846,9 @@ impl Transmod {
                 }
                 let Some(slot) = Self::slot_of(app, path) else { return false };
                 let Some(i) = name.strip_prefix("Control").and_then(|v| v.parse::<usize>().ok()) else { return false };
-                let (src, v) = crate::model::knob_edit(app.ctrl(path), model.source, *value);
-                out.push(msg(id::SET_MODULATION_SOURCE_PARAMETER, &[slot as i32], &[0.0, i as f32, src as f32, v]));
+                for (src, v) in crate::model::knob_edits(app.ctrl(path), model.source, *value) {
+                    out.push(msg(id::SET_MODULATION_SOURCE_PARAMETER, &[slot as i32], &[0.0, i as f32, src as f32, v]));
+                }
                 true
             }
             _ => false,

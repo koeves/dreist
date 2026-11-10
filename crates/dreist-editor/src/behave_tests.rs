@@ -137,3 +137,45 @@ fn transmod_knobs_take_wheel_steps() {
     assert!((v1 - (v0 + 1.0 / 150.0).min(1.0)).abs() < 1e-5, "{v0} {v1}");
     assert!(!ed.take_commands().is_empty());
 }
+
+/// [re:081d3e]: option-dragging a modulated knob's centre moves the base
+/// and keeps the modulation end, sending the base and the source's depth
+/// together; one undo step restores both.
+#[test]
+fn option_drag_of_the_base_keeps_the_modulation_end() {
+    let Ok(mut ed) = Editor::new(dreist_gui::skin::default_theme(), Model::new(project::new_document())) else { return };
+    ed.model.source = 5;
+    ed.sync();
+    let Some(k) = ed.app.root.path_of("VoicePan") else { return };
+    let orig = ed.model.doc.clone();
+    let c = ed.app.ctrl(&k).unwrap();
+    let (b0, end) = (c.attr_f32("baseValue", 0.0), c.attr_f32("baseValue", 0.0) + c.value * 2.0 - 1.0);
+    let r = ed.app.abs_rect(&k);
+    let (x, y) = (r.x as f32 + r.w as f32 / 2.0, r.y as f32 + r.h as f32 / 2.0);
+    let ev = ed.app.mouse_move(x, y);
+    feed(&mut ed, ev);
+    ed.app.mods.alt = true;
+    ed.take_commands();
+    let ev = ed.app.mouse_down(MouseButton::Left);
+    feed(&mut ed, ev);
+    // 40 px up: 0.2, less the snap's 0.1 lag off the end.
+    let ev = ed.app.mouse_move(x, y - 40.0);
+    feed(&mut ed, ev);
+    let ev = ed.app.mouse_up(MouseButton::Left);
+    feed(&mut ed, ev);
+    ed.app.mods.alt = false;
+    let sent: Vec<[f32; 3]> =
+        ed.take_commands().into_iter().filter_map(|c| if let Command::Message(m) = c { (m.kind == id::SET_LAYER_PARAMETER).then(|| [m.value[0], m.value[1], m.value[2]]) } else { None }).collect();
+    let base = sent.iter().rfind(|m| m[2] == 0.0).expect("base edit")[1];
+    let depth = sent.iter().rfind(|m| m[2] == 5.0).expect("depth edit")[1];
+    assert!((base - (b0 + 0.1).min(1.0)).abs() < 1e-5, "{sent:?}");
+    assert!((base + depth - end).abs() < 1e-5, "end kept: {sent:?}");
+    ed.sync();
+    let c = ed.app.ctrl(&k).unwrap();
+    assert!((c.attr_f32("baseValue", 0.0) - base).abs() < 1e-5 && (c.attr_f32("modDepth", 0.0) - depth).abs() < 1e-5);
+    assert_ne!(ed.model.doc, orig);
+    // One undo step for both.
+    let undo = ed.app.root.path_of("UndoButton").unwrap();
+    ed.handle(&UiEvent::Clicked { path: undo, name: "UndoButton".into(), id: 0, on: false });
+    assert_eq!(ed.model.doc, orig);
+}
