@@ -98,8 +98,8 @@ def sampler():
                   N("Labeller", None, (i * 62, 0, 60, 34), enumTextPosition="Below", intTextOffset=1,
                     style="SmallControlLabellerStyle", kids=[
                         N("PopupButton", n, (0, 0, 60, 19), pin="lr", displayName=cap, id=i_d, style="DefaultPopupButtonStyle")])
-                  for i, (n, cap, i_d) in enumerate([("SourceList", "Input", 100000), ("TriggerMode", "Start", None),
-                                                     ("Follow", "Then", None)])])
+                  for i, (n, cap, i_d) in enumerate([("SourceList", "Source", 100000), ("TriggerMode", "Trigger", None),
+                                                     ("Follow", "Assign", None)])])
     lab = N("Labeller", None, (0, 0, W, H), pin="lrtb", enumTextPosition="Below", intTextOffset=1, style="SmallControlLabellerStyle", kids=[
         N("Slider", "InputGain", (4, 3, 15, 62), pin="tb", displayName="Input", id=100001, style="SliderStyle", realTrackInset=0.3),
         N("MultiChannelDBMeter", "VUMeter", (21, 3, 14, 62), pin="tb", id=100003, optIsLinear=True, style="DefaultVUMeterStyle"),
@@ -120,7 +120,7 @@ def sampler():
               intTopSpacing=0, intBottomSpacing=0, kids=[
                   N("Button", "BeatsButton", (0, 0, 58, 18), displayName="Length in bars and beats", id=1, style="DefaultButtonStyle",
                     text="Beats", **fl),
-                  N("Button", "SecsButton", (60, 0, 60, 18), displayName="Length in seconds", style="DefaultButtonStyle", text="Secs", **fl)]),
+                  N("Button", "SecsButton", (60, 0, 60, 18), displayName="Length in seconds", style="DefaultButtonStyle", text="Seconds", **fl)]),
             N("Labeller", "BeatsPanel", (0, 21, 170, 19), pin="l", id=100002, enumTextPosition="Right", intTextOffset=2,
               style="SmallControlLabellerStyle", kids=[
                   N("TextBox", "BarsTextBox", (0, 0, 52, 19), displayName="Bars", id=100000, style="DefaultEditBoxStyle"),

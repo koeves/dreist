@@ -2,7 +2,7 @@
 <root>
     <CtrlPanel name="TransmodSelectPanel" rect="0, 0, 1150, 35" ARLeft="FNear 0.0000" ARRight="FNear 0.0000" ARTop="FNear 0.0000" ARBottom="FNear 0.0000" style="InvisibleStyle">
         <CtrlPanel rect="0, 0, 960, 35" ARLeft="FNear 0.0000" ARRight="FNear 190.0000" ARTop="FNear 0.0000" ARBottom="FNear 0.0000" style="InvisibleStyle">
-            <CtrlButton name="Src0" rect="2, 7, 38, 20" ARTop="Center 0.0000" displayName="Edit base values" style="TransmodButtonStyle" text="Base" />
+            <CtrlButton name="Src0" rect="2, 7, 38, 20" ARTop="Center 0.0000" displayName="Edit base values" style="TransmodButtonStyle" text="Src" />
             <CtrlLayoutBox rect="46, 7, 914, 20" ARLeft="FNear 46.0000" ARRight="FNear 0.0000" ARTop="Center 0.0000" intBottomSpacing="0" intLeftSpacing="0" intRightSpacing="0" intTopSpacing="0" optIsVertical="false" style="InvisibleStyle">
                 <CtrlButton name="Src1" rect="0, 0, 30, 20" style="TransmodButtonStyle" text="A Env" />
                 <CtrlButton name="Src2" rect="32, 0, 30, 20" style="TransmodButtonStyle" text="F Env" />

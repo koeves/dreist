@@ -11,13 +11,13 @@
             <CtrlKnob name="PreviewVolume" rect="42, 47, 20, 20" displayName="Thru" id="100001" realDialThickness="0.3000" style="KnobStyle" />
             <CtrlLayoutBox rect="70, 2, 184, 34" ARLeft="FFar 230.0000" ARRight="FFar 184.0000" intBottomSpacing="0" intLeftSpacing="0" intRightSpacing="0" intTopSpacing="0" optIsVertical="false" style="InvisibleStyle">
                 <CtrlLabeller rect="0, 0, 60, 34" enumTextPosition="Below" intTextOffset="1" style="SmallControlLabellerStyle">
-                    <CtrlPopupButton name="SourceList" rect="0, 0, 60, 19" ARLeft="FNear 0.0000" ARRight="FNear 0.0000" displayName="Input" id="100000" style="DefaultPopupButtonStyle" />
+                    <CtrlPopupButton name="SourceList" rect="0, 0, 60, 19" ARLeft="FNear 0.0000" ARRight="FNear 0.0000" displayName="Source" id="100000" style="DefaultPopupButtonStyle" />
                 </CtrlLabeller>
                 <CtrlLabeller rect="62, 0, 60, 34" enumTextPosition="Below" intTextOffset="1" style="SmallControlLabellerStyle">
-                    <CtrlPopupButton name="TriggerMode" rect="0, 0, 60, 19" ARLeft="FNear 0.0000" ARRight="FNear 0.0000" displayName="Start" style="DefaultPopupButtonStyle" />
+                    <CtrlPopupButton name="TriggerMode" rect="0, 0, 60, 19" ARLeft="FNear 0.0000" ARRight="FNear 0.0000" displayName="Trigger" style="DefaultPopupButtonStyle" />
                 </CtrlLabeller>
                 <CtrlLabeller rect="124, 0, 60, 34" enumTextPosition="Below" intTextOffset="1" style="SmallControlLabellerStyle">
-                    <CtrlPopupButton name="Follow" rect="0, 0, 60, 19" ARLeft="FNear 0.0000" ARRight="FNear 0.0000" displayName="Then" style="DefaultPopupButtonStyle" />
+                    <CtrlPopupButton name="Follow" rect="0, 0, 60, 19" ARLeft="FNear 0.0000" ARRight="FNear 0.0000" displayName="Assign" style="DefaultPopupButtonStyle" />
                 </CtrlLabeller>
             </CtrlLayoutBox>
             <CtrlLabeller name="ThresholdPanel" rect="70, 37, 184, 40" ARLeft="FFar 230.0000" ARRight="FFar 184.0000" enumTextPosition="Left" id="100001" style="SmallControlLabellerStyle">
@@ -28,7 +28,7 @@
             <CtrlPanel name="SyncPanel" rect="70, 37, 184, 42" id="100005" style="InvisibleStyle">
                 <CtrlButtonGroup name="SyncButtonGroup" rect="0, 0, 120, 18" id="100003" intBottomSpacing="0" intLeftSpacing="0" intRightSpacing="0" intTopSpacing="0" optIsVertical="false">
                     <CtrlButton name="BeatsButton" rect="0, 0, 58, 18" displayName="Length in bars and beats" id="1" overloadClass="FlashingButton" style="DefaultButtonStyle" text="Beats" />
-                    <CtrlButton name="SecsButton" rect="60, 0, 60, 18" displayName="Length in seconds" overloadClass="FlashingButton" style="DefaultButtonStyle" text="Secs" />
+                    <CtrlButton name="SecsButton" rect="60, 0, 60, 18" displayName="Length in seconds" overloadClass="FlashingButton" style="DefaultButtonStyle" text="Seconds" />
                 </CtrlButtonGroup>
                 <CtrlLabeller name="BeatsPanel" rect="0, 21, 170, 19" ARLeft="FNear 0.0000" enumTextPosition="Right" id="100002" intTextOffset="2" style="SmallControlLabellerStyle">
                     <CtrlTextBox name="BarsTextBox" rect="0, 0, 52, 19" displayName="Bars" id="100000" style="DefaultEditBoxStyle" />

@@ -118,7 +118,7 @@ def source_bar():
     flash = [N("Button", f"FlashSrc{i + 1}", (i * (bw + gap), 0, bw, 20), style="TransmodFlashButtonStyle")
              for i in range(len(SOURCES))]
     left = N("Panel", None, (0, 0, 960, H), pin="lrtb", style="InvisibleStyle", kids=[
-        N("Button", "Src0", (2, 7, 38, 20), pin="m", style="TransmodButtonStyle", text="Base",
+        N("Button", "Src0", (2, 7, 38, 20), pin="m", style="TransmodButtonStyle", text="Src",
           displayName="Edit base values"),
         N("LayoutBox", None, (46, 7, 914, 20), pin="lrm", kids=srcs, **box),
         N("LayoutBox", None, (46, 29, 914, 3), pin="lr", kids=flash, **box),
@@ -147,7 +147,7 @@ def trigger_dialog():
                  N("Labeller", None, (0, 66, 320, 28), pin="lrt", enumTextPosition="Right", intTextOffset=6,
                    style="DialogPanelLeftLabellerStyle", kids=[
                        N("PopupButton", "ShowEng", (0, 4, 56, 18), displayName="Engine", style="DefaultPopupButtonStyle")]),
-                 N("Matrix", "Matrix", (0, 116, 320, 320), pin="lrtb", displayName="Reset on pad(s) in an engine",
+                 N("Matrix", "Matrix", (0, 116, 320, 320), pin="lrtb", displayName="Pads That Trigger Modulator",
                    intNumberOfCols=4, intNumberOfRows=16, optLayoutFromTop=False, style="InvisibleStyle"),
              ])
     return N("AnchorPanel", "Anchor", (0, 0, 350, 450), enumAnchorEdge="ARLeft", intAnchorPoint=160,
