@@ -5,8 +5,9 @@
 - Rebuilt in Rust from the reverse-engineered behaviour of FXpansion **Geist2** 2.1.2.13.
 - Loads Geist2 `.geist` projects, kits and patterns; saves its own `.dreist` family
   (`.dreist`, `.dreistkit`, ...) in Geist2's XML.
-- VST3, CLAP and a standalone app for macOS (Apple Silicon) and Windows (x64).
-- Settings: `~/Library/Application Support/Dreist` (Windows: `%APPDATA%\Dreist`).
+- VST3, CLAP and a standalone app for macOS (Apple Silicon), Windows (x64) and Linux (x86_64, X11).
+- Settings: `~/Library/Application Support/Dreist` (Windows: `%APPDATA%\Dreist`, Linux:
+  `~/.config/Dreist`, or `$XDG_CONFIG_HOME/Dreist`).
 - Plugin IDs: CLAP `rs.dreist.dreist`, VST3 class `DreistRsDrumSmp1`.
 
 | | |
@@ -18,7 +19,7 @@
 
 Download the zips for your system from the
 [releases page](https://github.com/koeves/dreist/releases): `Dreist-<version>-<os>-VST3.zip`,
-`-CLAP.zip` and `-App.zip`.
+`-CLAP.zip` and `-App.zip` (`.tar.gz` on Linux).
 
 **macOS**
 
@@ -43,11 +44,26 @@ xattr -dr com.apple.quarantine ~/Library/Audio/Plug-Ins/VST3/Dreist.vst3 ~/Libra
   `Resources` folder next to it. SmartScreen may warn on first launch, because
   the build is unsigned: More info › Run anyway.
 
+**Linux** (x86_64, X11; Wayland desktops run it through XWayland)
+
+- VST3: unpack and move `Dreist.vst3` to `~/.vst3/` (or `/usr/lib/vst3/`).
+- CLAP: unpack and move the `Dreist` folder (holding `Dreist.clap` and its `Resources`) to
+  `~/.clap/` (or `/usr/lib/clap/`).
+- App: unpack the `Dreist` folder anywhere (say `~/.local/share/Dreist`) and run `Dreist`; keep
+  `Resources` next to it. A symlink to it (`ln -s ~/.local/share/Dreist/Dreist ~/.local/bin/dreist`)
+  works, and `dreist.desktop` / `dreist.png` are a desktop entry and icon for
+  `~/.local/share/applications` and `~/.local/share/icons/hicolor/256x256/apps`.
+- Runtime needs: ALSA (`libasound2`), X11 / XCB (`libx11-6`, `libx11-xcb1`, `libxcb1`,
+  `libxcursor1`) and OpenGL (`libgl1`), present on desktop systems. The standalone app plays
+  through ALSA (with PipeWire or PulseAudio, through their ALSA plugin); file dialogs use the XDG
+  desktop portal (`xdg-desktop-portal`, or `zenity` without one).
+
 **Content**
 
 Dreist does not include sample content. Get Geist2 content (such as the
 starter pack) from FXpansion; Geist2 kits, presets and expansions load as they are. Dreist looks in
-`~/Documents/FXpansion/Geist2` (Windows: `%USERPROFILE%\Documents\FXpansion\Geist2`);
+`~/Documents/FXpansion/Geist2` (Windows: `%USERPROFILE%\Documents\FXpansion\Geist2`, Linux:
+`~/Documents/FXpansion/Geist2` too);
 change the location under Preferences.
 
 ## Build
@@ -58,12 +74,21 @@ Needs a Rust toolchain.
 scripts/build.sh            # macOS: target/bundled/Dreist.{app,vst3,clap}
 scripts/build.sh --install  # also copies them to ~/Library and /Applications
 scripts/build-windows.sh    # Windows (Git Bash): target/bundled/Dreist.vst3, Dreist-CLAP/, Dreist-App/
+scripts/build-linux.sh      # Linux: target/bundled/Dreist.vst3, Dreist-CLAP/, Dreist-App/
+scripts/build-linux.sh --install  # also into ~/.vst3, ~/.clap/Dreist, ~/.local/share/Dreist (+ ~/.local/bin/dreist)
 cargo test --workspace
 ```
 
+On Linux the build needs (Debian / Ubuntu names; Fedora: `alsa-lib-devel libX11-devel
+libxcb-devel libXcursor-devel mesa-libGL-devel`):
+
+```bash
+sudo apt-get install pkg-config libasound2-dev libx11-dev libx11-xcb-dev libxcb1-dev libxcursor-dev libgl1-mesa-dev
+```
+
 Merging a release pull request (`dev` -> `main`) releases: `.github/workflows/release-on-main.yml`
-takes the version from the commits, tags the merge `vX.Y.Z`, tests and builds on macOS and Windows,
-publishes the GitHub release with the zips and opens the changelog pull request into `dev`
+takes the version from the commits, tags the merge `vX.Y.Z`, tests and builds on macOS, Windows and
+Linux, publishes the GitHub release with the zips (Linux: tarballs) and opens the changelog pull request into `dev`
 ([CONTRIBUTING.md](CONTRIBUTING.md)).
 
 ## Layout

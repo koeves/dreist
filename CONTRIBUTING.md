@@ -12,8 +12,8 @@ manual tagging, bumping or changelog commit. `.github/workflows/release-on-main.
 version from the commits since the last `v*` tag (`git cliff --bumped-version`, rules in
 `cliff.toml`: fix and the rest -> patch, feat -> minor, breaking -> major, and breaking -> minor
 while on 0.x), checks that `commons` points at a dreist-commons release tag, tags the merge commit
-`vX.Y.Z` and runs `release.yml`: the commit check, CI, tests and builds on macOS and Windows
-(VST3, CLAP, app zips) with the version written into `Cargo.toml` in its own checkout (plugins,
+`vX.Y.Z` and runs `release.yml`: the commit check, CI, tests and builds on macOS, Windows and
+Linux (VST3, CLAP, app zips; tarballs on Linux) with the version written into `Cargo.toml` in its own checkout (plugins,
 app and About show it), and the GitHub release with notes generated from the commits. It then
 opens the follow-up pull request `docs(release): changelog and version for vX.Y.Z` into `dev`
 (CHANGELOG.md, the `Cargo.toml` / `Cargo.lock` version), which merges itself once its checks pass.
@@ -46,14 +46,16 @@ the pointer to its tag (`build: dreist-commons vX.Y.Z`, or Dependabot's pull req
 
 Signing: builds are unsigned. `scripts/build.sh` signs ad hoc on macOS; `DREIST_SIGN_IDENTITY`
 (Developer ID) signs with the hardened runtime, and `DREIST_NOTARY_PROFILE` also notarises. Windows
-binaries are unsigned.
+and Linux binaries are unsigned.
 
 Third-party notices: `THIRD_PARTY_NOTICES.md` is generated (`python3 scripts/notices.py`, CI runs
 `--check`). The crates are MIT OR Apache-2.0; `dreist-plugin` and the binaries are GPL-3.0-or-later.
 
 ## Development
 
-Build, run and test (macOS; on Windows `scripts/build-windows.sh` in Git Bash):
+Build, run and test (macOS; on Windows `scripts/build-windows.sh` in Git Bash, on Linux
+`scripts/build-linux.sh`, with the system packages in the README; CI's `linux-build` job builds,
+tests and bundles there, the tests under `xvfb-run`):
 
     scripts/build.sh                  # release: target/bundled/Dreist.{app,vst3,clap}; --debug, --install
     cargo run -p dreist-plugin --features standalone --bin dreist-standalone --release
