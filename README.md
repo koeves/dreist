@@ -5,7 +5,8 @@
 - Rebuilt in Rust from the reverse-engineered behaviour of FXpansion **Geist2** 2.1.2.13.
 - Loads Geist2 `.geist` projects, kits and patterns; saves its own `.dreist` family
   (`.dreist`, `.dreistkit`, ...) in Geist2's XML.
-- VST3, CLAP and a standalone app for macOS (Apple Silicon), Windows (x64) and Linux (x86_64, X11).
+- VST3, CLAP and a standalone app for macOS (Apple Silicon), Windows (x64) and Linux (x86_64,
+  X11 / XWayland); minimums under [Installation](#installation).
 - Settings: `~/Library/Application Support/Dreist` (Windows: `%APPDATA%\Dreist`, Linux:
   `~/.config/Dreist`, or `$XDG_CONFIG_HOME/Dreist`).
 - Plugin IDs: CLAP `rs.dreist.dreist`, VST3 class `DreistRsDrumSmp1`.
@@ -17,9 +18,24 @@
 
 ## Installation
 
-Download the zips for your system from the
-[releases page](https://github.com/koeves/dreist/releases): `Dreist-<version>-<os>-VST3.zip`,
-`-CLAP.zip` and `-App.zip` (`.tar.gz` on Linux).
+Download the archives for your system from the
+[releases page](https://github.com/koeves/dreist/releases) (latest:
+[v0.2.3](https://github.com/koeves/dreist/releases/tag/v0.2.3), macOS and Windows; Linux builds
+come with the next release).
+
+Supported systems:
+
+- macOS 11 or newer on Apple Silicon.
+- Windows 10 or newer, x64.
+- Linux x86_64 with glibc 2.39 or newer (Ubuntu 24.04, Fedora 40 or newer), X11 or XWayland.
+
+Release downloads, per system (`<tag>` is the release, say `v0.2.3`):
+
+| System | VST3 | CLAP | App |
+|---|---|---|---|
+| macOS | `Dreist-<tag>-macOS-VST3.zip` | `Dreist-<tag>-macOS-CLAP.zip` | `Dreist-<tag>-macOS-App.zip` |
+| Windows | `Dreist-<tag>-Windows-VST3.zip` | `Dreist-<tag>-Windows-CLAP.zip` | `Dreist-<tag>-Windows-App.zip` |
+| Linux | `Dreist-<tag>-Linux-VST3.tar.gz` | `Dreist-<tag>-Linux-CLAP.tar.gz` | `Dreist-<tag>-Linux-App.tar.gz` |
 
 **macOS**
 
@@ -44,7 +60,7 @@ xattr -dr com.apple.quarantine ~/Library/Audio/Plug-Ins/VST3/Dreist.vst3 ~/Libra
   `Resources` folder next to it. SmartScreen may warn on first launch, because
   the build is unsigned: More info › Run anyway.
 
-**Linux** (x86_64, X11; Wayland desktops run it through XWayland)
+**Linux** (x86_64, glibc 2.39+; X11, Wayland desktops run it through XWayland)
 
 - VST3: unpack and move `Dreist.vst3` to `~/.vst3/` (or `/usr/lib/vst3/`).
 - CLAP: unpack and move the `Dreist` folder (holding `Dreist.clap` and its `Resources`) to
@@ -57,6 +73,13 @@ xattr -dr com.apple.quarantine ~/Library/Audio/Plug-Ins/VST3/Dreist.vst3 ~/Libra
   `libxcursor1`) and OpenGL (`libgl1`), present on desktop systems. The standalone app plays
   through ALSA (with PipeWire or PulseAudio, through their ALSA plugin); file dialogs use the XDG
   desktop portal (`xdg-desktop-portal`, or `zenity` without one).
+
+**Known limitations**
+
+- Windows and Linux: REX files (`.rx2`, `.rex`) do not load, and samples cannot be dragged out
+  of Dreist into a host or the file manager (both macOS only).
+- Linux: X11 only; Wayland desktops run Dreist through XWayland.
+- The builds are unsigned on every system (see above for the first launch on macOS and Windows).
 
 **Content**
 
