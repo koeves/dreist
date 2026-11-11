@@ -2,8 +2,8 @@ name: Release
 
 # Releases a tag `vX.Y.Z`: checks that commons is a dreist-commons release,
 # checks the commit subjects, runs the CI suite, builds Dreist (VST3, CLAP,
-# standalone) on macOS and Windows with the tag's version written into
-# Cargo.toml, tests it and publishes the GitHub release with the zips. Called
+# standalone) on macOS, Windows and Linux with the tag's version written into
+# Cargo.toml, tests it and publishes the GitHub release with the zips (tarballs on Linux). Called
 # by release-on-main.yml once it has tagged the merge of a release pull
 # request; also runs on a tag pushed by hand (a tag pushed by
 # release-on-main.yml with GITHUB_TOKEN starts no second run) and by hand
@@ -66,6 +66,8 @@ jobs:
             name: macOS
           - os: windows-latest
             name: Windows
+          - os: ubuntu-24.04
+            name: Linux
     runs-on: ${{ matrix.os }}
     defaults:
       run:
@@ -83,8 +85,13 @@ jobs:
           if [[ $TAG =~ ^v[0-9]+\.[0-9]+\.[0-9]+$ ]]; then
             .github/release/stamp-version.sh "$TAG"
           fi
+      - name: System packages (Linux)
+        if: runner.os == 'Linux'
+        run: |
+          sudo apt-get update
+          sudo apt-get install -y --no-install-recommends pkg-config libasound2-dev libjack-jackd2-dev libx11-dev libx11-xcb-dev libxcb1-dev libxcb-icccm4-dev libxcb-dri2-0-dev libxcursor-dev libgl1-mesa-dev xvfb
       - name: Test
-        run: cargo test --locked --workspace
+        run: ${{ runner.os == 'Linux' && 'xvfb-run -a ' || '' }}cargo test --locked --workspace
       - name: Build (macOS)
         if: runner.os == 'macOS'
         run: |
@@ -101,10 +108,22 @@ jobs:
           mv Dreist-CLAP Dreist && 7z a -tzip "Dreist-$TAG-${{ matrix.name }}-CLAP.zip" Dreist && mv Dreist Dreist-CLAP
           mv Dreist-App Dreist && 7z a -tzip "Dreist-$TAG-${{ matrix.name }}-App.zip" Dreist && mv Dreist Dreist-App
           7z a -tzip "Dreist-$TAG-${{ matrix.name }}-VST3.zip" Dreist.vst3
+      - name: Build (Linux)
+        # tar keeps the executable bits; the CLAP and the app unpack into a
+        # Dreist/ folder each (README: Linux).
+        if: runner.os == 'Linux'
+        run: |
+          scripts/build-linux.sh
+          cd target/bundled
+          tar -czf "Dreist-$TAG-${{ matrix.name }}-VST3.tar.gz" Dreist.vst3
+          tar -czf "Dreist-$TAG-${{ matrix.name }}-CLAP.tar.gz" --transform 's,^Dreist-CLAP,Dreist,' Dreist-CLAP
+          tar -czf "Dreist-$TAG-${{ matrix.name }}-App.tar.gz" --transform 's,^Dreist-App,Dreist,' Dreist-App
       - uses: actions/upload-artifact@v7
         with:
           name: Dreist-${{ env.TAG }}-${{ matrix.name }}
-          path: target/bundled/Dreist-*.zip
+          path: |
+            target/bundled/Dreist-*.zip
+            target/bundled/Dreist-*.tar.gz
           retention-days: 7
 
   release:
@@ -136,4 +155,4 @@ jobs:
           else
             gh release create "$TAG" --verify-tag --title "$TITLE" --notes-file notes.md
           fi
-          gh release upload "$TAG" dist/*.zip --clobber
+          gh release upload "$TAG" dist/*.zip dist/*.tar.gz --clobber

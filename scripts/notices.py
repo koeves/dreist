@@ -19,8 +19,16 @@ EXTRA = [
 ]
 
 
+# The platforms the release builds for: each one's crates are listed.
+PLATFORMS = ["aarch64-apple-darwin", "x86_64-pc-windows-msvc", "x86_64-unknown-linux-gnu"]
+
+
 def rows():
-    meta = json.loads(subprocess.check_output(["cargo", "metadata", "--format-version", "1", "--locked", "--filter-platform", "aarch64-apple-darwin"], cwd=ROOT))
+    return sorted(set().union(*(platform_rows(p) for p in PLATFORMS)))
+
+
+def platform_rows(platform):
+    meta = json.loads(subprocess.check_output(["cargo", "metadata", "--format-version", "1", "--locked", "--filter-platform", platform], cwd=ROOT))
     pk = {p["id"]: p for p in meta["packages"]}
     # The dreist-* crates (dreist-commons) are this project's own code.
     ws = set(meta["workspace_members"])
@@ -35,7 +43,7 @@ def rows():
         for d in nodes[i]["deps"]:
             if any(k["kind"] in (None, "build") for k in d["dep_kinds"]):
                 stack.append(d["pkg"])
-    return sorted({(pk[i]["name"], pk[i]["version"], pk[i]["license"] or "see repository", pk[i].get("repository") or "") for i in seen if i not in ws and not pk[i]["name"].startswith("dreist-")})
+    return {(pk[i]["name"], pk[i]["version"], pk[i]["license"] or "see repository", pk[i].get("repository") or "") for i in seen if i not in ws and not pk[i]["name"].startswith("dreist-")}
 
 
 def render():
