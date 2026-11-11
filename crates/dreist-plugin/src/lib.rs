@@ -260,7 +260,7 @@ impl Plugin for DreistPlugin {
     fn editor(&mut self, _async_executor: AsyncExecutor<Self>) -> Option<Box<dyn Editor>> {
         // Option `StyleSheet` (Preferences › UI style; `DREIST_THEME` overrides).
         let theme = std::env::var("DREIST_THEME").unwrap_or_else(|_| dreist_editor::options::Options::load().string("StyleSheet", dreist_gui::skin::default_theme()));
-        Some(Box::new(editor::DreistEditor { bridge: self.bridge.clone(), theme, params: self.params.clone(), size: self.editor_size.clone() }))
+        Some(Box::new(editor::DreistEditor { bridge: self.bridge.clone(), theme, params: self.params.clone(), size: self.editor_size.clone(), host_scale: 1.0f32.to_bits().into() }))
     }
 
     fn initialize(&mut self, _layout: &AudioIOLayout, buffer_config: &BufferConfig, _context: &mut impl InitContext<Self>) -> bool {
