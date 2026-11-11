@@ -56,7 +56,7 @@ Needs a Rust toolchain.
 
 ```bash
 scripts/build.sh            # macOS: target/bundled/Dreist.{app,vst3,clap}
-scripts/build.sh --install  # also copies them to ~/Library and ~/Applications
+scripts/build.sh --install  # also copies them to ~/Library and /Applications
 scripts/build-windows.sh    # Windows (Git Bash): target/bundled/Dreist.vst3, Dreist-CLAP/, Dreist-App/
 cargo test --workspace
 ```
