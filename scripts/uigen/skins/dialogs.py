@@ -30,7 +30,9 @@ def about():
           ARLeft="FNear 5.0000", ARRight="Relative 0.5000", ARTop="FNear 5.0000"),
         N("Label", "DateLabel", (W // 2, 5, W // 2 - 5, 20), style="DialogPanelRightLabelStyle", text="Date",
           ARLeft="Relative 0.5000", ARRight="FNear 5.0000", ARTop="FNear 5.0000"),
-        N("Label", "AboutLabel", (0, 50, W, H - 100), pin="lrtb", style="DialogPanelLargeCenterLabelStyle", text=""),
+        # Two centred lines (the editor puts a line break in the text).
+        N("MultiLineLabel", "AboutLabel", (0, 62, W, 52), pin="lrtb", style="DialogPanelLargeCenterLabelStyle", text="",
+          intLineHeight=26),
     ])
 
 

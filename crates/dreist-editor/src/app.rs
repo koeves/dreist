@@ -7,7 +7,7 @@ use std::path::Path;
 use dreist_formats::Node;
 
 /// The About text.
-pub const ABOUT: &str = "Dreist: drum sampler, sequencer and performance instrument. Native for macOS, Windows and Linux, written in Rust.";
+pub const ABOUT: &str = "Dreist: drum sampler, sequencer and performance instrument.\nNative for macOS, Windows and Linux, written in Rust.";
 
 /// Settings folder name (`~/Library/Application Support/<name>`,
 /// `%APPDATA%\<name>`, `$XDG_CONFIG_HOME/<name>`).
