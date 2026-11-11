@@ -87,3 +87,38 @@ jobs:
         run: |
           cargo build --locked -p dreist-plugin --release
           cargo build --locked -p dreist-plugin --features standalone --bin dreist-standalone --release
+
+  linux-build:
+    # The plugin and app on Linux (X11, ALSA): lint, test and bundle them.
+    runs-on: ubuntu-24.04
+    env:
+      DREIST_UI: ${{ github.workspace }}/assets/ui
+      DREIST_RESOURCES: ${{ github.workspace }}/assets/factory
+    steps:
+      - uses: actions/checkout@v7
+        with:
+          submodules: recursive
+      - uses: dtolnay/rust-toolchain@stable
+        with:
+          components: clippy
+      - uses: Swatinem/rust-cache@v2
+      - name: System packages
+        run: |
+          sudo apt-get update
+          sudo apt-get install -y --no-install-recommends pkg-config libasound2-dev libjack-jackd2-dev libx11-dev libx11-xcb-dev libxcb1-dev libxcb-icccm4-dev libxcb-dri2-0-dev libxcursor-dev libgl1-mesa-dev xvfb
+      - name: Clippy
+        run: cargo clippy --locked --workspace --all-targets -- -D warnings
+      - name: Clippy (standalone)
+        run: cargo clippy --locked -p dreist-plugin --all-targets --features standalone -- -D warnings
+      - name: Test
+        run: xvfb-run -a cargo test --locked --workspace
+      - name: Build plugin and standalone
+        run: scripts/build-linux.sh
+      - name: Bundle layout
+        run: |
+          test -f target/bundled/Dreist.vst3/Contents/x86_64-linux/Dreist.so
+          test -d target/bundled/Dreist.vst3/Contents/Resources/Dreist/Skin
+          test -f target/bundled/Dreist-CLAP/Dreist.clap
+          test -d target/bundled/Dreist-CLAP/Resources/Factory
+          test -x target/bundled/Dreist-App/Dreist
+          test -d target/bundled/Dreist-App/Resources/Dreist
