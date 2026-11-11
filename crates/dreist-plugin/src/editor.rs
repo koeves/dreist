@@ -356,6 +356,9 @@ pub struct DreistEditor {
     /// The window size the editor last asked for (pixels; 0 = from the
     /// options), what `size()` reports to the host.
     pub size: Arc<std::sync::atomic::AtomicU64>,
+    /// The host's scale factor (`f32` bits; Windows and Linux, see
+    /// `set_scale_factor`).
+    pub host_scale: std::sync::atomic::AtomicU32,
 }
 
 /// The UI scale (Preferences › UI scaling).
@@ -634,7 +637,8 @@ impl Editor for DreistEditor {
             }
             inbox.clear();
         });
-        Box::new(Handle(dreist_editor::window::open_parented(&parent, gui, link)))
+        let scale = f32::from_bits(self.host_scale.load(std::sync::atomic::Ordering::Relaxed)) as f64;
+        Box::new(Handle(dreist_editor::window::open_parented(&parent, gui, link, scale)))
     }
 
     fn size(&self) -> (u32, u32) {
@@ -662,9 +666,12 @@ impl Editor for DreistEditor {
         (w, h) == (width, height)
     }
 
-    fn set_scale_factor(&self, _factor: f32) -> bool {
-        // baseview follows the system scale factor itself.
-        false
+    fn set_scale_factor(&self, factor: f32) -> bool {
+        // Windows and Linux (macOS scales by itself and never calls this):
+        // the host sizes its view from `size()` times this factor, so the
+        // window takes it too.
+        self.host_scale.store(factor.to_bits(), std::sync::atomic::Ordering::Relaxed);
+        true
     }
 
     fn param_value_changed(&self, _id: &str, _normalized_value: f32) {}
@@ -774,7 +781,8 @@ mod tests {
     /// reaches the open editor through the bridge.
     #[test]
     fn host_resizes_follow_with_a_minimum() {
-        let ed = DreistEditor { bridge: Arc::new(Bridge::default()), theme: String::new(), params: Arc::new(crate::DreistParams::default()), size: Default::default() };
+        let ed =
+            DreistEditor { bridge: Arc::new(Bridge::default()), theme: String::new(), params: Arc::new(crate::DreistParams::default()), size: Default::default(), host_scale: 1.0f32.to_bits().into() };
         let (mw, mh) = ed.min_size().expect("resizable");
         let (w, h) = dreist_gui::app::MIN_WINDOW;
         assert!(mw >= (w as f64 * 0.5) as u32 && mh >= (h as f64 * 0.5) as u32);
