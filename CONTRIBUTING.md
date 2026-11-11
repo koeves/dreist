@@ -7,30 +7,42 @@ short (a crate or area); a body only when the why is not obvious, wrapped at 72 
 attribution in commits, tags or release notes. The release workflow checks the commits since the
 previous tag (`.github/workflows/commits.yml`); the changelog is generated from them.
 
-Releases: `git cliff --unreleased --tag vX.Y.Z --prepend CHANGELOG.md` ([git-cliff](https://git-cliff.org),
-config in `cliff.toml`), edit the new section by hand if needed, bump the version in `Cargo.toml`,
-commit as `chore(release): vX.Y.Z`, then tag `vX.Y.Z` and push the tag. The release workflow
-(`.github/workflows/release.yml`) runs the tests on macOS and Windows, builds VST3, CLAP and the app,
-and publishes the tag's `CHANGELOG.md` section with the zips. To rebuild a release's assets:
-`gh workflow run release.yml --ref <tag> -f tag=<tag> -f upload=true`.
+Releases: merging the release pull request (`dev` -> `main`, merge commit) releases; there is no
+manual tagging, bumping or changelog commit. `.github/workflows/release-on-main.yml` computes the
+version from the commits since the last `v*` tag (`git cliff --bumped-version`, rules in
+`cliff.toml`: fix and the rest -> patch, feat -> minor, breaking -> major, and breaking -> minor
+while on 0.x), checks that `commons` points at a dreist-commons release tag, tags the merge commit
+`vX.Y.Z` and runs `release.yml`: the commit check, CI, tests and builds on macOS and Windows
+(VST3, CLAP, app zips) with the version written into `Cargo.toml` in its own checkout (plugins,
+app and About show it), and the GitHub release with notes generated from the commits. It then
+opens the follow-up pull request `docs(release): changelog and version for vX.Y.Z` into `dev`
+(CHANGELOG.md, the `Cargo.toml` / `Cargo.lock` version), which merges itself once its checks pass.
+Only feat, fix, perf, refactor, revert, breaking and dependency (`build(deps)`, `chore(deps)`,
+`build: dreist-commons ...`) commits are releasable: without one nothing is released and the run
+says so. A line `Release-As: X.Y.Z` in the release pull request's body (or in a commit message
+since the last tag) sets the version instead, and releases even without a releasable commit.
+Release dreist-commons first and point `commons` at its tag (a pull request into `dev`) when
+Dreist needs the change. `release.yml` also runs on a tag pushed by hand; to rebuild a release's
+assets: `gh workflow run release.yml --ref <tag> -f tag=<tag> -f upload=true`.
 
 Branches and CI: work happens on `feature/<name>` branches (parallel threads: one worktree each,
 outside the checkout), pushed and merged into `dev` through a pull request with a merge commit
 once its checks pass (CI, the commit-subject check and CodeQL). Dependabot targets `dev`: patch
 and minor updates, GitHub Actions and submodule bumps merge on their own when the checks pass,
-major updates wait for a review. A release is a pull request from `dev` into `main`, merged with
-a merge commit; tagging that merge `vX.Y.Z` runs the release workflow. GitHub Actions run on pull
-requests into `dev` and `main`, on release tags and by hand (`workflow_dispatch`), never on plain
-branch pushes. Run the checks locally before pushing: `cargo fmt --all --check`,
-`cargo clippy --workspace --all-targets -- -D warnings`, `cargo test --workspace` and
-`python3 scripts/uigen/uigen.py --check`.
+major updates wait for a review. A release is a pull request from `dev` into `main`, merged with a
+merge commit (see Releases). GitHub Actions run on pull requests into `dev` and `main`, on pushes
+to `main` (the release), on release tags and by hand (`workflow_dispatch`, also how the follow-up
+pull request gets its checks), never on other branch pushes. Run the checks locally before
+pushing: `cargo fmt --all --check`, `cargo clippy --workspace --all-targets -- -D warnings`,
+`cargo test --workspace` and `python3 scripts/uigen/uigen.py --check`.
 
 dreist-commons: the shared crates are the submodule at `commons` (clone with `--recursive`). To
-change them, commit and push in `commons/` first, then commit the new pointer here as
-`build: dreist-commons <short sha or vX.Y.Z>`. Keep one app's behaviour behind its profile or opt-in
-style attributes and run both apps' tests and goldens against the change; goldens must stay
-identical unless the change means to alter them (say why in the commit). At a release, merge
-dreist-commons `dev` into its `main` first and point the apps at that commit.
+change them, commit and push in `commons/` first, then commit the new pointer here as `build:
+dreist-commons <short sha or vX.Y.Z>`. Keep one app's behaviour behind its profile or opt-in style
+attributes and run both apps' tests and goldens against the change; goldens must stay identical
+unless the change means to alter them (say why in the commit). A release needs `commons` at a
+dreist-commons release tag (the release run checks it): release dreist-commons first, then bump
+the pointer to its tag (`build: dreist-commons vX.Y.Z`, or Dependabot's pull request).
 
 Signing: builds are unsigned. `scripts/build.sh` signs ad hoc on macOS; `DREIST_SIGN_IDENTITY`
 (Developer ID) signs with the hardened runtime, and `DREIST_NOTARY_PROFILE` also notarises. Windows
