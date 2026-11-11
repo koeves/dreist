@@ -1,4 +1,4 @@
-//! Standalone Dreist (nih-plug's standalone wrapper: CoreAudio or WASAPI
+//! Standalone Dreist (nih-plug's standalone wrapper: CoreAudio, WASAPI or ALSA
 //! through cpal, or JACK).
 //!
 //! The devices come from the audio / MIDI settings panels
