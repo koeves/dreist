@@ -10,7 +10,7 @@ use dreist_formats::Node;
 pub const ABOUT: &str = "Dreist: drum sampler, sequencer and performance instrument. Native for macOS and Windows, written in Rust.";
 
 /// Settings folder name (`~/Library/Application Support/<name>`,
-/// `%APPDATA%\<name>`).
+/// `%APPDATA%\<name>`, `$XDG_CONFIG_HOME/<name>`).
 pub const SETTINGS_DIR: &str = "Dreist";
 
 /// Earlier settings folder names: the first one found is moved to
