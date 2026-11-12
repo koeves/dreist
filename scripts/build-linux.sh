@@ -78,8 +78,13 @@ if [ "$install" = 1 ]; then
     cp -R "$clap" "$HOME/.clap/Dreist"
     cp -R "$app" "$share/Dreist"
     ln -sf "$share/Dreist/Dreist" "$HOME/.local/bin/dreist"
-    cp "$app/dreist.desktop" "$share/applications/dreist.desktop"
+    # Absolute paths: ~/.local/bin is only on PATH if it existed at login,
+    # and launchers hide entries whose program they cannot find.
+    sed -e "s|^Exec=.*|Exec=$share/Dreist/Dreist|" -e "s|^Icon=.*|Icon=$share/Dreist/dreist.png|" \
+        -e "/^Exec=/i TryExec=$share/Dreist/Dreist" "$app/dreist.desktop" > "$share/applications/dreist.desktop"
     cp "$app/dreist.png" "$share/icons/hicolor/256x256/apps/dreist.png"
+    command -v update-desktop-database >/dev/null && update-desktop-database -q "$share/applications" || true
+    command -v gtk-update-icon-cache >/dev/null && gtk-update-icon-cache -q -t "$share/icons/hicolor" 2>/dev/null || true
 fi
 
 echo "==> Done"
