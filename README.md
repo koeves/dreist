@@ -54,6 +54,7 @@ Download the archives for your system from the [latest release](https://github.c
 - **App**: move `Dreist.app` to `/Applications`.
 - **First launch**: the builds are unsigned, so open the app with right-click › Open › Open.
 - **Plugins blocked by a host**: clear the quarantine flag.
+- **Uninstall**: delete `Dreist.vst3`, `Dreist.clap` and `Dreist.app` from those folders.
 
 ```bash
 xattr -dr com.apple.quarantine ~/Library/Audio/Plug-Ins/VST3/Dreist.vst3 ~/Library/Audio/Plug-Ins/CLAP/Dreist.clap
@@ -65,6 +66,7 @@ xattr -dr com.apple.quarantine ~/Library/Audio/Plug-Ins/VST3/Dreist.vst3 ~/Libra
 - **CLAP**: move the `Dreist` folder (`Dreist.clap` and `Resources`) to `C:\Program Files\Common Files\CLAP\`.
 - **App**: unzip the `Dreist` folder anywhere and run `Dreist.exe`; keep `Resources` next to it.
 - **First launch**: the builds are unsigned; if SmartScreen warns, choose More info › Run anyway.
+- **Uninstall**: delete the `Dreist.vst3` and `Dreist` folders from those places, and the app folder.
 
 ### Linux
 
@@ -74,12 +76,14 @@ xattr -dr com.apple.quarantine ~/Library/Audio/Plug-Ins/VST3/Dreist.vst3 ~/Libra
 - **Launcher**: `dreist.desktop` goes in `~/.local/share/applications`, `dreist.png` in `~/.local/share/icons/hicolor/256x256/apps`.
 - **Runtime**: ALSA, X11 / XCB and OpenGL, present on desktop systems.
 - **File dialogs**: through the XDG desktop portal, or `zenity` without one.
+- **Uninstall**: delete those files, or run `scripts/build-linux.sh --uninstall` after a source install.
 
 ### Settings
 
 - **macOS**: `~/Library/Application Support/Dreist`.
 - **Windows**: `%APPDATA%\Dreist`.
 - **Linux**: `~/.config/Dreist` (or `$XDG_CONFIG_HOME/Dreist`).
+- **Uninstalling** leaves this folder and your content in place; delete them by hand to remove everything.
 
 ### Limitations
 
@@ -105,6 +109,7 @@ scripts/build.sh --install        # macOS: also into ~/Library/Audio/Plug-Ins an
 scripts/build-windows.sh          # Windows, in Git Bash
 scripts/build-linux.sh            # Linux
 scripts/build-linux.sh --install  # Linux: also into ~/.vst3, ~/.clap and ~/.local
+scripts/build-linux.sh --uninstall  # Linux: remove that install
 cargo test --workspace
 ```
 
