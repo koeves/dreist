@@ -66,6 +66,7 @@ Exec=dreist
 Icon=dreist
 Terminal=false
 Categories=AudioVideo;Audio;Music;
+StartupWMClass=Dreist
 DESKTOP
 
 echo "==> Resources"
