@@ -75,6 +75,7 @@ xattr -dr com.apple.quarantine ~/Library/Audio/Plug-Ins/VST3/Dreist.vst3 ~/Libra
 - **By hand**: `Dreist.vst3` goes in `~/.vst3/`, the `Dreist` CLAP folder in `~/.clap/`, and the `Dreist` app folder anywhere (run `Dreist`, keep `Resources` next to it).
 - **Runtime**: ALSA, X11 / XCB and OpenGL, present on desktop systems.
 - **File dialogs**: through the XDG desktop portal, or `zenity` without one.
+- **Standalone audio**: smoothest on PipeWire (Ubuntu 24.04+); on PulseAudio, raise the buffer in the audio settings or run `Dreist --backend jack` with JACK.
 
 ### Settings
 
