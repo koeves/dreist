@@ -472,9 +472,12 @@ impl Editor for DreistEditor {
             let host = bridge.host_size.swap(0, Ordering::AcqRel);
             if host != 0 {
                 let ui = ed.app.ui_scale.max(0.25);
-                ed.app.resize(((host >> 32) as f32 / ui).round() as i32, ((host & 0xffff_ffff) as f32 / ui).round() as i32);
-                ed.app.resize_request = true;
-                ed.app.dirty = true;
+                let (w, h) = (((host >> 32) as f32 / ui).round() as i32, ((host & 0xffff_ffff) as f32 / ui).round() as i32);
+                if (w, h) != ed.app.size() {
+                    ed.app.resize(w, h);
+                    ed.app.resize_request = true;
+                    ed.app.dirty = true;
+                }
             }
             // A new UI scale or the window sizer: ask the host for the new
             // size (`size()` reads it), unless it is the host's own.
@@ -665,8 +668,11 @@ impl Editor for DreistEditor {
         let min = min_size();
         let (w, h) = (width.max(min.0), height.max(min.1));
         let px = ((w as u64) << 32) | h as u64;
-        self.size.store(px, Ordering::Relaxed);
-        self.bridge.host_size.store(px, Ordering::Release);
+        // Hosts repeat the current size (REAPER on every idle tick): only a
+        // new size goes to the editor, which resizes and redraws for it.
+        if self.size.swap(px, Ordering::Relaxed) != px {
+            self.bridge.host_size.store(px, Ordering::Release);
+        }
         (w, h) == (width, height)
     }
 
