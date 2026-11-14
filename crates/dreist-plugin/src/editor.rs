@@ -582,9 +582,8 @@ impl Editor for DreistEditor {
             if inbox.mods_triggered != 0 {
                 ed.modulators_triggered(std::mem::take(&mut inbox.mods_triggered));
             }
-            if let Some(st) = inbox.seq_steps.take().filter(|st| *st != ed.model.seq_steps) {
-                ed.model.seq_steps = st;
-                ed.app.dirty = true;
+            if let Some(st) = inbox.seq_steps.take() {
+                ed.set_seq_steps(st);
             }
             ed.set_host_loop(inbox.host_loop);
             if inbox.tempo > 0.0 {
@@ -604,8 +603,13 @@ impl Editor for DreistEditor {
             // The preview volume is editor-side.
             if let Some(view) = inbox.sampler.take() {
                 let sampler = dreist_editor::model::SamplerView { preview_volume: ed.model.sampler.preview_volume, ..view };
-                if ed.model.sampler != sampler {
-                    ed.model.sampler = sampler;
+                // The input meters change with every block (the default
+                // source is the master): `update_meters` repaints just the
+                // sampler's meters, anything else redraws the window.
+                let others = dreist_editor::model::SamplerView { meters: ed.model.sampler.meters, ..sampler.clone() };
+                let changed = ed.model.sampler != others;
+                ed.model.sampler = sampler;
+                if changed {
                     ed.app.dirty = true;
                 }
             }

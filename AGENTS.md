@@ -15,7 +15,7 @@ dreist-commons, Dreist specifics here.
   `CONTRIBUTING.md`.
 - Nothing may come to the front while the desktop is in use: tests and harnesses set
   `DREIST_BACKGROUND_GUI=1`, apps start with `open -g`.
-- Branches: `feature/<name>` (one worktree each, outside the checkout) -> pull request into
+- Branches: `feature/<name>` (one worktree each, in `.claude/worktrees/<name>`) -> pull request into
   `dev` (squash only; the PR title is the Conventional Commit; checks green) -> release pull request `dev` -> `main` (merge commit). The
   merge releases: version from the commits (`Release-As: X.Y.Z` overrides), tag, build, GitHub
   release and a follow-up changelog / version pull request into `dev` happen on their own; never
