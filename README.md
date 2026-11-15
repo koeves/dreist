@@ -85,6 +85,12 @@ xattr -dr com.apple.quarantine ~/Library/Audio/Plug-Ins/VST3/Dreist.vst3 ~/Libra
 - **Linux**: `~/.config/Dreist` (or `$XDG_CONFIG_HOME/Dreist`).
 - **Uninstalling** leaves this folder and your content in place; delete them by hand to remove everything.
 
+### Debug runs
+
+- **Start**: `dreist --debug --play <project> --until-end` (or `--duration <seconds>`) opens the project, plays it and quits at the end.
+- **Log**: timestamped lines with the audio load, late blocks with their song position and memory, then a summary; on stderr and in `~/Library/Logs/Dreist`, `$XDG_STATE_HOME/Dreist` or `%LOCALAPPDATA%\Dreist\Logs`.
+- **Options**: `--debug-json` for JSON lines, `--debug-log <file>` for another file, `--fail-on-late <n>` to exit with status 3 after more late blocks.
+
 ### Limitations
 
 - **REX files** (`.rx2`, `.rex`) load on macOS only.

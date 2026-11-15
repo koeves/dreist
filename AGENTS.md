@@ -67,6 +67,13 @@ with the reason.
     cargo clippy --workspace --all-targets -- -D warnings
     cargo fmt --all --check
 
+Debug runs of the standalone (`dreist_engine::diag`; README "Debug runs") drive playback tests
+without clicking: `dreist --debug --debug-json --play <project> --until-end --fail-on-late 0`.
+Each line is one JSON object (`kind`: `start`, `stats` once a second, `late` per late block with
+`pos` bar.beat, `summary` last); the exit status is 3 when late blocks exceed the limit. On a test
+machine run it with the busy load the test asks for, and report the summary line and the `late`
+lines.
+
 Resources resolve through `dreist_formats::paths`: `DREIST_RESOURCES` / `DREIST_UI`, then the bundle,
 then the repository's `assets/`. Content (no samples are shipped) comes from the original's packs:
 `DREIST_CONTENT`, else `Content` in the documents folder; tests that need it skip without it.
