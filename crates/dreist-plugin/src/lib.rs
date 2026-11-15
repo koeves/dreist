@@ -420,6 +420,8 @@ impl Plugin for DreistPlugin {
         }
         if let Some(m) = diag {
             m.set_transport(engine.song_position(), engine.is_playing());
+            let (voices, stretching) = engine.voice_counts();
+            m.set_voices(voices, stretching);
         }
         if let Ok(mut s) = self.bridge.state.try_lock() {
             s.playing = engine.is_playing();
