@@ -113,7 +113,8 @@ jobs:
           7z a -tzip "Dreist-$TAG-${{ matrix.name }}-VST3.zip" Dreist.vst3
       - name: Build (Linux)
         # tar keeps the executable bits; the CLAP and the app unpack into a
-        # Dreist/ folder each (README: Linux).
+        # Dreist/ folder each, the full archive into Dreist-<tag>-Linux/ with
+        # install.sh (README: Linux).
         if: runner.os == 'Linux'
         run: |
           scripts/build-linux.sh
@@ -121,6 +122,8 @@ jobs:
           tar -czf "Dreist-$TAG-${{ matrix.name }}-VST3.tar.gz" Dreist.vst3
           tar -czf "Dreist-$TAG-${{ matrix.name }}-CLAP.tar.gz" --transform 's,^Dreist-CLAP,Dreist,' Dreist-CLAP
           tar -czf "Dreist-$TAG-${{ matrix.name }}-App.tar.gz" --transform 's,^Dreist-App,Dreist,' Dreist-App
+          # Everything with install.sh (scripts/linux-install.sh) in one folder.
+          tar -czf "Dreist-$TAG-${{ matrix.name }}.tar.gz" --transform "s,^,Dreist-$TAG-${{ matrix.name }}/," install.sh Dreist.vst3 Dreist-CLAP Dreist-App
       - uses: actions/upload-artifact@v7
         with:
           name: Dreist-${{ env.TAG }}-${{ matrix.name }}

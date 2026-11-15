@@ -7,3 +7,5 @@
 # Conflict copies made by file sync ("name 2.rs").
 crates/**/* [0-9].rs
 __pycache__/
+# Agent worktrees and local settings
+.claude/

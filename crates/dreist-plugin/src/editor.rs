@@ -472,9 +472,12 @@ impl Editor for DreistEditor {
             let host = bridge.host_size.swap(0, Ordering::AcqRel);
             if host != 0 {
                 let ui = ed.app.ui_scale.max(0.25);
-                ed.app.resize(((host >> 32) as f32 / ui).round() as i32, ((host & 0xffff_ffff) as f32 / ui).round() as i32);
-                ed.app.resize_request = true;
-                ed.app.dirty = true;
+                let (w, h) = (((host >> 32) as f32 / ui).round() as i32, ((host & 0xffff_ffff) as f32 / ui).round() as i32);
+                if (w, h) != ed.app.size() {
+                    ed.app.resize(w, h);
+                    ed.app.resize_request = true;
+                    ed.app.dirty = true;
+                }
             }
             // A new UI scale or the window sizer: ask the host for the new
             // size (`size()` reads it), unless it is the host's own.
@@ -582,9 +585,8 @@ impl Editor for DreistEditor {
             if inbox.mods_triggered != 0 {
                 ed.modulators_triggered(std::mem::take(&mut inbox.mods_triggered));
             }
-            if let Some(st) = inbox.seq_steps.take().filter(|st| *st != ed.model.seq_steps) {
-                ed.model.seq_steps = st;
-                ed.app.dirty = true;
+            if let Some(st) = inbox.seq_steps.take() {
+                ed.set_seq_steps(st);
             }
             ed.set_host_loop(inbox.host_loop);
             if inbox.tempo > 0.0 {
@@ -604,8 +606,13 @@ impl Editor for DreistEditor {
             // The preview volume is editor-side.
             if let Some(view) = inbox.sampler.take() {
                 let sampler = dreist_editor::model::SamplerView { preview_volume: ed.model.sampler.preview_volume, ..view };
-                if ed.model.sampler != sampler {
-                    ed.model.sampler = sampler;
+                // The input meters change with every block (the default
+                // source is the master): `update_meters` repaints just the
+                // sampler's meters, anything else redraws the window.
+                let others = dreist_editor::model::SamplerView { meters: ed.model.sampler.meters, ..sampler.clone() };
+                let changed = ed.model.sampler != others;
+                ed.model.sampler = sampler;
+                if changed {
                     ed.app.dirty = true;
                 }
             }
@@ -661,8 +668,11 @@ impl Editor for DreistEditor {
         let min = min_size();
         let (w, h) = (width.max(min.0), height.max(min.1));
         let px = ((w as u64) << 32) | h as u64;
-        self.size.store(px, Ordering::Relaxed);
-        self.bridge.host_size.store(px, Ordering::Release);
+        // Hosts repeat the current size (REAPER on every idle tick): only a
+        // new size goes to the editor, which resizes and redraws for it.
+        if self.size.swap(px, Ordering::Relaxed) != px {
+            self.bridge.host_size.store(px, Ordering::Release);
+        }
         (w, h) == (width, height)
     }
 
