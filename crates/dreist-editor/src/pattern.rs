@@ -1815,7 +1815,7 @@ impl PatternPanel {
     /// the height (on/off lanes: upper half on); dragging fills the steps
     /// passed; the right button restores the lane default. `y` is relative
     /// to the graph, `h` its height.
-    #[allow(clippy::too_many_arguments)]
+    ///
     /// [re:e9d6e3] mouse handling (left press [re:fc66b7],
     /// move [re:6b8705], right press [re:235fb8],
     /// delete tool [re:8ed66a]) with the default tool: a click sets the
