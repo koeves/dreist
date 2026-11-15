@@ -174,6 +174,11 @@ pub struct Bridge {
     /// Decoded sample bytes of the latest built engine, for the memory
     /// readout.
     pub sample_bytes: AtomicU64,
+    /// The audio thread's load, for the CPU and memory readout.
+    pub load: dreist_engine::load::DspLoad,
+    /// Running as the standalone app (late blocks are dropouts there; a
+    /// host may call irregularly).
+    pub standalone: std::sync::atomic::AtomicBool,
 }
 
 /// A lock that survives a panic elsewhere (the data is plain state).
@@ -466,6 +471,7 @@ impl Editor for DreistEditor {
         // The last previews' samples: the audio thread may still be playing
         // one, and must not be the one to free it.
         let mut previews: std::collections::VecDeque<Arc<dreist_dsp::voice::SampleData>> = Default::default();
+        let mut perf = PerfFeed::default();
         let link = Box::new(move |ed: &mut DreistGui, cmds: Vec<Command>| {
             // The host resized the view (its window's frame): the editor
             // follows, and the window with the next frame.
@@ -617,6 +623,7 @@ impl Editor for DreistEditor {
                 }
             }
             ed.update_meters(&inbox.meters);
+            perf.tick(ed, &bridge);
             let (n, ch, cc) = inbox.last_cc;
             ed.midi_cc(n, ch, cc);
             if !inbox.midi_log.is_empty() {
@@ -689,6 +696,46 @@ impl Editor for DreistEditor {
     fn param_modulation_changed(&self, _id: &str, _modulation_offset: f32) {}
 
     fn param_values_changed(&self) {}
+}
+
+/// The CPU and memory readout's feed: once a second, while it is on.
+struct PerfFeed {
+    at: std::time::Instant,
+    /// The audio load's second last shown, and how many updates ago it
+    /// changed (the audio thread stopped: no DSP figures).
+    second: u32,
+    stale: u8,
+}
+
+impl Default for PerfFeed {
+    fn default() -> PerfFeed {
+        PerfFeed { at: std::time::Instant::now(), second: 0, stale: 0 }
+    }
+}
+
+impl PerfFeed {
+    fn tick(&mut self, ed: &mut DreistGui, bridge: &Bridge) {
+        if self.at.elapsed() < std::time::Duration::from_secs(1) {
+            return;
+        }
+        self.at = std::time::Instant::now();
+        if !ed.perf_shown() {
+            ed.performance(&dreist_gui::perf::Reading::default());
+            return;
+        }
+        let second = bridge.load.seconds();
+        self.stale = if second == self.second { self.stale.saturating_add(1) } else { 0 };
+        self.second = second;
+        let dsp = bridge.load.reading().filter(|_| self.stale < 2);
+        let r = dreist_gui::perf::Reading {
+            dsp: dsp.map(|d| d.average),
+            peak: dsp.map(|d| d.peak),
+            ui: ed.app.ui_load,
+            memory: dreist_engine::load::rss_bytes(),
+            late: bridge.standalone.load(Ordering::Relaxed).then(|| bridge.load.reading().map_or(0, |d| d.late)),
+        };
+        ed.performance(&r);
+    }
 }
 
 #[cfg(test)]
