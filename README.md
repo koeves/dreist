@@ -76,6 +76,7 @@ xattr -dr com.apple.quarantine ~/Library/Audio/Plug-Ins/VST3/Dreist.vst3 ~/Libra
 - **Runtime**: ALSA, X11 / XCB and OpenGL, present on desktop systems.
 - **File dialogs**: through the XDG desktop portal, or `zenity` without one.
 - **Standalone audio**: smoothest on PipeWire (Ubuntu 24.04+); on PulseAudio, raise the buffer in the audio settings or run `Dreist --backend jack` with JACK.
+- **Crackles**: if playback crackles on a slow machine, start with a bigger buffer: `dreist --period-size 2048`.
 
 ### Settings
 
