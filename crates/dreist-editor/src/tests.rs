@@ -4321,3 +4321,81 @@ fn effect_meters_follow_the_control_output() {
     ed.sync();
     assert_eq!(ed.app.ctrl(&cards[1]).unwrap().display_name, "Bus Compressor (Gentle Glue On )");
 }
+
+#[test]
+fn the_performance_readout_repaints_only_itself() {
+    let Some(mut ed) = demo_editor("Presets/Hollow.geist") else { return };
+    assert!(!ed.perf_shown());
+    ed.performance(&dreist_gui::perf::Reading { dsp: Some(0.3), ..Default::default() });
+    assert!(ed.app.root.children.iter().all(|c| c.name != dreist_gui::perf::NAME), "off by default");
+    ed.modals.options.set(crate::editor::tools_menu::PERF_OPTION, true);
+    ed.performance(&dreist_gui::perf::Reading::default());
+    let _ = ed.render(1.0);
+    for k in 0..3 {
+        let r = dreist_gui::perf::Reading { dsp: Some(0.2 + 0.1 * k as f32), peak: Some(0.5 + 0.2 * k as f32), ui: Some(0.1), memory: Some(300 << 20), late: Some(k) };
+        ed.performance(&r);
+        assert!(!ed.app.dirty && ed.app.needs_redraw());
+        let partial = ed.render_frame(1.0).clone();
+        assert!(ed.app.frame_damage.as_ref().is_some_and(|d| d.iter().all(|r| r.h <= 32)), "{:?}", ed.app.frame_damage);
+        let full = ed.render(1.0);
+        let off = partial.data().chunks(4).zip(full.data().chunks(4)).filter(|(x, y)| x.iter().zip(y.iter()).take(3).any(|(p, q)| p.abs_diff(*q) > 1)).count();
+        assert!(off * 1000 <= partial.data().len() / 4, "tick {k}: {off} pixels differ");
+    }
+}
+
+/// The readout covers no control: two rows at the bottom of the browser's
+/// list area, at each window size (the UI scale only scales the window).
+#[test]
+fn the_performance_readout_covers_no_control() {
+    let p = demo("Presets/Hollow.geist");
+    let Ok(proj) = dreist_formats::Project::load(&p) else { return };
+    let Ok(mut ed) = Editor::new(dreist_gui::skin::default_theme(), Model::new(proj.raw)) else { return };
+    ed.modals.options.set(crate::editor::tools_menu::PERF_OPTION, true);
+    let sizes: [Option<(i32, i32)>; 3] = [Some(dreist_gui::app::MIN_WINDOW), None, Some((1920, 1200))];
+    for size in sizes {
+        if let Some((w, h)) = size {
+            ed.app.resize(w, h);
+        }
+        let _ = ed.render(1.0);
+        ed.place_perf();
+        dreist_gui::perf::update(&mut ed.app, &dreist_gui::perf::Reading { dsp: Some(0.31), peak: Some(0.58), ui: Some(0.14), memory: Some(351 << 20), late: Some(0) });
+        let i = ed.app.root.children.iter().position(|c| c.name == dreist_gui::perf::NAME).expect("readout");
+        let r = ed.app.root.children[i].rect;
+        assert!(r.w > 0 && r.h == 32, "{size:?}: placed {r:?}");
+        fn walk(app: &dreist_gui::app::App, path: &mut Vec<usize>, r: dreist_gui::Rect, skip: usize, out: &mut Vec<String>) {
+            let Some(c) = app.ctrl(path) else { return };
+            if !c.visible {
+                return;
+            }
+            let leaf = c.children.is_empty() && !c.class.ends_with("Panel") && path.len() > 1;
+            let a = app.abs_rect(path);
+            if leaf && a.w > 0 && a.h > 0 && a.x < r.x + r.w && r.x < a.x + a.w && a.y < r.y + r.h && r.y < a.y + a.h {
+                out.push(format!("{} '{}' {a:?}", c.class, c.name));
+            }
+            for k in 0..c.children.len() {
+                if path.is_empty() && k == skip {
+                    continue;
+                }
+                path.push(k);
+                walk(app, path, r, skip, out);
+                path.pop();
+            }
+        }
+        let mut hits = Vec::new();
+        walk(&ed.app, &mut Vec::new(), r, i, &mut hits);
+        assert!(hits.is_empty(), "{size:?}: the readout {r:?} covers {hits:?}");
+        // Nothing of the list area under it either.
+        let page = ed.browser.as_ref().unwrap().page().to_vec();
+        let list = [&page[..], &ed.app.ctrl(&page).unwrap().path_of("SplitView").unwrap()[..]].concat();
+        let l = ed.app.abs_rect(&list);
+        assert!(r.y >= l.y + l.h, "{size:?}: the readout {r:?} overlaps the list area {l:?}");
+    }
+    // Off: the list area gets its height back.
+    let page = ed.browser.as_ref().unwrap().page().to_vec();
+    let list = [&page[..], &ed.app.ctrl(&page).unwrap().path_of("SplitView").unwrap()[..]].concat();
+    let h = ed.app.abs_rect(&list).h;
+    ed.modals.options.set(crate::editor::tools_menu::PERF_OPTION, false);
+    ed.place_perf();
+    assert_eq!(ed.app.abs_rect(&list).h, h + dreist_gui::perf::STRIP);
+    assert!(ed.app.root.children.iter().all(|c| c.name != dreist_gui::perf::NAME));
+}
