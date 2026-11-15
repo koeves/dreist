@@ -5,8 +5,8 @@ use crate::*;
 /// Options key: the CPU and memory readout is on (off by default).
 pub(crate) const PERF_OPTION: &str = "ShowPerformance";
 
-/// The readout's place: over the bottom of the browser list, above the pads.
-const PERF_PLACE: dreist_gui::perf::Place = dreist_gui::perf::Place { x: 8, y: -272, w: 290 };
+/// The readout's place: bottom right, beside the macro knobs.
+const PERF_PLACE: dreist_gui::perf::Place = dreist_gui::perf::Place { x: -6, y: -10, w: 250 };
 
 impl Editor {
     /// The CPU and memory readout is on.
