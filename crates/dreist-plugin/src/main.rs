@@ -1,4 +1,4 @@
-//! Standalone Dreist (nih-plug's standalone wrapper: CoreAudio or WASAPI
+//! Standalone Dreist (nih-plug's standalone wrapper: CoreAudio, WASAPI or ALSA
 //! through cpal, or JACK).
 //!
 //! The devices come from the audio / MIDI settings panels
@@ -9,10 +9,18 @@ use dreist_plugin::DreistPlugin;
 use nih_plug::prelude::*;
 
 /// Command line plus the stored device choices for flags not given.
-fn args() -> Vec<String> {
-    let mut args: Vec<String> = std::env::args().collect();
+fn args(mut args: Vec<String>) -> Vec<String> {
     let o = dreist_editor::options::Options::load();
-    let given = |args: &[String], flag: &str| args.iter().any(|a| a == flag || a.starts_with(&format!("{flag}=")));
+    let given = |args: &[String], flag: &str| {
+        // nih-plug's one-letter forms of the flags set here.
+        let short = match flag {
+            "--backend" => Some("-b"),
+            "--sample-rate" => Some("-r"),
+            "--period-size" => Some("-p"),
+            _ => None,
+        };
+        args.iter().any(|a| a == flag || a.starts_with(&format!("{flag}=")) || short.is_some_and(|s| a.starts_with(s)))
+    };
     let s = dreist_editor::devices::Settings::load(&o);
     // The system backend even when JACK is installed (nih-plug's "auto"
     // prefers JACK).
@@ -35,7 +43,9 @@ fn args() -> Vec<String> {
         // period size (558 for 512 at 44.1 kHz), which the wrapper
         // rejects. Default to the output device's own rate.
         ("--sample-rate", rate.map(|r| r.to_string())),
-        ("--period-size", (s.buffer > 0).then(|| s.buffer.to_string())),
+        // The default buffer is nih-plug's choice: 512, or 1024 when PulseAudio
+        // is the sound server (its ALSA plugin underruns at 512).
+        ("--period-size", (s.buffer > 0 && s.buffer != dreist_editor::devices::DEFAULT_BUFFER).then(|| s.buffer.to_string())),
     ] {
         if let Some(v) = v.filter(|v| !v.is_empty()) {
             if !given(&args, flag) {
@@ -49,5 +59,51 @@ fn args() -> Vec<String> {
 
 fn main() {
     dreist_plugin::profile::install();
-    nih_export_standalone_with_args::<DreistPlugin, _>(args());
+    // Debug runs (`--debug`, `--play <file>`, ...; `dreist_engine::diag`).
+    let (debug, rest) = match dreist_engine::diag::DebugArgs::split(std::env::args().collect()) {
+        Ok(split) => split,
+        Err(e) => {
+            eprintln!("{e}");
+            std::process::exit(2);
+        }
+    };
+    if debug.debug {
+        if let Some(song) = &debug.play {
+            if let Err(e) = hand_over(song) {
+                eprintln!("{}: {e}", song.display());
+                std::process::exit(2);
+            }
+        }
+    }
+    let args = args(rest);
+    // While playing, hold the performance power profile (Linux; option
+    // `HoldPerformanceWhilePlaying`, on by default).
+    dreist_host::power::set_enabled(dreist_editor::options::Options::load().bool("HoldPerformanceWhilePlaying", true));
+    dreist_host::power::start(
+        "Dreist",
+        Box::new(|line: &str| {
+            eprintln!("{line}");
+            dreist_engine::diag::note("power", line);
+        }),
+    );
+    if debug.debug {
+        dreist_engine::diag::start_run("Dreist", env!("CARGO_PKG_VERSION"), debug, &args);
+    }
+    nih_export_standalone_with_args::<DreistPlugin, _>(args);
+    if let Some(status) = dreist_engine::diag::end_run() {
+        std::process::exit(status);
+    }
+}
+
+/// Start with the project at `song` (the session file an audio restart
+/// hands over).
+fn hand_over(song: &std::path::Path) -> Result<(), String> {
+    let doc = dreist_formats::Project::load(song).map_err(|e| e.to_string())?.raw;
+    let samples = dreist_formats::model::samples_dir(song);
+    let session = dreist_plugin::Session { doc: doc.to_xml(), samples: Some(samples.to_string_lossy().into_owned()) };
+    let file = std::env::temp_dir().join(format!("dreist-debug-{}.json", std::process::id()));
+    std::fs::write(&file, dreist_host::serde_json::to_string(&session).map_err(|e| e.to_string())?).map_err(|e| e.to_string())?;
+    // SAFETY: set before any other thread starts.
+    unsafe { std::env::set_var(dreist_plugin::standalone::SESSION_ENV, &file) };
+    Ok(())
 }

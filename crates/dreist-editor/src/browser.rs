@@ -1148,17 +1148,11 @@ impl Browser {
                 true
             }
             NavAction::CopyPath => {
-                if let Ok(mut c) = std::process::Command::new("pbcopy").stdin(std::process::Stdio::piped()).spawn() {
-                    use std::io::Write;
-                    if let Some(i) = c.stdin.as_mut() {
-                        let _ = i.write_all(dir.to_string_lossy().as_bytes());
-                    }
-                    let _ = c.wait();
-                }
+                dreist_host::shell::copy_text(&dir.to_string_lossy());
                 false
             }
             NavAction::Reveal => {
-                let _ = std::process::Command::new("open").arg("-R").arg(&dir).spawn();
+                dreist_host::shell::reveal(&[&dir]);
                 false
             }
             NavAction::Favourite => {
@@ -1268,7 +1262,7 @@ impl Browser {
                 true
             }
             SourceAction::Reveal => {
-                let _ = std::process::Command::new("open").arg("-R").arg(&path).spawn();
+                dreist_host::shell::reveal(&[&path]);
                 false
             }
             // [re:ecaf90]: an edit box over the row.
@@ -1495,7 +1489,7 @@ impl Browser {
             FileAction::Reveal | FileAction::RevealFolder => {
                 let ts: Vec<PathBuf> = if a == FileAction::Reveal { self.menu_targets().into_iter().map(|e| e.path).collect() } else { self.dir.clone().into_iter().collect() };
                 if !ts.is_empty() {
-                    let _ = std::process::Command::new("open").arg("-R").args(ts).spawn();
+                    dreist_host::shell::reveal(&ts);
                 }
                 false
             }

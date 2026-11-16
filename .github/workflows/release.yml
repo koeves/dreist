@@ -1,19 +1,32 @@
 name: Release
 
-# Pushing a tag `vX.Y.Z` checks the commit subjects, runs the CI suite, builds Dreist (VST3,
-# CLAP, standalone) on macOS and Windows, tests it and publishes the GitHub
-# release with the zips. A manual run builds the checked-out ref and
-# publishes to `tag` only when `upload` is set. No workflow runs on branch
-# pushes (see CONTRIBUTING.md).
+# Releases a tag `vX.Y.Z`: checks that commons is a dreist-commons release,
+# checks the commit subjects, runs the CI suite, builds Dreist (VST3, CLAP,
+# standalone) on macOS, Windows and Linux with the tag's version written into
+# Cargo.toml, tests it and publishes the GitHub release with the zips (tarballs on Linux). Called
+# by release-on-main.yml once it has tagged the merge of a release pull
+# request; also runs on a tag pushed by hand (a tag pushed by
+# release-on-main.yml with GITHUB_TOKEN starts no second run) and by hand
+# (`workflow_dispatch`: builds the checked-out ref, uploads to `tag` only when
+# `upload` is set). No workflow runs on other branch pushes (CONTRIBUTING.md).
 on:
   push:
     tags: ["v*"]
+  workflow_call:
+    inputs:
+      tag:
+        description: "Release tag"
+        type: string
+        required: true
+      upload:
+        description: "Upload the zips to the release"
+        type: boolean
+        default: true
   workflow_dispatch:
     inputs:
       tag:
         description: "Release tag (names the zips; the upload target)"
         required: true
-        default: "v0.2.3"
       upload:
         description: "Upload the zips to the release"
         type: boolean
@@ -24,10 +37,19 @@ permissions:
 
 env:
   CARGO_TERM_COLOR: always
-  TAG: ${{ github.event_name == 'push' && github.ref_name || inputs.tag || 'dev' }}
-  UPLOAD: ${{ github.event_name == 'push' || inputs.upload }}
+  TAG: ${{ inputs.tag || github.ref_name }}
 
 jobs:
+  commons:
+    # The submodule must be the commit of a dreist-commons release tag.
+    runs-on: ubuntu-24.04
+    steps:
+      - uses: actions/checkout@v7
+        with:
+          submodules: recursive
+      - name: commons is a dreist-commons release
+        run: .github/release/check-commons.sh
+
   commits:
     uses: ./.github/workflows/commits.yml
 
@@ -35,7 +57,7 @@ jobs:
     uses: ./.github/workflows/ci.yml
 
   build:
-    needs: [commits, ci]
+    needs: [commons, commits, ci]
     strategy:
       fail-fast: false
       matrix:
@@ -44,6 +66,8 @@ jobs:
             name: macOS
           - os: windows-latest
             name: Windows
+          - os: ubuntu-24.04
+            name: Linux
     runs-on: ${{ matrix.os }}
     defaults:
       run:
@@ -54,8 +78,23 @@ jobs:
           submodules: recursive
       - uses: dtolnay/rust-toolchain@stable
       - uses: Swatinem/rust-cache@v2
+      - name: Version from the tag
+        # Only in this checkout: the plugins, the app's Info.plist and the
+        # About panel show it.
+        run: |
+          if [[ $TAG =~ ^v[0-9]+\.[0-9]+\.[0-9]+$ ]]; then
+            .github/release/stamp-version.sh "$TAG"
+          fi
+      - name: System packages (Linux)
+        if: runner.os == 'Linux'
+        run: |
+          # The runners' Azure mirror sometimes stops resolving; install from the main archive.
+          sudo sed -i -e 's|mirror+file:/etc/apt/apt-mirrors.txt|http://archive.ubuntu.com/ubuntu/|g' \
+            -e 's|http://azure.archive.ubuntu.com/ubuntu|http://archive.ubuntu.com/ubuntu|g' /etc/apt/sources.list.d/ubuntu.sources
+          sudo apt-get -o Acquire::Retries=3 update
+          sudo apt-get install -y --no-install-recommends pkg-config libasound2-dev libjack-jackd2-dev libx11-dev libx11-xcb-dev libxcb1-dev libxcb-icccm4-dev libxcb-dri2-0-dev libxcursor-dev libgl1-mesa-dev xvfb
       - name: Test
-        run: cargo test --locked --workspace
+        run: ${{ runner.os == 'Linux' && 'xvfb-run -a ' || '' }}cargo test --locked --workspace
       - name: Build (macOS)
         if: runner.os == 'macOS'
         run: |
@@ -64,6 +103,11 @@ jobs:
           ditto -c -k --keepParent Dreist.vst3 "Dreist-$TAG-${{ matrix.name }}-VST3.zip"
           ditto -c -k --keepParent Dreist.clap "Dreist-$TAG-${{ matrix.name }}-CLAP.zip"
           ditto -c -k --keepParent Dreist.app "Dreist-$TAG-${{ matrix.name }}-App.zip"
+          # Everything with install.sh (commons/packaging) in one folder.
+          full="Dreist-$TAG-${{ matrix.name }}"
+          mkdir "$full"
+          for p in install.sh Dreist.vst3 Dreist.clap Dreist.app; do ditto "$p" "$full/$p"; done
+          ditto -c -k --keepParent "$full" "$full.zip"
       - name: Build (Windows)
         if: runner.os == 'Windows'
         run: |
@@ -72,46 +116,58 @@ jobs:
           mv Dreist-CLAP Dreist && 7z a -tzip "Dreist-$TAG-${{ matrix.name }}-CLAP.zip" Dreist && mv Dreist Dreist-CLAP
           mv Dreist-App Dreist && 7z a -tzip "Dreist-$TAG-${{ matrix.name }}-App.zip" Dreist && mv Dreist Dreist-App
           7z a -tzip "Dreist-$TAG-${{ matrix.name }}-VST3.zip" Dreist.vst3
+          # Everything with install.ps1 (commons/packaging) in one folder.
+          full="Dreist-$TAG-${{ matrix.name }}"
+          mkdir "$full" && cp -R install.ps1 Dreist.vst3 Dreist-CLAP Dreist-App "$full/"
+          7z a -tzip "$full.zip" "$full"
+      - name: Build (Linux)
+        # tar keeps the executable bits; the CLAP and the app unpack into a
+        # Dreist/ folder each, the full archive into Dreist-<tag>-Linux/ with
+        # install.sh (README: Linux).
+        if: runner.os == 'Linux'
+        run: |
+          scripts/build-linux.sh
+          cd target/bundled
+          tar -czf "Dreist-$TAG-${{ matrix.name }}-VST3.tar.gz" Dreist.vst3
+          tar -czf "Dreist-$TAG-${{ matrix.name }}-CLAP.tar.gz" --transform 's,^Dreist-CLAP,Dreist,' Dreist-CLAP
+          tar -czf "Dreist-$TAG-${{ matrix.name }}-App.tar.gz" --transform 's,^Dreist-App,Dreist,' Dreist-App
+          # Everything with install.sh (commons/packaging) in one folder.
+          tar -czf "Dreist-$TAG-${{ matrix.name }}.tar.gz" --transform "s,^,Dreist-$TAG-${{ matrix.name }}/," install.sh Dreist.vst3 Dreist-CLAP Dreist-App
       - uses: actions/upload-artifact@v7
         with:
           name: Dreist-${{ env.TAG }}-${{ matrix.name }}
-          path: target/bundled/Dreist-*.zip
+          path: |
+            target/bundled/Dreist-*.zip
+            target/bundled/Dreist-*.tar.gz
           retention-days: 7
 
   release:
-    # The tag's CHANGELOG.md section is the release notes; without one,
-    # git-cliff generates them from the commits since the previous tag.
+    # The notes are the tag's changelog section, generated from the commits
+    # since the previous tag (.github/release/notes.sh, cliff.toml).
     needs: build
-    if: github.event_name == 'push' || inputs.upload
+    if: inputs.upload || (github.event_name == 'push' && github.ref_type == 'tag')
     runs-on: ubuntu-24.04
     steps:
       - uses: actions/checkout@v7
         with:
           fetch-depth: 0
+      - uses: taiki-e/install-action@v2
+        with:
+          tool: git-cliff
       - uses: actions/download-artifact@v8
         with:
           path: dist
           merge-multiple: true
-      - name: Release notes from CHANGELOG.md
-        id: notes
-        run: |
-          awk -v v="${TAG#v}" '/^## \[/ { p = index($0, "## [" v "]") == 1; next } p' CHANGELOG.md > notes.md || true
-          if [ -s notes.md ]; then echo "found=true" >> "$GITHUB_OUTPUT"; fi
-      - name: Release notes from the commits
-        if: steps.notes.outputs.found != 'true'
-        uses: orhun/git-cliff-action@v4
-        with:
-          config: cliff.toml
-          args: --latest --strip all
-        env:
-          OUTPUT: notes.md
+      - name: Release notes
+        run: .github/release/notes.sh "$TAG" > notes.md
       - name: Publish the release
         env:
           GH_TOKEN: ${{ github.token }}
+          TITLE: ${{ github.event.repository.name }} ${{ env.TAG }}
         run: |
           if gh release view "$TAG" > /dev/null 2>&1; then
             gh release edit "$TAG" --notes-file notes.md
           else
-            gh release create "$TAG" --verify-tag --title "${{ github.event.repository.name }} $TAG" --notes-file notes.md
+            gh release create "$TAG" --verify-tag --title "$TITLE" --notes-file notes.md
           fi
-          gh release upload "$TAG" dist/*.zip --clobber
+          gh release upload "$TAG" dist/*.zip dist/*.tar.gz --clobber

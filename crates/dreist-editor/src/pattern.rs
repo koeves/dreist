@@ -1815,7 +1815,7 @@ impl PatternPanel {
     /// the height (on/off lanes: upper half on); dragging fills the steps
     /// passed; the right button restores the lane default. `y` is relative
     /// to the graph, `h` its height.
-    #[allow(clippy::too_many_arguments)]
+    ///
     /// [re:e9d6e3] mouse handling (left press [re:fc66b7],
     /// move [re:6b8705], right press [re:235fb8],
     /// delete tool [re:8ed66a]) with the default tool: a click sets the
@@ -2416,11 +2416,31 @@ impl PatternPanel {
         }
     }
 
+    /// The grid control's layout of `pat`.
+    fn grid_layout(&self, model: &Model, pat: &PatternData, c: &Ctrl) -> GridLayout {
+        let e = model.engine;
+        if self.multi { GridLayout::compute_multi(model, pat, c.rect.w, c.rect.h, &|t| self.lanes(e, t)) } else { GridLayout::compute(model, pat, c.rect.w, c.rect.h) }
+    }
+
+    /// The grid's step columns (x, width in `c`'s coordinates) that show
+    /// the playback position at `old` or `new`, on every track length: a
+    /// step moves the position drawing only there.
+    pub fn position_columns(&self, model: &Model, c: &Ctrl, old: Option<u32>, new: Option<u32>) -> Vec<(f32, f32)> {
+        let pat = self.drawn_pattern(model);
+        let lay = self.grid_layout(model, &pat, c);
+        let mut cols = std::collections::BTreeSet::new();
+        for row in 0..lay.tracks {
+            let tl = pat.tracks.get(lay.first_track + row).map(|t| t.length.max(1)).unwrap_or(pat.steps) as usize;
+            cols.extend([old, new].into_iter().flatten().map(|pos| pos as usize % tl.max(1)));
+        }
+        cols.into_iter().filter(|st| lay.step_range().contains(st)).map(|st| (lay.step_x(st), lay.step_w)).collect()
+    }
+
     fn draw_grid(&self, model: &Model, r: &Renderer, p: &mut Painter, c: &Ctrl) {
         let s = r.styles;
         let e = model.engine;
         let pat = self.drawn_pattern(model);
-        let lay = if self.multi { GridLayout::compute_multi(model, &pat, c.rect.w, c.rect.h, &|t| self.lanes(e, t)) } else { GridLayout::compute(model, &pat, c.rect.w, c.rect.h) };
+        let lay = self.grid_layout(model, &pat, c);
         let (w, h) = ((lay.step_range().end as f32 - lay.first_step as f32) * lay.step_w, c.rect.h as f32);
         let pink = Colour::rgba(255, 200, 200, 255);
         let fill = s.colour(BACK_STYLE, "colFill", pink);

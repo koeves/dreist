@@ -174,6 +174,11 @@ pub struct Bridge {
     /// Decoded sample bytes of the latest built engine, for the memory
     /// readout.
     pub sample_bytes: AtomicU64,
+    /// The audio thread's load, for the CPU and memory readout.
+    pub load: dreist_engine::load::DspLoad,
+    /// Running as the standalone app (late blocks are dropouts there; a
+    /// host may call irregularly).
+    pub standalone: std::sync::atomic::AtomicBool,
 }
 
 /// A lock that survives a panic elsewhere (the data is plain state).
@@ -356,6 +361,9 @@ pub struct DreistEditor {
     /// The window size the editor last asked for (pixels; 0 = from the
     /// options), what `size()` reports to the host.
     pub size: Arc<std::sync::atomic::AtomicU64>,
+    /// The host's scale factor (`f32` bits; Windows and Linux, see
+    /// `set_scale_factor`).
+    pub host_scale: std::sync::atomic::AtomicU32,
 }
 
 /// The UI scale (Preferences › UI scaling).
@@ -463,15 +471,19 @@ impl Editor for DreistEditor {
         // The last previews' samples: the audio thread may still be playing
         // one, and must not be the one to free it.
         let mut previews: std::collections::VecDeque<Arc<dreist_dsp::voice::SampleData>> = Default::default();
+        let mut perf = PerfFeed::default();
         let link = Box::new(move |ed: &mut DreistGui, cmds: Vec<Command>| {
             // The host resized the view (its window's frame): the editor
             // follows, and the window with the next frame.
             let host = bridge.host_size.swap(0, Ordering::AcqRel);
             if host != 0 {
                 let ui = ed.app.ui_scale.max(0.25);
-                ed.app.resize(((host >> 32) as f32 / ui).round() as i32, ((host & 0xffff_ffff) as f32 / ui).round() as i32);
-                ed.app.resize_request = true;
-                ed.app.dirty = true;
+                let (w, h) = (((host >> 32) as f32 / ui).round() as i32, ((host & 0xffff_ffff) as f32 / ui).round() as i32);
+                if (w, h) != ed.app.size() {
+                    ed.app.resize(w, h);
+                    ed.app.resize_request = true;
+                    ed.app.dirty = true;
+                }
             }
             // A new UI scale or the window sizer: ask the host for the new
             // size (`size()` reads it), unless it is the host's own.
@@ -519,7 +531,7 @@ impl Editor for DreistEditor {
                                     // Pattern export: show the file (the original offers it for dragging).
                                     if reveal {
                                         if let Some(f) = r.files.first() {
-                                            let _ = std::process::Command::new("open").arg("-R").arg(f).spawn();
+                                            dreist_host::shell::reveal(&[f]);
                                         }
                                     }
                                 }
@@ -579,9 +591,8 @@ impl Editor for DreistEditor {
             if inbox.mods_triggered != 0 {
                 ed.modulators_triggered(std::mem::take(&mut inbox.mods_triggered));
             }
-            if let Some(st) = inbox.seq_steps.take().filter(|st| *st != ed.model.seq_steps) {
-                ed.model.seq_steps = st;
-                ed.app.dirty = true;
+            if let Some(st) = inbox.seq_steps.take() {
+                ed.set_seq_steps(st);
             }
             ed.set_host_loop(inbox.host_loop);
             if inbox.tempo > 0.0 {
@@ -601,12 +612,18 @@ impl Editor for DreistEditor {
             // The preview volume is editor-side.
             if let Some(view) = inbox.sampler.take() {
                 let sampler = dreist_editor::model::SamplerView { preview_volume: ed.model.sampler.preview_volume, ..view };
-                if ed.model.sampler != sampler {
-                    ed.model.sampler = sampler;
+                // The input meters change with every block (the default
+                // source is the master): `update_meters` repaints just the
+                // sampler's meters, anything else redraws the window.
+                let others = dreist_editor::model::SamplerView { meters: ed.model.sampler.meters, ..sampler.clone() };
+                let changed = ed.model.sampler != others;
+                ed.model.sampler = sampler;
+                if changed {
                     ed.app.dirty = true;
                 }
             }
             ed.update_meters(&inbox.meters);
+            perf.tick(ed, &bridge);
             let (n, ch, cc) = inbox.last_cc;
             ed.midi_cc(n, ch, cc);
             if !inbox.midi_log.is_empty() {
@@ -634,7 +651,8 @@ impl Editor for DreistEditor {
             }
             inbox.clear();
         });
-        Box::new(Handle(dreist_editor::window::open_parented(&parent, gui, link)))
+        let scale = f32::from_bits(self.host_scale.load(std::sync::atomic::Ordering::Relaxed)) as f64;
+        Box::new(Handle(dreist_editor::window::open_parented(&parent, gui, link, scale)))
     }
 
     fn size(&self) -> (u32, u32) {
@@ -657,14 +675,20 @@ impl Editor for DreistEditor {
         let min = min_size();
         let (w, h) = (width.max(min.0), height.max(min.1));
         let px = ((w as u64) << 32) | h as u64;
-        self.size.store(px, Ordering::Relaxed);
-        self.bridge.host_size.store(px, Ordering::Release);
+        // Hosts repeat the current size (REAPER on every idle tick): only a
+        // new size goes to the editor, which resizes and redraws for it.
+        if self.size.swap(px, Ordering::Relaxed) != px {
+            self.bridge.host_size.store(px, Ordering::Release);
+        }
         (w, h) == (width, height)
     }
 
-    fn set_scale_factor(&self, _factor: f32) -> bool {
-        // baseview follows the system scale factor itself.
-        false
+    fn set_scale_factor(&self, factor: f32) -> bool {
+        // Windows and Linux (macOS scales by itself and never calls this):
+        // the host sizes its view from `size()` times this factor, so the
+        // window takes it too.
+        self.host_scale.store(factor.to_bits(), std::sync::atomic::Ordering::Relaxed);
+        true
     }
 
     fn param_value_changed(&self, _id: &str, _normalized_value: f32) {}
@@ -672,6 +696,50 @@ impl Editor for DreistEditor {
     fn param_modulation_changed(&self, _id: &str, _modulation_offset: f32) {}
 
     fn param_values_changed(&self) {}
+}
+
+/// The CPU and memory readout's feed: once a second, while it is on.
+struct PerfFeed {
+    at: std::time::Instant,
+    /// The audio load's second last shown, and how many updates ago it
+    /// changed (the audio thread stopped: no DSP figures).
+    second: u32,
+    stale: u8,
+}
+
+impl Default for PerfFeed {
+    fn default() -> PerfFeed {
+        PerfFeed { at: std::time::Instant::now(), second: 0, stale: 0 }
+    }
+}
+
+impl PerfFeed {
+    fn tick(&mut self, ed: &mut DreistGui, bridge: &Bridge) {
+        ed.place_perf();
+        if let (Some(m), Some(ui)) = (dreist_engine::diag::monitor(), ed.app.ui_load) {
+            m.set_ui_load(ui);
+        }
+        if self.at.elapsed() < std::time::Duration::from_secs(1) {
+            return;
+        }
+        self.at = std::time::Instant::now();
+        if !ed.perf_shown() {
+            ed.performance(&dreist_gui::perf::Reading::default());
+            return;
+        }
+        let second = bridge.load.seconds();
+        self.stale = if second == self.second { self.stale.saturating_add(1) } else { 0 };
+        self.second = second;
+        let dsp = bridge.load.reading().filter(|_| self.stale < 2);
+        let r = dreist_gui::perf::Reading {
+            dsp: dsp.map(|d| d.average),
+            peak: dsp.map(|d| d.peak),
+            ui: ed.app.ui_load,
+            memory: dreist_engine::load::rss_bytes(),
+            late: bridge.standalone.load(Ordering::Relaxed).then(|| bridge.load.reading().map_or(0, |d| d.late)),
+        };
+        ed.performance(&r);
+    }
 }
 
 #[cfg(test)]
@@ -774,7 +842,8 @@ mod tests {
     /// reaches the open editor through the bridge.
     #[test]
     fn host_resizes_follow_with_a_minimum() {
-        let ed = DreistEditor { bridge: Arc::new(Bridge::default()), theme: String::new(), params: Arc::new(crate::DreistParams::default()), size: Default::default() };
+        let ed =
+            DreistEditor { bridge: Arc::new(Bridge::default()), theme: String::new(), params: Arc::new(crate::DreistParams::default()), size: Default::default(), host_scale: 1.0f32.to_bits().into() };
         let (mw, mh) = ed.min_size().expect("resizable");
         let (w, h) = dreist_gui::app::MIN_WINDOW;
         assert!(mw >= (w as f64 * 0.5) as u32 && mh >= (h as f64 * 0.5) as u32);

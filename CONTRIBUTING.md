@@ -1,61 +1,79 @@
 # Contributing
 
-Commit subjects follow [Conventional Commits](https://www.conventionalcommits.org/):
-`type(scope): summary`, with type one of `feat`, `fix`, `perf`, `refactor`, `docs`, `test`,
-`build`, `ci`, `chore`, `style` or `revert`, and `!` after the type for a breaking change. Scopes are
-short (a crate or area); a body only when the why is not obvious, wrapped at 72 columns. No AI
-attribution in commits, tags or release notes. The release workflow checks the commits since the
-previous tag (`.github/workflows/commits.yml`); the changelog is generated from them.
+## Commits
 
-Releases: `git cliff --unreleased --tag vX.Y.Z --prepend CHANGELOG.md` ([git-cliff](https://git-cliff.org),
-config in `cliff.toml`), edit the new section by hand if needed, bump the version in `Cargo.toml`,
-commit as `chore(release): vX.Y.Z`, then tag `vX.Y.Z` and push the tag. The release workflow
-(`.github/workflows/release.yml`) runs the tests on macOS and Windows, builds VST3, CLAP and the app,
-and publishes the tag's `CHANGELOG.md` section with the zips. To rebuild a release's assets:
-`gh workflow run release.yml --ref <tag> -f tag=<tag> -f upload=true`.
+- **Format**: [Conventional Commits](https://www.conventionalcommits.org/), `type(scope): summary`, with `!` after the type for a breaking change.
+- **Types**: `feat`, `fix`, `perf`, `refactor`, `docs`, `test`, `build`, `ci`, `chore`, `style`, `revert`.
+- **Scope and body**: a short scope (a crate or area); a body only when the why is not obvious, wrapped at 72 columns.
+- **Checked**: by the `conventional` check; the changelog and release notes are generated from the commits.
 
-Branches and CI: work goes to `dev`; at a release `dev` is merged into `main` and the merge is
-tagged. GitHub Actions run only on release tags and by hand (`workflow_dispatch`), never on branch
-pushes or pull requests, so run the checks locally before pushing: `cargo fmt --all --check`,
-`cargo clippy --workspace --all-targets -- -D warnings`, `cargo test --workspace` and
-`python3 scripts/uigen/uigen.py --check`.
+## Branches and pull requests
 
-dreist-commons: the shared crates are the submodule at `commons` (clone with `--recursive`). To
-change them, commit and push in `commons/` first, then commit the new pointer here as
-`build: dreist-commons <short sha or vX.Y.Z>`. Keep one app's behaviour behind its profile or opt-in
-style attributes and run both apps' tests and goldens against the change; goldens must stay
-identical unless the change means to alter them (say why in the commit). At a release, merge
-dreist-commons `dev` into its `main` first and point the apps at that commit.
+- **Work**: on `feature/<name>`, one worktree per branch in `.claude/worktrees/<name>`.
+- **Into `dev`**: a pull request, squash-merged; its title is the Conventional Commit.
+- **Drafts**: longer work opens as a draft pull request, marked ready once its testing is done; short work goes from a local branch straight to a ready pull request.
+- **Issues**: for features, bug reports and work spanning several pull requests or repos; the pull request links it with `Closes #N`.
+- **No issue**: small fixes, docs, chores and dependency bumps go straight to a pull request with a conventional title.
+- **Board**: features and larger work for all three repos are tracked on [Dreist & Einst](https://github.com/users/koeves/projects/1).
+- **Rules**: `dev` and `main` take changes only through pull requests with green checks.
+- **Dependabot**: targets `dev`; patch, minor, Actions and submodule updates merge on their own when green.
 
-Signing: builds are unsigned. `scripts/build.sh` signs ad hoc on macOS; `DREIST_SIGN_IDENTITY`
-(Developer ID) signs with the hardened runtime, and `DREIST_NOTARY_PROFILE` also notarises. Windows
-binaries are unsigned.
+## Checks
 
-Third-party notices: `THIRD_PARTY_NOTICES.md` is generated (`python3 scripts/notices.py`, CI runs
-`--check`). The crates are MIT OR Apache-2.0; `dreist-plugin` and the binaries are GPL-3.0-or-later.
+Run them before pushing:
+
+```bash
+cargo fmt --all --check
+cargo clippy --workspace --all-targets -- -D warnings
+cargo test --workspace
+python3 scripts/uigen/uigen.py --check
+```
+
+- **CI**: `checks` and `macos` (required), plus `linux-build`, which builds, tests and bundles on Linux.
+- **CodeQL**: runs on every pull request into `dev` and `main`.
+- **Goldens**: `commons/crates/*/tests/golden/` and `crates/dreist-editor/tests/golden/screens.txt` stay identical unless a change means to alter them.
+- **Updating goldens**: `UPDATE_GOLDEN=1`, and say why in the commit.
 
 ## Development
 
-Build, run and test (macOS; on Windows `scripts/build-windows.sh` in Git Bash):
+```bash
+scripts/build.sh                  # target/bundled/Dreist.{app,vst3,clap}; --debug, --install
+cargo run -p dreist-plugin --features standalone --bin dreist-standalone --release
+DREIST_UI=$PWD/assets/ui DREIST_RESOURCES=$PWD/assets/factory cargo test --manifest-path commons/Cargo.toml --workspace
+```
 
-    scripts/build.sh                  # release: target/bundled/Dreist.{app,vst3,clap}; --debug, --install
-    cargo run -p dreist-plugin --features standalone --bin dreist-standalone --release
-    cargo test --workspace
-    DREIST_UI=$PWD/assets/ui DREIST_RESOURCES=$PWD/assets/factory cargo test --manifest-path commons/Cargo.toml --workspace
+- **Resources**: found through `DREIST_RESOURCES` / `DREIST_UI`, the bundle, then `assets/`.
+- **Content**: tests that need the original's content packs skip without them (`DREIST_CONTENT` sets the location).
+- **Code style**: `cargo fmt` (200 columns) and clippy clean.
+- **Behaviour**: matches the original; cite reverse-engineering evidence by `[re:xxxxxx]` tag.
+- **Names**: no original product or vendor names outside README files.
+- **Audio path**: does not allocate once warmed up (`realtime.rs`, `fx_realtime.rs`).
+- **Files**: file code returns `Result` and degrades on damaged files.
 
-Resources resolve through `dreist_formats::paths` (`DREIST_RESOURCES` / `DREIST_UI`, the bundle, then
-`assets/`). No samples are shipped: content comes from the original's packs (`DREIST_CONTENT`, else
-`Content` in the documents folder); tests that need it skip without it.
+## UI
 
-Goldens (`commons/crates/*/tests/golden/`, `crates/dreist-editor/tests/golden/screens.txt`) stay
-identical unless a change means to alter them; regenerate with `UPDATE_GOLDEN=1` and say why.
+- **Generated**: everything in `assets/ui` comes from `scripts/uigen/uigen.py` (`skia-python==144.1`, `fonttools==4.68.0`).
+- **Edits**: change the generator, never the generated files; `--check` fails when they are stale.
+- **Look**: layouts, sizes and labels follow the original's skin; graphics are Dreist's own vector art.
 
-Conventions: `cargo fmt` (200 columns) and clippy clean; behaviour matches the original, citing
-evidence by `[re:xxxxxx]` tag; no original product or vendor names outside README files; the audio
-path does not allocate once warmed up (`realtime.rs`, `fx_realtime.rs`); file code returns `Result`
-and degrades on damaged files.
+## Releases
 
-UI: everything in `assets/ui` is generated by `scripts/uigen/uigen.py` (needs `skia-python==144.1`,
-`fonttools==4.68.0`); edit the generator, never the generated files, and check with `--check`.
-Layouts, sizes and labels follow the shipped original's skin; graphics are Dreist's own vector art,
-never copied bitmaps.
+- **Release**: a pull request from `dev` into `main`, merged with a merge commit.
+- **Automatic**: the merge computes the version from the commits, tags `vX.Y.Z`, builds macOS, Windows and Linux and publishes the GitHub release.
+- **Follow-up**: a changelog and version pull request into `dev` merges itself once green.
+- **Version**: fix → patch, feat → minor, breaking → major (minor while on 0.x); `Release-As: X.Y.Z` in the release pull request overrides it.
+- **Releasable**: feat, fix, perf, refactor, revert, breaking and dependency commits; without one nothing is released.
+- **Rebuild assets**: `gh workflow run release.yml --ref <tag> -f tag=<tag> -f upload=true`.
+
+## dreist-commons
+
+- **Submodule**: the shared crates are at `commons`; clone with `--recursive`.
+- **Changes**: land in dreist-commons first, then bump the pointer here as `build: dreist-commons <sha or vX.Y.Z>`.
+- **One app's behaviour**: stays behind its profile or opt-in style attributes; run both apps' tests against the change.
+- **Releases**: `commons` must be at a dreist-commons release tag; release dreist-commons first.
+
+## Builds
+
+- **Signing**: `scripts/build.sh` signs ad hoc on macOS; `DREIST_SIGN_IDENTITY` (Developer ID) signs with the hardened runtime, `DREIST_NOTARY_PROFILE` also notarises.
+- **Release builds**: unsigned on every system.
+- **Third-party notices**: `THIRD_PARTY_NOTICES.md` is generated by `python3 scripts/notices.py`; CI runs `--check`.

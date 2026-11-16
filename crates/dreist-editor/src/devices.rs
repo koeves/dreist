@@ -52,6 +52,8 @@ pub trait DeviceHost: Send {
     fn midi(&self) -> MidiSetup;
     /// Restart audio with the stored settings, keeping the document.
     fn restart(&self, doc: &dreist_formats::Node, samples: Option<&std::path::Path>);
+    /// Hold the performance power profile while playing (Linux), or not.
+    fn power_hold(&self, _on: bool) {}
     /// Follow the MIDI clock of input `port` (Sync to clock), or stop.
     fn clock_sync(&self, _port: &str, _on: bool) {}
 }
