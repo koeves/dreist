@@ -3,9 +3,12 @@
 #
 #   scripts/build.sh            release build into target/bundled/
 #   scripts/build.sh --debug    debug build
-#   scripts/build.sh --install  also install to ~/Library/Audio/Plug-Ins and /Applications
+#   scripts/build.sh --install  also install for this user (target/bundled/install.sh)
+#   scripts/build.sh --uninstall  remove that install
 #
-# Output: target/bundled/Dreist.vst3, Dreist.clap, Dreist.app
+# Output: target/bundled/Dreist.vst3, Dreist.clap, Dreist.app and install.sh
+# (commons/packaging/install.sh, which the release archive also carries;
+# commons/packaging/README.md lists what goes where).
 #
 # Signing: ad-hoc by default. With DREIST_SIGN_IDENTITY set (a "Developer
 # ID Application: ..." identity in the keychain) the bundles are signed
@@ -19,14 +22,19 @@ export PATH="$HOME/.rustup/toolchains/stable-aarch64-apple-darwin/bin:$HOME/.car
 
 profile=release
 install=0
+uninstall=0
 for a in "$@"; do
     case "$a" in
         --debug) profile=debug ;;
         --install) install=1 ;;
-        -h|--help) sed -n '2,8p' "$0"; exit 0 ;;
+        --uninstall) uninstall=1 ;;
+        -h|--help) sed -n '2,12p' "$0"; exit 0 ;;
         *) echo "unknown option: $a" >&2; exit 2 ;;
     esac
 done
+if [ "$uninstall" = 1 ]; then
+    exec sh commons/packaging/install.sh --app Dreist --uninstall
+fi
 flag=$([ "$profile" = release ] && echo --release || true)
 version=$(sed -n 's/^version = "\(.*\)"/\1/p' Cargo.toml | head -1)
 out=target/bundled
@@ -99,13 +107,12 @@ if [ -n "${DREIST_SIGN_IDENTITY:-}" ] && [ -n "${DREIST_NOTARY_PROFILE:-}" ]; th
     done
 fi
 
+cp commons/packaging/install.sh "$out/install.sh"
+chmod +x "$out/install.sh"
+
 if [ "$install" = 1 ]; then
     echo "==> Installing"
-    mkdir -p "$HOME/Library/Audio/Plug-Ins/VST3" "$HOME/Library/Audio/Plug-Ins/CLAP"
-    rm -rf "$HOME/Library/Audio/Plug-Ins/VST3/Dreist.vst3" "$HOME/Library/Audio/Plug-Ins/CLAP/Dreist.clap" "/Applications/Dreist.app"
-    cp -R "$out/Dreist.vst3" "$HOME/Library/Audio/Plug-Ins/VST3/"
-    cp -R "$out/Dreist.clap" "$HOME/Library/Audio/Plug-Ins/CLAP/"
-    cp -R "$app" /Applications/
+    sh "$out/install.sh"
 fi
 
 echo "==> Done"

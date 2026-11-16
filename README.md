@@ -39,22 +39,24 @@ Dreist is a drum sampler, step sequencer and performance instrument: a Rust rebu
 
 ## Installation
 
-Download the archives for your system from the [latest release](https://github.com/koeves/dreist/releases/latest).
+Download the archive for your system from the [latest release](https://github.com/koeves/dreist/releases/latest), unpack it and run its install script.
 
-| System | Requirements | VST3 | CLAP | App |
+| System | Requirements | Archive | Install | Uninstall |
 |---|---|---|---|---|
-| macOS | 11+, Apple Silicon | `Dreist-<tag>-macOS-VST3.zip` | `Dreist-<tag>-macOS-CLAP.zip` | `Dreist-<tag>-macOS-App.zip` |
-| Windows | 10+, x64 | `Dreist-<tag>-Windows-VST3.zip` | `Dreist-<tag>-Windows-CLAP.zip` | `Dreist-<tag>-Windows-App.zip` |
-| Linux | x86_64, glibc 2.39+, X11 or XWayland | `Dreist-<tag>-Linux-VST3.tar.gz` | `Dreist-<tag>-Linux-CLAP.tar.gz` | `Dreist-<tag>-Linux-App.tar.gz` |
+| macOS | 11+, Apple Silicon | `Dreist-<tag>-macOS.zip` | `./install.sh` | `./install.sh --uninstall` |
+| Windows | 10+, x64 | `Dreist-<tag>-Windows.zip` | `.\install.ps1` | `.\install.ps1 --uninstall` |
+| Linux | x86_64, glibc 2.39+, X11 or XWayland | `Dreist-<tag>-Linux.tar.gz` | `./install.sh` | `./install.sh --uninstall` |
+
+- **What it installs**: the app, VST3 and CLAP in the standard folders, for your user on macOS and Linux and for all users on Windows ([locations](https://github.com/koeves/dreist-commons/blob/dev/packaging/README.md#locations)).
+- **All users on macOS and Linux**: add `--system` and run it with `sudo`.
+- **Windows**: run it in an administrator PowerShell, or add `--user` to install for your user only.
+- **Settings and content** stay on uninstall.
+- **Single parts**: the release also has one archive each for the VST3, CLAP and app, to place by hand.
 
 ### macOS
 
-- **VST3**: move `Dreist.vst3` to `~/Library/Audio/Plug-Ins/VST3/`.
-- **CLAP**: move `Dreist.clap` to `~/Library/Audio/Plug-Ins/CLAP/`.
-- **App**: move `Dreist.app` to `/Applications`.
 - **First launch**: the builds are unsigned, so open the app with right-click › Open › Open.
 - **Plugins blocked by a host**: clear the quarantine flag.
-- **Uninstall**: delete `Dreist.vst3`, `Dreist.clap` and `Dreist.app` from those folders.
 
 ```bash
 xattr -dr com.apple.quarantine ~/Library/Audio/Plug-Ins/VST3/Dreist.vst3 ~/Library/Audio/Plug-Ins/CLAP/Dreist.clap
@@ -62,17 +64,12 @@ xattr -dr com.apple.quarantine ~/Library/Audio/Plug-Ins/VST3/Dreist.vst3 ~/Libra
 
 ### Windows
 
-- **VST3**: move the `Dreist.vst3` folder to `C:\Program Files\Common Files\VST3\`.
-- **CLAP**: move the `Dreist` folder (`Dreist.clap` and `Resources`) to `C:\Program Files\Common Files\CLAP\`.
-- **App**: unzip the `Dreist` folder anywhere and run `Dreist.exe`; keep `Resources` next to it.
+- **Running the script**: in PowerShell, `powershell -ExecutionPolicy Bypass -File .\install.ps1` if scripts are blocked.
 - **First launch**: the builds are unsigned; if SmartScreen warns, choose More info › Run anyway.
-- **Uninstall**: delete the `Dreist.vst3` and `Dreist` folders from those places, and the app folder.
 
 ### Linux
 
-- **Install**: unpack `Dreist-<tag>-Linux.tar.gz` and run `./install.sh` in its folder; it sets up the VST3, CLAP, app, launcher and icon for your user.
-- **Uninstall**: run `./install.sh --uninstall`; settings and content stay.
-- **By hand**: `Dreist.vst3` goes in `~/.vst3/`, the `Dreist` CLAP folder in `~/.clap/`, and the `Dreist` app folder anywhere (run `Dreist`, keep `Resources` next to it).
+- **Launcher**: the install adds the app to the desktop's app list and a `dreist` command.
 - **Runtime**: ALSA, X11 / XCB and OpenGL, present on desktop systems.
 - **File dialogs**: through the XDG desktop portal, or `zenity` without one.
 - **Standalone audio**: smoothest on PipeWire (Ubuntu 24.04+); on PulseAudio, raise the buffer in the audio settings or run `Dreist --backend jack` with JACK.
@@ -111,7 +108,8 @@ Needs a Rust toolchain.
 ```bash
 git clone --recursive https://github.com/koeves/dreist
 scripts/build.sh                  # macOS: target/bundled/Dreist.{app,vst3,clap}
-scripts/build.sh --install        # macOS: also into ~/Library/Audio/Plug-Ins and /Applications
+scripts/build.sh --install        # macOS: also install for this user (target/bundled/install.sh)
+scripts/build.sh --uninstall      # macOS: remove that install
 scripts/build-windows.sh          # Windows, in Git Bash
 scripts/build-linux.sh            # Linux
 scripts/build-linux.sh --install  # Linux: also install for this user (target/bundled/install.sh)
