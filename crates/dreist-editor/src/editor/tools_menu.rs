@@ -2,7 +2,37 @@
 
 use crate::*;
 
+/// Options key: the CPU and memory readout is on (off by default).
+pub(crate) const PERF_OPTION: &str = "ShowPerformance";
+
 impl Editor {
+    /// The CPU and memory readout is on.
+    pub fn perf_shown(&self) -> bool {
+        self.modals.options.bool(PERF_OPTION, false)
+    }
+
+    /// Show `r` in the readout, adding or removing it to match the option
+    /// (the app calls this about once a second).
+    pub fn performance(&mut self, r: &dreist_gui::perf::Reading) {
+        self.place_perf();
+        if self.perf_shown() {
+            dreist_gui::perf::update(&mut self.app, r);
+        }
+    }
+
+    /// Add or remove the readout to match the option, in a strip taken
+    /// from the bottom of the browser's list area (kept every frame through
+    /// splitters and window sizes); hidden while that area is not shown.
+    pub fn place_perf(&mut self) {
+        let on = self.perf_shown();
+        let list = self.browser.as_ref().map(|b| b.page().to_vec()).and_then(|page| Some([&page[..], &self.app.ctrl(&page)?.path_of("SplitView")?[..]].concat()));
+        let strip = list.and_then(|p| dreist_gui::perf::reserve_below(&mut self.app, &p, on));
+        dreist_gui::perf::show(&mut self.app, on);
+        if on {
+            dreist_gui::perf::place(&mut self.app, strip.unwrap_or_default());
+        }
+    }
+
     /// Tools ([re:4139f8] [re:a00968]) and Help ([re:0316e2])
     /// menus.
     pub(crate) fn tools_help_menu(&mut self, ev: &UiEvent) -> bool {
@@ -11,10 +41,11 @@ impl Editor {
         // `SaveSamplesWithChunks`.
         let embed = if project::embed_samples() { format!("{}Save samples with presets", dreist_gui::menu::CHECK) } else { "Save samples with presets".into() };
         let tools: [&str; 11] = ["Preferences", "", &reset, "Save as default preset", "Clear default preset", "", "Find missing files...", "", "Export as audio...", "", &embed];
-        const HELP: [&str; 5] = ["About", "", "Reset UI size to default", "Reset UI scale to 100%", "Show MIDI Console"];
+        let perf = if self.perf_shown() { "Hide CPU and memory" } else { "Show CPU and memory" };
+        let help: [&str; 6] = ["About", "", "Reset UI size to default", "Reset UI scale to 100%", "Show MIDI Console", perf];
         match ev {
             UiEvent::Clicked { path, name, .. } if (name == "ToolButton" || name == "HelpButton") && !self.browser.as_ref().is_some_and(|b| path.starts_with(b.page())) => {
-                let items = if name == "ToolButton" { &tools[..] } else { &HELP[..] };
+                let items = if name == "ToolButton" { &tools[..] } else { &help[..] };
                 self.app.open_menu(path, items.iter().map(|s| s.to_string()).collect(), None);
                 false
             }
@@ -86,6 +117,14 @@ impl Editor {
                         }
                     }
                     4 => self.midiconsole.open = true,
+                    5 => {
+                        let on = !self.perf_shown();
+                        self.modals.options.set(PERF_OPTION, on);
+                        if !cfg!(test) {
+                            self.modals.options.save();
+                        }
+                        self.place_perf();
+                    }
                     _ => {}
                 }
                 true
