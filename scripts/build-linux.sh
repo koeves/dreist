@@ -13,8 +13,9 @@
 # .clap and the app are bare files, so Dreist's profile looks for
 # `Resources/` next to them (as on Windows).
 #
-# --install and --uninstall run that install.sh (scripts/linux-install.sh,
-# which the release tarball also carries; it lists what goes where).
+# --install and --uninstall run that install.sh (commons/packaging/install.sh,
+# which the release tarball also carries; commons/packaging/README.md lists
+# what goes where).
 #
 # Needs pkg-config and the ALSA, X11, XCB and OpenGL headers (README).
 set -euo pipefail
@@ -29,13 +30,13 @@ for a in "$@"; do
         --debug) profile=debug ;;
         --install) install=1 ;;
         --uninstall) uninstall=1 ;;
-        -h|--help) sed -n '2,19p' "$0"; exit 0 ;;
+        -h|--help) sed -n '2,20p' "$0"; exit 0 ;;
         *) echo "unknown option: $a" >&2; exit 2 ;;
     esac
 done
 
 if [ "$uninstall" = 1 ]; then
-    exec sh scripts/linux-install.sh --uninstall
+    exec sh commons/packaging/install.sh --app Dreist --uninstall
 fi
 flag=$([ "$profile" = release ] && echo --release || true)
 out=target/bundled
@@ -55,7 +56,7 @@ mv "$out/Dreist.clap" "$clap/Dreist.clap"
 cp "target/$profile/dreist-standalone" "$app/Dreist"
 cp assets/ui/AppIcon.png "$app/dreist.png"
 cp -R assets/linux/icons "$app/icons"
-cp scripts/linux-install.sh "$out/install.sh"
+cp commons/packaging/install.sh "$out/install.sh"
 chmod +x "$out/install.sh"
 cat > "$app/dreist.desktop" <<DESKTOP
 [Desktop Entry]
