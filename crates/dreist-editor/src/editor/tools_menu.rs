@@ -5,7 +5,33 @@ use crate::*;
 /// Options key: the CPU and memory readout is on (off by default).
 pub(crate) const PERF_OPTION: &str = "ShowPerformance";
 
+/// Options key: hold the performance power profile while the standalone
+/// plays (Linux; on by default).
+pub(crate) const POWER_OPTION: &str = "HoldPerformanceWhilePlaying";
+
 impl Editor {
+    /// The power-profile hold is offered: the Linux standalone.
+    fn power_hold_offered(&self) -> bool {
+        cfg!(target_os = "linux") && self.devices.host.is_some()
+    }
+
+    /// Its menu item, checked while on.
+    fn power_hold_item(&self) -> String {
+        let label = "Keep the CPU at full speed while playing";
+        if self.modals.options.bool(POWER_OPTION, true) { format!("{}{label}", dreist_gui::menu::CHECK) } else { label.into() }
+    }
+
+    fn toggle_power_hold(&mut self) {
+        let on = !self.modals.options.bool(POWER_OPTION, true);
+        self.modals.options.set(POWER_OPTION, on);
+        if !cfg!(test) {
+            self.modals.options.save();
+        }
+        if let Some(h) = &self.devices.host {
+            h.power_hold(on);
+        }
+    }
+
     /// The CPU and memory readout is on.
     pub fn perf_shown(&self) -> bool {
         self.modals.options.bool(PERF_OPTION, false)
@@ -42,7 +68,11 @@ impl Editor {
         let embed = if project::embed_samples() { format!("{}Save samples with presets", dreist_gui::menu::CHECK) } else { "Save samples with presets".into() };
         let tools: [&str; 11] = ["Preferences", "", &reset, "Save as default preset", "Clear default preset", "", "Find missing files...", "", "Export as audio...", "", &embed];
         let perf = if self.perf_shown() { "Hide CPU and memory" } else { "Show CPU and memory" };
-        let help: [&str; 6] = ["About", "", "Reset UI size to default", "Reset UI scale to 100%", "Show MIDI Console", perf];
+        let power = self.power_hold_item();
+        let mut help: Vec<&str> = vec!["About", "", "Reset UI size to default", "Reset UI scale to 100%", "Show MIDI Console", perf];
+        if self.power_hold_offered() {
+            help.push(&power);
+        }
         match ev {
             UiEvent::Clicked { path, name, .. } if (name == "ToolButton" || name == "HelpButton") && !self.browser.as_ref().is_some_and(|b| path.starts_with(b.page())) => {
                 let items = if name == "ToolButton" { &tools[..] } else { &help[..] };
@@ -117,6 +147,7 @@ impl Editor {
                         }
                     }
                     4 => self.midiconsole.open = true,
+                    6 if self.power_hold_offered() => self.toggle_power_hold(),
                     5 => {
                         let on = !self.perf_shown();
                         self.modals.options.set(PERF_OPTION, on);
