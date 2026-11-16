@@ -29,7 +29,8 @@ cargo test --workspace
 python3 scripts/uigen/uigen.py --check
 ```
 
-- **CI**: `checks` and `macos` (required), plus `linux-build`, which builds, tests and bundles on Linux.
+- **CI**: pull requests into `dev` run `checks` and `linux-build` (builds, tests and bundles on Linux); the release pull request and the release also run `macos`.
+- **Docs only**: a pull request that changes only Markdown skips the build and test jobs; a skipped job counts as passed.
 - **CodeQL**: runs on every pull request into `dev` and `main`.
 - **Goldens**: `commons/crates/*/tests/golden/` and `crates/dreist-editor/tests/golden/screens.txt` stay identical unless a change means to alter them.
 - **Updating goldens**: `UPDATE_GOLDEN=1`, and say why in the commit.
@@ -58,11 +59,11 @@ DREIST_UI=$PWD/assets/ui DREIST_RESOURCES=$PWD/assets/factory cargo test --manif
 
 ## Releases
 
-- **Release**: a pull request from `dev` into `main`, merged with a merge commit.
-- **Automatic**: the merge computes the version from the commits, tags `vX.Y.Z`, builds macOS, Windows and Linux and publishes the GitHub release.
-- **Follow-up**: a changelog and version pull request into `dev` merges itself once green.
-- **Version**: fix → patch, feat → minor, breaking → major (minor while on 0.x); `Release-As: X.Y.Z` in the release pull request overrides it.
-- **Releasable**: feat, fix, perf, refactor, revert, breaking and dependency commits; without one nothing is released.
+- **Prepare**: `.github/release/prepare.sh` cuts `release/vX.Y.Z` from `dev` with the version and its CHANGELOG section in one commit and opens its pull request into `dev`; `--dry-run` tries it locally.
+- **Version**: from the commits since the last tag: fix → patch, feat → minor, breaking → major (minor while on 0.x); `--as X.Y.Z` or a `Release-As: X.Y.Z` line in a commit sets it.
+- **Releasable**: feat, fix, perf, refactor, revert, breaking and dependency commits; `ci`, `docs`, `test`, `style` and other commits alone release nothing.
+- **Release**: `prepare.sh --open` opens the pull request from `dev` into `main`, merged with a merge commit; its `release-version` check needs the prepared version and changelog and no releasable commit after them.
+- **Automatic**: the merge tags `vX.Y.Z`, builds macOS, Windows and Linux and publishes the GitHub release; the changelog and version are already in `dev`.
 - **Rebuild assets**: `gh workflow run release.yml --ref <tag> -f tag=<tag> -f upload=true`.
 
 ## dreist-commons
