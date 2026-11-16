@@ -799,7 +799,7 @@ dependencies = [
 
 [[package]]
 name = "dreist-cli"
-version = "0.2.3"
+version = "0.3.0"
 dependencies = [
  "dreist-dsp",
  "dreist-engine",
@@ -816,7 +816,7 @@ dependencies = [
 
 [[package]]
 name = "dreist-editor"
-version = "0.2.3"
+version = "0.3.0"
 dependencies = [
  "dreist-dsp",
  "dreist-engine",
@@ -875,7 +875,7 @@ dependencies = [
 
 [[package]]
 name = "dreist-plugin"
-version = "0.2.3"
+version = "0.3.0"
 dependencies = [
  "dreist-dsp",
  "dreist-editor",
@@ -3114,7 +3114,7 @@ checksum = "163b33ed8786455e2fa5d72f554057ce3f3182425434f756cd39c99839d88e23"
 
 [[package]]
 name = "xtask"
-version = "0.2.3"
+version = "0.3.0"
 dependencies = [
  "nih_plug_xtask",
 ]

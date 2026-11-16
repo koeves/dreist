@@ -1,5 +1,48 @@
 # Changelog
 
+## [0.3.0] - 2026-11-16
+
+### Features
+
+- Linux build (VST3, CLAP, standalone) (#14)
+- **editor:** CPU and memory readout (#34)
+- **plugin:** Debug runs of the standalone launcher (#36)
+- **standalone:** Keep the CPU at full speed while playing on Linux (#38)
+- **build:** Install scripts from dreist-commons on every platform (#39)
+
+### Fixes
+
+- **ui:** The About dialog shows its text on two lines (#21)
+- **linux:** Editor at the host's scale, dialogs in an existing folder (#28)
+- **linux:** Installer, window, standalone audio and editor performance (#32)
+
+### Performance
+
+- **editor:** Screens with controls kept as pixels between frames (#35)
+
+### Documentation
+
+- Feature branches into dev by pull request, releases by pull request into main
+- Releasing is merging the release pull request
+- MacOS, Windows and Linux in the About text and README (#19)
+- README and contributing guide as short bullet lists (#30)
+- Draft pull requests while work is in progress (#37)
+
+### Tests
+
+- **editor:** The screen goldens show a fixed version in About
+
+### Build and CI
+
+- **deps:** Bump github/codeql-action from 3 to 4
+- **deps:** Bump actions/setup-python from 5 to 7
+- --install puts the standalone app in /Applications
+- Checks and CodeQL on pull requests into dev and main; Dependabot auto-merge
+- Release on merging the release pull request into main
+- Squash pull requests into dev, merge commits into main (#17)
+- Install Linux packages from the main Ubuntu archive (#27)
+- Dreist-commons v0.3.0 (#41)
+
 ## [0.2.3] - 2026-11-11
 
 Dependency updates (rfd 0.18, midir 0.11, libc; dreist-commons v0.2.3 with tiny-skia 0.12,
