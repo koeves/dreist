@@ -64,6 +64,8 @@ impl Default for DreistParams {
 }
 
 pub struct DreistPlugin {
+    /// This instance's number for the diagnostics log (`dreist_engine::diag`).
+    diag_id: u64,
     params: Arc<DreistParams>,
     engine: Option<Box<Dreist>>,
     /// A swapped-out engine waiting for room in `Bridge::retired` (never
@@ -94,6 +96,7 @@ impl Default for DreistPlugin {
     fn default() -> Self {
         profile::install();
         DreistPlugin {
+            diag_id: dreist_engine::diag::instance_id(),
             params: Arc::new(DreistParams::default()),
             engine: None,
             retiring: None,
@@ -111,6 +114,13 @@ impl Default for DreistPlugin {
             #[cfg(feature = "standalone")]
             clock: Default::default(),
         }
+    }
+}
+
+impl Drop for DreistPlugin {
+    fn drop(&mut self) {
+        // The next instance reports to the diagnostics log.
+        dreist_engine::diag::release(self.diag_id);
     }
 }
 
@@ -266,8 +276,24 @@ impl Plugin for DreistPlugin {
         Some(Box::new(editor::DreistEditor { bridge: self.bridge.clone(), theme, params: self.params.clone(), size: self.editor_size.clone(), host_scale: 1.0f32.to_bits().into() }))
     }
 
-    fn initialize(&mut self, _layout: &AudioIOLayout, buffer_config: &BufferConfig, _context: &mut impl InitContext<Self>) -> bool {
+    fn initialize(&mut self, _layout: &AudioIOLayout, buffer_config: &BufferConfig, context: &mut impl InitContext<Self>) -> bool {
         let sr = buffer_config.sample_rate;
+        // The diagnostics log (one per app and process) and this setup.
+        dreist_engine::diag::start(
+            "Dreist",
+            match option_env!("BUILD_VERSION") {
+                Some(v) => v,
+                None => env!("CARGO_PKG_VERSION"),
+            },
+            Vec::new(),
+        );
+        dreist_engine::diag::audio(vec![
+            ("format".into(), context.plugin_api().to_string().into()),
+            ("host".into(), dreist_engine::diag::host_name().into()),
+            ("instance".into(), self.diag_id.into()),
+            ("rate".into(), sr.into()),
+            ("max_block".into(), buffer_config.max_buffer_size.into()),
+        ]);
         self.bridge.sample_rate.store(sr.to_bits(), std::sync::atomic::Ordering::Relaxed);
         let options = dreist_editor::options::render_options();
         if let Ok(mut bp) = self.bridge.project_path.lock() {
@@ -368,8 +394,9 @@ impl Plugin for DreistPlugin {
         let bridge = self.bridge.clone();
         let rate = f32::from_bits(bridge.sample_rate.load(std::sync::atomic::Ordering::Relaxed));
         let _load = bridge.load.scope(buffer.samples(), rate);
-        // A debug run's monitor (`dreist_engine::diag`), when on.
-        let diag = dreist_engine::diag::monitor();
+        // The diagnostics monitor, when this instance reports
+        // (`dreist_engine::diag`).
+        let diag = dreist_engine::diag::monitor_for(self.diag_id);
         let _diag = diag.map(|m| m.block(buffer.samples(), rate));
         bridge.standalone.store(context.plugin_api() == nih_plug::prelude::PluginApi::Standalone, std::sync::atomic::Ordering::Relaxed);
         self.swap_in_rebuilt();
