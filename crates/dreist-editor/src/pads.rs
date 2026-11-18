@@ -51,6 +51,15 @@ pub struct Pads {
     press: (f32, f32),
 }
 
+impl Pads {
+    /// The app's menu closed without a pick (Escape, a click elsewhere):
+    /// forget the menu kept open here, so a later pick in another menu is
+    /// not taken for it.
+    pub(crate) fn menu_dismissed(&mut self) {
+        self.menu = 0;
+    }
+}
+
 /// [re:2d30eb] flash overlay.
 ///
 /// - Flash [re:870ce8]: on, alpha 0.65, colour = the

@@ -178,6 +178,15 @@ pub struct VelSplit {
     menu: Option<Menu>,
 }
 
+impl VelSplit {
+    /// The app's menu closed without a pick (Escape, a click elsewhere):
+    /// forget the menu kept open here, so a later pick in another menu is
+    /// not taken for it.
+    pub(crate) fn menu_dismissed(&mut self) {
+        self.menu = None;
+    }
+}
+
 /// Slide animation tags.
 const SLIDE_IN: u32 = 0x5e1;
 const SLIDE_OUT: u32 = 0x5e0;

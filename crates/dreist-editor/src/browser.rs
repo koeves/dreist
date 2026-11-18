@@ -335,6 +335,21 @@ pub struct Browser {
     nav_menu: Option<(PathBuf, Vec<NavAction>)>,
 }
 
+impl Browser {
+    /// The app's menu closed without a pick (Escape, a click elsewhere):
+    /// forget the menu kept open here, so a later pick in another menu is
+    /// not taken for it.
+    pub(crate) fn menu_dismissed(&mut self) {
+        self.headings_menu = None;
+        self.menu_entry = None;
+        self.menu.clear();
+        self.header_menu = 0;
+        self.source_menu = None;
+        self.nav_menu = None;
+        self.pane.menu_dismissed();
+    }
+}
+
 /// [re:2717b8] /
 /// [re:970ae8]: lock everything unless everything is locked, then unlock.
 pub fn toggle_lock_all(model: &mut Model, class: &str, count: usize) {

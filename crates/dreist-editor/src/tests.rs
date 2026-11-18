@@ -857,6 +857,28 @@ fn undo_history_menu_steps_back() {
     assert_eq!(ed.history.redo.last().map(|r| r.0.as_str()), Some("Edit 0"));
 }
 
+/// Repro: a menu closed without a pick (Escape, a click elsewhere) keeps
+/// nothing for later: the next pick, in another menu, belongs to that menu.
+#[test]
+fn dismissed_menu_does_not_take_the_next_pick() {
+    let Ok(mut ed) = Editor::new(dreist_gui::skin::default_theme(), Model::new(project::new_document())) else { return };
+    let before = ed.model.doc.clone();
+    ed.model.doc.set("Probe", 1);
+    ed.history.undo.push_back(("Edit".into(), before));
+    let edited = ed.model.doc.clone();
+    let h = ed.app.root.path_of("UndoHistory").unwrap();
+    ed.handle(&UiEvent::Clicked { path: h, name: "UndoHistory".into(), id: 0, on: false });
+    assert!(ed.app.escape(), "the undo history menu was open");
+    // Engine 1's selector menu, then its "Copy" (changes nothing).
+    let mut sel = [ed.header.selectors.clone().unwrap(), vec![0]].concat();
+    sel.push(ed.app.ctrl(&sel).unwrap().children.iter().position(|c| c.name == "EngineSelectionButton").unwrap());
+    ed.handle(&UiEvent::RightClicked { path: sel.clone(), name: "EngineSelectionButton".into() });
+    let menu = ed.app.menu.take().expect("the engine menu opened");
+    assert_eq!(menu.items[3], "Copy");
+    ed.handle(&UiEvent::MenuSelected { anchor: sel, name: "EngineSelectionButton".into(), index: 3 });
+    assert_eq!(ed.model.doc, edited, "the engine menu's pick went to the dismissed undo history");
+}
+
 #[test]
 fn pattern_export_renders_the_engine_pattern() {
     let Ok(mut ed) = Editor::new(dreist_gui::skin::default_theme(), Model::new(project::new_document())) else { return };

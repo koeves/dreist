@@ -123,6 +123,20 @@ pub struct Mixer {
     view_menu: bool,
 }
 
+impl Mixer {
+    /// The app's menu closed without a pick (Escape, a click elsewhere):
+    /// forget the menu kept open here, so a later pick in another menu is
+    /// not taken for it.
+    pub(crate) fn menu_dismissed(&mut self) {
+        self.output_menu = None;
+        self.route_all_menu = None;
+        self.view_menu = false;
+        if let Some(fx) = self.fx.as_mut() {
+            fx.menu_dismissed();
+        }
+    }
+}
+
 const TITLE: &str = "MixerChannelEditTitleStyle";
 const TITLE_SELECTED: &str = "MixerChannelEditTitleSelectedStyle";
 const TITLE_SUB: &str = "MixerChannelEditTitleSubSelStyle";
