@@ -1,5 +1,6 @@
 #!/usr/bin/env bash
-# Build Dreist: VST3 + CLAP bundles and the standalone macOS app.
+# Build Dreist: VST3 + CLAP bundles and the standalone macOS app, each a
+# universal binary (Apple Silicon and Intel).
 #
 #   scripts/build.sh            release build into target/bundled/
 #   scripts/build.sh --debug    debug build
@@ -18,7 +19,8 @@
 set -euo pipefail
 
 cd "$(dirname "$0")/.."
-export PATH="$HOME/.rustup/toolchains/stable-aarch64-apple-darwin/bin:$HOME/.cargo/bin:$PATH"
+export PATH="$HOME/.cargo/bin:$PATH"
+targets="aarch64-apple-darwin x86_64-apple-darwin"
 
 profile=release
 install=0
@@ -28,7 +30,7 @@ for a in "$@"; do
         --debug) profile=debug ;;
         --install) install=1 ;;
         --uninstall) uninstall=1 ;;
-        -h|--help) sed -n '2,12p' "$0"; exit 0 ;;
+        -h|--help) sed -n '2,13p' "$0"; exit 0 ;;
         *) echo "unknown option: $a" >&2; exit 2 ;;
     esac
 done
@@ -42,15 +44,25 @@ version=${BUILD_VERSION%%+*}
 out=target/bundled
 mkdir -p "$out"
 
-echo "==> VST3 / CLAP ($profile)"
-cargo run --package xtask --release -- bundle dreist-plugin $flag
+# Both architectures' standard libraries (rustup installs a missing one).
+if command -v rustup >/dev/null; then
+    # shellcheck disable=SC2086
+    rustup target add $targets >/dev/null
+fi
 
-echo "==> Standalone app ($profile)"
-cargo build -p dreist-plugin --features standalone --bin dreist-standalone $flag
+echo "==> VST3 / CLAP ($profile, universal)"
+cargo run --package xtask --release -- bundle-universal dreist-plugin $flag
+
+echo "==> Standalone app ($profile, universal)"
+slices=()
+for t in $targets; do
+    cargo build -p dreist-plugin --features standalone --bin dreist-standalone --target "$t" $flag
+    slices+=("target/$t/$profile/dreist-standalone")
+done
 app="$out/Dreist.app"
 rm -rf "$app"
 mkdir -p "$app/Contents/MacOS" "$app/Contents/Resources"
-cp "target/$profile/dreist-standalone" "$app/Contents/MacOS/Dreist"
+lipo -create "${slices[@]}" -output "$app/Contents/MacOS/Dreist"
 cat > "$app/Contents/Info.plist" <<PLIST
 <?xml version="1.0" encoding="UTF-8"?>
 <!DOCTYPE plist PUBLIC "-//Apple//DTD PLIST 1.0//EN" "http://www.apple.com/DTDs/PropertyList-1.0.dtd">

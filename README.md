@@ -43,10 +43,11 @@ Download the archive for your system from the [latest release](https://github.co
 
 | System | Requirements | Archive | Install | Uninstall |
 |---|---|---|---|---|
-| macOS | 11+, Apple Silicon | `Dreist-<tag>-macOS.zip` | `./install.sh` | `./install.sh --uninstall` |
+| macOS | 11+, Apple Silicon or Intel | `Dreist-<tag>-macOS.zip` | `./install.sh` | `./install.sh --uninstall` |
 | Windows | 10+, x64 | `Dreist-<tag>-Windows.zip` | `.\install.ps1` | `.\install.ps1 --uninstall` |
 | Linux | x86_64, glibc 2.39+, X11 or XWayland | `Dreist-<tag>-Linux.tar.gz` | `./install.sh` | `./install.sh --uninstall` |
 
+- **macOS builds**: universal binaries, native on Apple Silicon and Intel.
 - **What it installs**: the app, VST3 and CLAP in the standard folders, for your user on macOS and Linux and for all users on Windows ([locations](https://github.com/koeves/dreist-commons/blob/dev/packaging/README.md#locations)).
 - **All users on macOS and Linux**: add `--system` and run it with `sudo`.
 - **Windows**: run it in an administrator PowerShell, or add `--user` to install for your user only.
@@ -103,7 +104,7 @@ xattr -dr com.apple.quarantine ~/Library/Audio/Plug-Ins/VST3/Dreist.vst3 ~/Libra
 
 ## Building
 
-Needs a Rust toolchain.
+Needs a Rust toolchain; on macOS `scripts/build.sh` adds the `aarch64-apple-darwin` and `x86_64-apple-darwin` targets.
 
 ```bash
 git clone --recursive https://github.com/koeves/dreist

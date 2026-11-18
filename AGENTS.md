@@ -2,7 +2,7 @@
 
 Dreist is a drum sampler, step sequencer and performance instrument written in Rust. It loads the
 original's `.geist` projects, kits and patterns and plays them the same way, and builds as VST3, CLAP
-and a standalone app for macOS (Apple Silicon), Windows (x64) and Linux (x86_64). It is a thin app on
+and a standalone app for macOS (universal: Apple Silicon and Intel), Windows (x64) and Linux (x86_64). It is a thin app on
 **dreist-commons** (submodule at `commons`, used by path): Dreist installs its profile (names,
 resources, `.dreist*` save family, settings folder `Dreist`) at start-up. Shared behaviour belongs in
 dreist-commons, Dreist specifics here.
@@ -58,8 +58,7 @@ with the reason.
 
 ## Build, run, test
 
-    export PATH=$HOME/.rustup/toolchains/stable-aarch64-apple-darwin/bin:$PATH
-    scripts/build.sh                  # release: target/bundled/Dreist.{app,vst3,clap}; --debug, --install
+    scripts/build.sh                  # release: target/bundled/Dreist.{app,vst3,clap}, universal; --debug, --install
     scripts/build-windows.sh          # Windows (Git Bash)
     scripts/build-linux.sh            # Linux
     cargo run -p dreist-plugin --features standalone --bin dreist-standalone --release
