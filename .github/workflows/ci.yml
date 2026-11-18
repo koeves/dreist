@@ -115,8 +115,8 @@ jobs:
       - name: Shared crates against Dreist's assets
         run: cargo test --locked --manifest-path commons/Cargo.toml --workspace
       - name: Build plugin and standalone
-        # Universal binaries (Apple Silicon and Intel).
-        run: scripts/build.sh
+        # Universal binaries: both slices build (releases ship one per Mac).
+        run: scripts/build.sh --arch universal
       - name: Universal binaries
         run: |
           for b in Dreist.vst3/Contents/MacOS/Dreist Dreist.clap/Contents/MacOS/Dreist Dreist.app/Contents/MacOS/Dreist; do

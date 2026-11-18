@@ -1,9 +1,10 @@
 #!/usr/bin/env bash
-# Build Dreist: VST3 + CLAP bundles and the standalone macOS app, each a
-# universal binary (Apple Silicon and Intel).
+# Build Dreist: VST3 + CLAP bundles and the standalone macOS app.
 #
 #   scripts/build.sh            release build into target/bundled/
 #   scripts/build.sh --debug    debug build
+#   scripts/build.sh --arch A   arm64, x86_64 or universal (both); default
+#                               this Mac's (Apple Silicon under Rosetta too)
 #   scripts/build.sh --install  also install for this user (target/bundled/install.sh)
 #   scripts/build.sh --uninstall  remove that install
 #
@@ -20,20 +21,33 @@ set -euo pipefail
 
 cd "$(dirname "$0")/.."
 export PATH="$HOME/.cargo/bin:$PATH"
-targets="aarch64-apple-darwin x86_64-apple-darwin"
 
 profile=release
 install=0
 uninstall=0
-for a in "$@"; do
-    case "$a" in
+arch=
+while [ $# -gt 0 ]; do
+    case "$1" in
         --debug) profile=debug ;;
+        --arch) arch=${2:-}; shift ;;
+        --arch=*) arch=${1#--arch=} ;;
         --install) install=1 ;;
         --uninstall) uninstall=1 ;;
-        -h|--help) sed -n '2,13p' "$0"; exit 0 ;;
-        *) echo "unknown option: $a" >&2; exit 2 ;;
+        -h|--help) sed -n '2,15p' "$0"; exit 0 ;;
+        *) echo "unknown option: $1" >&2; exit 2 ;;
     esac
+    shift
 done
+if [ -z "$arch" ]; then
+    arch=$(uname -m)
+    [ "$(sysctl -n sysctl.proc_translated 2>/dev/null || true)" = 1 ] && arch=arm64
+fi
+case "$arch" in
+    arm64) targets=aarch64-apple-darwin ;;
+    x86_64) targets=x86_64-apple-darwin ;;
+    universal) targets="aarch64-apple-darwin x86_64-apple-darwin" ;;
+    *) echo "unknown --arch: $arch (arm64, x86_64 or universal)" >&2; exit 2 ;;
+esac
 if [ "$uninstall" = 1 ]; then
     exec sh commons/packaging/install.sh --app Dreist --uninstall
 fi
@@ -44,16 +58,20 @@ version=${BUILD_VERSION%%+*}
 out=target/bundled
 mkdir -p "$out"
 
-# Both architectures' standard libraries (rustup installs a missing one).
+# The targets' standard libraries (rustup installs a missing one).
 if command -v rustup >/dev/null; then
     # shellcheck disable=SC2086
     rustup target add $targets >/dev/null
 fi
 
-echo "==> VST3 / CLAP ($profile, universal)"
-cargo run --package xtask --release -- bundle-universal dreist-plugin $flag
+echo "==> VST3 / CLAP ($profile, $arch)"
+if [ "$arch" = universal ]; then
+    cargo run --package xtask --release -- bundle-universal dreist-plugin $flag
+else
+    cargo run --package xtask --release -- bundle dreist-plugin $flag --target "$targets"
+fi
 
-echo "==> Standalone app ($profile, universal)"
+echo "==> Standalone app ($profile, $arch)"
 slices=()
 for t in $targets; do
     cargo build -p dreist-plugin --features standalone --bin dreist-standalone --target "$t" $flag
@@ -62,7 +80,11 @@ done
 app="$out/Dreist.app"
 rm -rf "$app"
 mkdir -p "$app/Contents/MacOS" "$app/Contents/Resources"
-lipo -create "${slices[@]}" -output "$app/Contents/MacOS/Dreist"
+if [ "${#slices[@]}" = 1 ]; then
+    cp "${slices[0]}" "$app/Contents/MacOS/Dreist"
+else
+    lipo -create "${slices[@]}" -output "$app/Contents/MacOS/Dreist"
+fi
 cat > "$app/Contents/Info.plist" <<PLIST
 <?xml version="1.0" encoding="UTF-8"?>
 <!DOCTYPE plist PUBLIC "-//Apple//DTD PLIST 1.0//EN" "http://www.apple.com/DTDs/PropertyList-1.0.dtd">

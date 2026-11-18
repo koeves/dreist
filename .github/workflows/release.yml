@@ -67,8 +67,13 @@ jobs:
       fail-fast: false
       matrix:
         include:
+          # One archive per system; each Mac build runs on its own kind of Mac.
           - os: macos-15
-            name: macOS
+            name: macOS-AppleSilicon
+            arch: arm64
+          - os: macos-15-intel
+            name: macOS-Intel
+            arch: x86_64
           - os: windows-latest
             name: Windows
           - os: ubuntu-24.04
@@ -82,9 +87,6 @@ jobs:
         with:
           submodules: recursive
       - uses: dtolnay/rust-toolchain@stable
-        with:
-          # macOS builds universal binaries (Apple Silicon and Intel).
-          targets: ${{ runner.os == 'macOS' && 'aarch64-apple-darwin, x86_64-apple-darwin' || '' }}
       - uses: Swatinem/rust-cache@v2
       - name: Version from the tag
         # Only in this checkout: the plugins, the app's Info.plist and the
@@ -106,12 +108,9 @@ jobs:
       - name: Build (macOS)
         if: runner.os == 'macOS'
         run: |
-          scripts/build.sh
+          scripts/build.sh --arch ${{ matrix.arch }}
           cd target/bundled
-          ditto -c -k --keepParent Dreist.vst3 "Dreist-$TAG-${{ matrix.name }}-VST3.zip"
-          ditto -c -k --keepParent Dreist.clap "Dreist-$TAG-${{ matrix.name }}-CLAP.zip"
-          ditto -c -k --keepParent Dreist.app "Dreist-$TAG-${{ matrix.name }}-App.zip"
-          # Everything with install.sh (commons/packaging) in one folder.
+          # install.sh (commons/packaging) and the three parts in one folder.
           full="Dreist-$TAG-${{ matrix.name }}"
           mkdir "$full"
           for p in install.sh Dreist.vst3 Dreist.clap Dreist.app; do ditto "$p" "$full/$p"; done
@@ -121,25 +120,17 @@ jobs:
         run: |
           scripts/build-windows.sh
           cd target/bundled
-          mv Dreist-CLAP Dreist && 7z a -tzip "Dreist-$TAG-${{ matrix.name }}-CLAP.zip" Dreist && mv Dreist Dreist-CLAP
-          mv Dreist-App Dreist && 7z a -tzip "Dreist-$TAG-${{ matrix.name }}-App.zip" Dreist && mv Dreist Dreist-App
-          7z a -tzip "Dreist-$TAG-${{ matrix.name }}-VST3.zip" Dreist.vst3
-          # Everything with install.ps1 (commons/packaging) in one folder.
+          # install.ps1 (commons/packaging) and the three parts in one folder.
           full="Dreist-$TAG-${{ matrix.name }}"
           mkdir "$full" && cp -R install.ps1 Dreist.vst3 Dreist-CLAP Dreist-App "$full/"
           7z a -tzip "$full.zip" "$full"
       - name: Build (Linux)
-        # tar keeps the executable bits; the CLAP and the app unpack into a
-        # Dreist/ folder each, the full archive into Dreist-<tag>-Linux/ with
-        # install.sh (README: Linux).
+        # tar keeps the executable bits; the archive unpacks into
+        # Dreist-<tag>-Linux/ with install.sh (README: Linux).
         if: runner.os == 'Linux'
         run: |
           scripts/build-linux.sh
           cd target/bundled
-          tar -czf "Dreist-$TAG-${{ matrix.name }}-VST3.tar.gz" Dreist.vst3
-          tar -czf "Dreist-$TAG-${{ matrix.name }}-CLAP.tar.gz" --transform 's,^Dreist-CLAP,Dreist,' Dreist-CLAP
-          tar -czf "Dreist-$TAG-${{ matrix.name }}-App.tar.gz" --transform 's,^Dreist-App,Dreist,' Dreist-App
-          # Everything with install.sh (commons/packaging) in one folder.
           tar -czf "Dreist-$TAG-${{ matrix.name }}.tar.gz" --transform "s,^,Dreist-$TAG-${{ matrix.name }}/," install.sh Dreist.vst3 Dreist-CLAP Dreist-App
       - uses: actions/upload-artifact@v7
         with:
