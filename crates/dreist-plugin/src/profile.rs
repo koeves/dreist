@@ -7,6 +7,8 @@ use dreist_formats::profile::{BASE, Profile, Resources};
 pub static DREIST: Profile = Profile {
     ui: Resources { dev_dirs: &[concat!(env!("CARGO_MANIFEST_DIR"), "/../../assets/ui")], ..BASE.ui },
     factory: Resources { dev_dirs: &[concat!(env!("CARGO_MANIFEST_DIR"), "/../../assets/factory")], ..BASE.factory },
+    // The beta's settings folder.
+    legacy_settings_dirs: &["Geist-rs"],
     ..BASE
 };
 

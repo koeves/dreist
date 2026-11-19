@@ -7,7 +7,7 @@ fn new_instance_starts_from_the_saved_default_preset() {
     let dir = std::env::temp_dir().join(format!("dreist-default-preset-{}", std::process::id()));
     let _ = std::fs::remove_dir_all(&dir);
     // SAFETY: the only test in this binary, set before anything reads it.
-    unsafe { std::env::set_var(dreist_editor::app::SETTINGS_ENV, &dir) };
+    unsafe { std::env::set_var(dreist_formats::profile::BASE.settings_env, &dir) };
     dreist_plugin::profile::install();
     // What Tools › Save as default preset writes.
     let doc = dreist_formats::Node::parse(r#"<root version="3000" CurrentEngine="0"><TimeInfo Tempo="97" /></root>"#).unwrap();
