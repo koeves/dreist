@@ -19,6 +19,7 @@ use std::cell::RefCell;
 use std::path::PathBuf;
 
 use dreist_engine::binding::id;
+use dreist_engine::peaks::PeaksCache;
 use dreist_formats::LayerParam;
 use dreist_gui::app::{App, UiEvent};
 use dreist_gui::paint::{Painter, RectF};
@@ -55,141 +56,6 @@ pub fn param_for_control(name: &str) -> Option<LayerParam> {
     LayerParam::from_name(n)
 }
 
-/// Min/max per bucket of a sample's left channel.
-struct Peaks {
-    buckets: Vec<(f32, f32)>,
-    frames: usize,
-    /// File sample rate (envelope overlay times).
-    rate: f32,
-    /// Zero crossings of the left channel.
-    zeros: Vec<u32>,
-}
-
-/// Waveforms kept (most recently shown).
-const PEAKS_KEPT: usize = 16;
-
-/// How often a shown sample's file is checked for changes.
-const PEAKS_RECHECK: std::time::Duration = std::time::Duration::from_secs(1);
-
-/// How long a draw waits for a background decode before it goes on
-/// without the waveform (a one-shot is ready well within it).
-const PEAKS_WAIT: std::time::Duration = std::time::Duration::from_millis(50);
-
-/// Decode waveforms on a background thread (the editor windows); off,
-/// a decode finishes before the draw that asked for it (tests, shots).
-static DECODE_IN_BACKGROUND: std::sync::atomic::AtomicBool = std::sync::atomic::AtomicBool::new(false);
-
-/// Let waveform decodes run off the UI thread from now on.
-fn decode_in_background() {
-    DECODE_IN_BACKGROUND.store(true, std::sync::atomic::Ordering::Relaxed);
-}
-
-/// A sample's peaks, or the decode still running for them.
-enum PeaksSlot {
-    Ready(Option<Peaks>),
-    Loading(std::sync::mpsc::Receiver<Option<Peaks>>),
-}
-
-impl PeaksSlot {
-    fn start(path: &std::path::Path, background: bool) -> PeaksSlot {
-        if !background {
-            return PeaksSlot::Ready(load_peaks(path));
-        }
-        let (tx, rx) = std::sync::mpsc::channel();
-        let file = path.to_path_buf();
-        let spawned = std::thread::Builder::new().name("waveform".into()).spawn(move || {
-            let _ = tx.send(load_peaks(&file));
-        });
-        if spawned.is_err() {
-            return PeaksSlot::Ready(load_peaks(path));
-        }
-        match rx.recv_timeout(PEAKS_WAIT) {
-            Ok(p) => PeaksSlot::Ready(p),
-            Err(std::sync::mpsc::RecvTimeoutError::Timeout) => PeaksSlot::Loading(rx),
-            Err(std::sync::mpsc::RecvTimeoutError::Disconnected) => PeaksSlot::Ready(None),
-        }
-    }
-
-    /// Take a finished decode; true when it just finished.
-    fn poll(&mut self) -> bool {
-        let PeaksSlot::Loading(rx) = self else { return false };
-        match rx.try_recv() {
-            Ok(p) => *self = PeaksSlot::Ready(p),
-            Err(std::sync::mpsc::TryRecvError::Disconnected) => *self = PeaksSlot::Ready(None),
-            Err(std::sync::mpsc::TryRecvError::Empty) => return false,
-        }
-        true
-    }
-
-    fn peaks(&self) -> Option<&Peaks> {
-        match self {
-            PeaksSlot::Ready(p) => p.as_ref(),
-            PeaksSlot::Loading(_) => None,
-        }
-    }
-}
-
-struct PeaksEntry {
-    file: PathBuf,
-    /// Modification time when last checked.
-    stamp: Option<std::time::SystemTime>,
-    checked: std::time::Instant,
-    slot: PeaksSlot,
-}
-
-/// Peaks of the samples shown: reloaded when the file changes on disk (a
-/// layer sample saved over it, a missing file appearing; checked at most
-/// once per [`PEAKS_RECHECK`]), the least recently shown dropped past
-/// [`PEAKS_KEPT`].
-#[derive(Default)]
-struct PeaksCache {
-    /// Most recent last.
-    entries: Vec<PeaksEntry>,
-    /// Decode in the background whatever `decode_in_background` says.
-    background: bool,
-}
-
-impl PeaksCache {
-    fn get(&mut self, path: &std::path::Path) -> Option<&Peaks> {
-        let now = std::time::Instant::now();
-        let background = self.background || DECODE_IN_BACKGROUND.load(std::sync::atomic::Ordering::Relaxed);
-        let stamp_of = |p: &std::path::Path| std::fs::metadata(p).and_then(|m| m.modified()).ok();
-        let mut entry = match self.entries.iter().position(|e| e.file == path) {
-            Some(i) => {
-                let mut e = self.entries.remove(i);
-                if now.duration_since(e.checked) >= PEAKS_RECHECK {
-                    e.checked = now;
-                    let stamp = stamp_of(path);
-                    if stamp != e.stamp {
-                        e.stamp = stamp;
-                        e.slot = PeaksSlot::start(path, background);
-                    }
-                }
-                e
-            }
-            None => {
-                let stamp = stamp_of(path);
-                PeaksEntry { file: path.to_path_buf(), stamp, checked: now, slot: PeaksSlot::start(path, background) }
-            }
-        };
-        entry.slot.poll();
-        self.entries.push(entry);
-        if self.entries.len() > PEAKS_KEPT {
-            self.entries.remove(0);
-        }
-        self.entries.last().and_then(|e| e.slot.peaks())
-    }
-
-    /// Take finished background decodes; true when any finished.
-    fn poll(&mut self) -> bool {
-        let mut any = false;
-        for e in &mut self.entries {
-            any |= e.slot.poll();
-        }
-        any
-    }
-}
-
 impl Inspector {
     /// Show waveforms whose background decode finished: the zoom follows
     /// the new sample's length and the inspector repaints. True when it
@@ -216,7 +82,7 @@ impl crate::Editor {
     /// Decode waveforms off the UI thread from now on (a live window;
     /// it calls [`Self::poll_waveforms`] every frame).
     pub fn decode_waveforms_in_background(&self) {
-        decode_in_background();
+        dreist_engine::peaks::decode_in_background();
     }
 }
 
@@ -331,8 +197,6 @@ impl Inspector {
     }
 }
 
-const PEAK_BUCKETS: usize = 2048;
-
 /// Visit the controls tagged `layerZoom` (the layer wave display's zoom bar).
 fn walk_tagged(c: &mut Ctrl, f: &mut dyn FnMut(&mut Ctrl)) {
     for k in &mut c.children {
@@ -345,19 +209,6 @@ fn walk_tagged(c: &mut Ctrl, f: &mut dyn FnMut(&mut Ctrl)) {
 
 fn find_tagged<'a>(c: &'a Ctrl, name: &str) -> Option<&'a Ctrl> {
     c.children.iter().find_map(|k| if k.attr("layerZoom").is_some() && k.name == name { Some(k) } else { find_tagged(k, name) })
-}
-
-fn load_peaks(path: &std::path::Path) -> Option<Peaks> {
-    let mut cache = dreist_engine::audio::SampleCache::default();
-    let data = cache.get(path)?;
-    let n = data.left.len();
-    if n == 0 {
-        return None;
-    }
-    let per = n.div_ceil(PEAK_BUCKETS).max(1);
-    let buckets = data.left.chunks(per).map(|c| c.iter().fold((f32::MAX, f32::MIN), |(lo, hi), &x| (lo.min(x), hi.max(x)))).collect();
-    let zeros = data.left.windows(2).enumerate().filter(|(_, w)| (w[0] <= 0.0) != (w[1] <= 0.0)).map(|(i, _)| i as u32 + 1).collect();
-    Some(Peaks { buckets, frames: n, zeros, rate: data.sample_rate.max(1.0) })
 }
 
 impl Inspector {
@@ -1090,7 +941,7 @@ impl Inspector {
             "WaveDisplayZoomSlider" if c.attr("layerZoom").is_some() => {
                 let e = model.engine;
                 let mut cache = self.peaks.borrow_mut();
-                let overview = model.layer_sample(e, model.pad[e], model.layer[e]).and_then(|f| cache.get(&f)).map_or(&[][..], |pk| &pk.buckets[..]);
+                let overview = model.layer_sample(e, model.pad[e], model.layer[e]).and_then(|f| cache.get(&f)).map_or(&[][..], |pk| pk.left());
                 crate::zoomslider::draw(p, r.styles, "WaveDisplayZoomSliderStyle", c.rect.w as f32, c.rect.h as f32, self.view, overview);
                 true
             }
@@ -1145,7 +996,7 @@ impl Inspector {
         let disabled = s.colour(WAVE_STYLE, "colLineDisabled", line);
         let looping_col = s.colour(WAVE_STYLE, "colLineLooping", line);
         let m = wave_markers(model, e, pad, l, pk.frames as u32);
-        let n = pk.buckets.len();
+        let n = pk.left().len();
         let cols = w as usize;
         let (v0, vl) = self.view;
         let frac_of = |x: f32| v0 + x / w.max(1.0) * vl;
@@ -1162,7 +1013,7 @@ impl Inspector {
             } else {
                 line
             };
-            let (lo, hi) = pk.buckets[a..b].iter().fold((f32::MAX, f32::MIN), |(l0, h0), (l1, h1)| (l0.min(*l1), h0.max(*h1)));
+            let (lo, hi) = pk.left()[a..b].iter().fold((f32::MAX, f32::MIN), |(l0, h0), (l1, h1)| (l0.min(*l1), h0.max(*h1)));
             let y0 = wy + h / 2.0 - hi.clamp(-1.0, 1.0) * h / 2.0;
             let y1 = wy + h / 2.0 - lo.clamp(-1.0, 1.0) * h / 2.0;
             p.fill_rect(RectF::new(x as f32, y0, 1.0, (y1 - y0).max(1.0)), line);
@@ -1480,43 +1331,6 @@ fn draw_sampling(sm: &crate::model::Sampling, r: &Renderer, p: &mut Painter, w: 
 
 #[cfg(test)]
 mod tests {
-    /// Waveforms decode off the drawing thread, and a shown file is
-    /// checked for changes at most once a second.
-    #[test]
-    fn peaks_decode_in_background_and_recheck_files_once_a_second() {
-        let dir = std::env::temp_dir().join(format!("dreist-peaks-{}", std::process::id()));
-        std::fs::create_dir_all(&dir).unwrap();
-        let file = dir.join("a.wav");
-        let write = |n: usize| {
-            let v = vec![0.25f32; n];
-            dreist_engine::write_wav(&file, 44100, &v, &v).unwrap();
-        };
-        write(300);
-        let mut cache = super::PeaksCache { background: true, ..Default::default() };
-        let frames = |cache: &mut super::PeaksCache| {
-            let until = std::time::Instant::now() + std::time::Duration::from_secs(10);
-            loop {
-                if let Some(pk) = cache.get(&file) {
-                    return pk.frames;
-                }
-                assert!(std::time::Instant::now() < until, "decode never finished");
-                std::thread::sleep(std::time::Duration::from_millis(5));
-                cache.poll();
-            }
-        };
-        assert_eq!(frames(&mut cache), 300);
-        // Saved over: not looked at again within the second...
-        std::thread::sleep(std::time::Duration::from_millis(20));
-        write(500);
-        let mtime = std::fs::metadata(&file).unwrap().modified().unwrap() + std::time::Duration::from_secs(5);
-        std::fs::File::options().write(true).open(&file).unwrap().set_modified(mtime).unwrap();
-        assert_eq!(frames(&mut cache), 300);
-        // ...then reloaded.
-        cache.entries[0].checked -= super::PEAKS_RECHECK;
-        assert_eq!(frames(&mut cache), 500);
-        let _ = std::fs::remove_dir_all(&dir);
-    }
-
     #[test]
     fn envelope_handles_and_drag() {
         use dreist_formats::Node;
