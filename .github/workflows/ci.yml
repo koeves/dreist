@@ -21,9 +21,9 @@ env:
   # Windows that tests open stay in the background (commons vendor/baseview).
   DREIST_BACKGROUND_GUI: "1"
 
-# Pull requests into dev run the fast checks (Linux); macOS and Windows run
-# on the release pull request (into main) and in the release. A skipped job
-# counts as passed for the branch rules.
+# Pull requests into dev run the fast checks (Linux); macOS (Apple Silicon and
+# Intel) and Windows run on the release pull request (into main) and in the
+# release. A skipped job counts as passed for the branch rules.
 jobs:
   changes:
     # Whether a pull request changes more than Markdown: a docs-only pull
@@ -107,6 +107,7 @@ jobs:
       - uses: dtolnay/rust-toolchain@stable
         with:
           components: clippy
+          targets: aarch64-apple-darwin, x86_64-apple-darwin
       - uses: Swatinem/rust-cache@v2
       - name: Clippy
         run: cargo clippy --locked --workspace --all-targets -- -D warnings
@@ -115,9 +116,37 @@ jobs:
       - name: Shared crates against Dreist's assets
         run: cargo test --locked --manifest-path commons/Cargo.toml --workspace
       - name: Build plugin and standalone
+        # Universal binaries: both slices build (releases ship one per Mac).
+        run: scripts/build.sh --arch universal
+      - name: Universal binaries
         run: |
-          cargo build --locked -p dreist-plugin --release
-          cargo build --locked -p dreist-plugin --features standalone --bin dreist-standalone --release
+          for b in Dreist.vst3/Contents/MacOS/Dreist Dreist.clap/Contents/MacOS/Dreist Dreist.app/Contents/MacOS/Dreist; do
+            lipo "target/bundled/$b" -verify_arch arm64 x86_64
+          done
+
+  macos-intel:
+    needs: changes
+    if: needs.changes.outputs.code == 'true' && (github.event_name != 'pull_request' || github.base_ref == 'main')
+    # The suite on Intel (x86_64): the macOS builds are universal.
+    runs-on: macos-15-intel
+    env:
+      DREIST_UI: ${{ github.workspace }}/assets/ui
+      DREIST_RESOURCES: ${{ github.workspace }}/assets/factory
+    steps:
+      - uses: actions/checkout@v7
+        with:
+          submodules: recursive
+      - uses: dtolnay/rust-toolchain@stable
+      - uses: Swatinem/rust-cache@v2
+      - name: Test
+        run: cargo test --locked --workspace
+      - name: Shared crates against Dreist's assets
+        # The effect fingerprints hash float output, which differs on x86_64
+        # (checked on Apple Silicon above): non-fatal here.
+        run: cargo test --locked --manifest-path commons/Cargo.toml --workspace -- --skip effects_match_fingerprints
+      - name: Effect fingerprints (platform-dependent)
+        continue-on-error: true
+        run: cargo test --locked --manifest-path commons/Cargo.toml -p dreist-dsp --test fx_harness effects_match_fingerprints
 
   linux-build:
     needs: changes
