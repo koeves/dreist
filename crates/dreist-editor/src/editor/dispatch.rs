@@ -112,6 +112,7 @@ impl Editor {
     pub(crate) fn collapse_notification(&mut self, path: &[usize], iconic: bool, end: bool) {
         let parent_is = |app: &App, n: &str| path.split_last().and_then(|(_, p)| app.ctrl(p)).is_some_and(|c| c.name == n);
         let layer = parent_is(&self.app, "LayerParams");
+        let before = self.app.marks();
         let Some(c) = self.app.ctrl_mut(path) else { return };
         if c.attr("fxSlot").is_some() && (iconic != end) {
             fxchain::fold_controls(c, !iconic);
@@ -121,7 +122,7 @@ impl Editor {
                 k.enabled = !iconic;
             }
         }
-        self.app.dirty = true;
+        self.invalidate_changes(&before);
     }
 
     /// Committed text boxes: tempo, step count and the names kept in the
@@ -586,9 +587,10 @@ impl Editor {
             self.set_drop_highlights(None, None);
         }
         if let UiEvent::Shortcut { key, cmd, shift, alt, ctrl } = ev {
+            let before = self.app.marks();
             if self.accelerator(key, accel::Mods { shift: *shift, cmd: *cmd, alt: *alt, ctrl: *ctrl }) {
                 self.sync();
-                self.app.dirty = true;
+                self.invalidate_changes(&before);
                 return;
             }
         }

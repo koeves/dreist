@@ -277,7 +277,6 @@ impl FileFind {
         };
         self.set_child(app, "ProgressBar", |c| c.value = progress.clamp(0.0, 1.0));
         self.set_child(app, "ScanLabel", |c| c.text = current);
-        app.dirty = true;
         if !done {
             return false;
         }

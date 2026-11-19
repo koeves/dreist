@@ -571,9 +571,14 @@ impl Editor {
         }
         self.animate_drop_highlights();
         self.save_window_size();
-        if self.filefind.scanning() && self.filefind.tick(&mut self.app, &mut self.model) {
-            self.outbox.push(self.model.rebuild_command());
-            self.sync();
+        if self.filefind.scanning() {
+            // The progress bar and label repaint, not the window.
+            let before = self.app.marks();
+            if self.filefind.tick(&mut self.app, &mut self.model) {
+                self.outbox.push(self.model.rebuild_command());
+                self.sync();
+            }
+            self.invalidate_changes(&before);
         }
         if self.modals.tick(&mut self.app) {
             self.app.dirty = true;
