@@ -112,6 +112,7 @@ impl Editor {
     pub(crate) fn collapse_notification(&mut self, path: &[usize], iconic: bool, end: bool) {
         let parent_is = |app: &App, n: &str| path.split_last().and_then(|(_, p)| app.ctrl(p)).is_some_and(|c| c.name == n);
         let layer = parent_is(&self.app, "LayerParams");
+        let before = self.app.marks();
         let Some(c) = self.app.ctrl_mut(path) else { return };
         if c.attr("fxSlot").is_some() && (iconic != end) {
             fxchain::fold_controls(c, !iconic);
@@ -121,7 +122,7 @@ impl Editor {
                 k.enabled = !iconic;
             }
         }
-        self.app.dirty = true;
+        self.invalidate_changes(&before);
     }
 
     /// Committed text boxes: tempo, step count and the names kept in the
@@ -435,6 +436,15 @@ impl Editor {
         self.app.render_frame_with(scale, Some(&d))
     }
 
+    /// Repaint the code-drawn panels whose drawing changed (the model
+    /// moved, the controls did not): what a whole repaint would show anew.
+    pub(crate) fn repaint_drawn(&mut self) {
+        if !self.app.dirty {
+            let before = self.app.marks();
+            self.invalidate_changes(&before);
+        }
+    }
+
     /// Repaint what changed since `before`: the controls, and the
     /// code-drawn panels whose drawing changed.
     pub(crate) fn invalidate_changes(&mut self, before: &dreist_gui::app::Marks) {
@@ -509,14 +519,23 @@ impl Editor {
                 .as_ref()
                 .and_then(|p| self.inspector.modulation_mask(&self.app, &self.model, p).or_else(|| self.mixers.iter().find_map(|m| m.modulation_mask(&self.app, &self.model, p))))
                 .unwrap_or(0);
-            if self.transmod.highlight_sources(&mut self.app, mask) {
-                self.app.dirty = true;
+            // The buttons whose outline changed are invalidated there.
+            self.transmod.highlight_sources(&mut self.app, mask);
+            return;
+        }
+        // A hover only picks the cursor and leaves the controls as they
+        // are, so their marks are taken only once the cursor changed.
+        if matches!(ev, UiEvent::Hover { .. }) {
+            if self.pointer_feedback(ev) {
+                let before = self.app.marks();
+                self.invalidate_changes(&before);
             }
             return;
         }
-        if matches!(ev, UiEvent::Hover { .. } | UiEvent::DragOver { .. }) {
+        if matches!(ev, UiEvent::DragOver { .. }) {
+            let before = self.app.marks();
             if self.pointer_feedback(ev) {
-                self.app.dirty = true;
+                self.invalidate_changes(&before);
             }
             return;
         }
@@ -524,10 +543,11 @@ impl Editor {
         if let UiEvent::Files { to, files, x, y, dropped } = ev {
             self.external_drag = Some(files.clone());
             if !*dropped {
+                let before = self.app.marks();
                 self.app.cursor = self.drag_cursor(&[], to);
                 self.pad_drag_flash(&[], &to.clone(), *x, *y);
                 self.drop_highlights(&[], &to.clone());
-                self.app.dirty = true;
+                self.invalidate_changes(&before);
                 return;
             }
             let drop = UiEvent::Dropped { from: Vec::new(), to: to.clone(), x: *x, y: *y };
@@ -567,9 +587,10 @@ impl Editor {
             self.set_drop_highlights(None, None);
         }
         if let UiEvent::Shortcut { key, cmd, shift, alt, ctrl } = ev {
+            let before = self.app.marks();
             if self.accelerator(key, accel::Mods { shift: *shift, cmd: *cmd, alt: *alt, ctrl: *ctrl }) {
                 self.sync();
-                self.app.dirty = true;
+                self.invalidate_changes(&before);
                 return;
             }
         }

@@ -19,6 +19,7 @@ use std::cell::RefCell;
 use std::path::PathBuf;
 
 use dreist_engine::binding::id;
+use dreist_engine::peaks::PeaksCache;
 use dreist_formats::LayerParam;
 use dreist_gui::app::{App, UiEvent};
 use dreist_gui::paint::{Painter, RectF};
@@ -55,43 +56,33 @@ pub fn param_for_control(name: &str) -> Option<LayerParam> {
     LayerParam::from_name(n)
 }
 
-/// Min/max per bucket of a sample's left channel.
-struct Peaks {
-    buckets: Vec<(f32, f32)>,
-    frames: usize,
-    /// File sample rate (envelope overlay times).
-    rate: f32,
-    /// Zero crossings of the left channel.
-    zeros: Vec<u32>,
-}
-
-/// Waveforms kept (most recently shown).
-const PEAKS_KEPT: usize = 16;
-
-/// Peaks of the samples shown: reloaded when the file changes on disk (a
-/// layer sample saved over it, a missing file appearing), the least
-/// recently shown dropped past [`PEAKS_KEPT`].
-#[derive(Default)]
-struct PeaksCache {
-    /// (file, modification time, peaks); most recent last.
-    entries: Vec<(PathBuf, Option<std::time::SystemTime>, Option<Peaks>)>,
-}
-
-impl PeaksCache {
-    fn get(&mut self, path: &std::path::Path) -> Option<&Peaks> {
-        let stamp = std::fs::metadata(path).and_then(|m| m.modified()).ok();
-        let entry = match self.entries.iter().position(|e| e.0 == path) {
-            Some(i) => {
-                let e = self.entries.remove(i);
-                if e.1 == stamp { e } else { (e.0, stamp, load_peaks(path)) }
-            }
-            None => (path.to_path_buf(), stamp, load_peaks(path)),
-        };
-        self.entries.push(entry);
-        if self.entries.len() > PEAKS_KEPT {
-            self.entries.remove(0);
+impl Inspector {
+    /// Show waveforms whose background decode finished: the zoom follows
+    /// the new sample's length and the inspector repaints. True when it
+    /// repainted.
+    pub(crate) fn poll_waveforms(&mut self, app: &mut App, model: &Model) -> bool {
+        if !self.peaks.get_mut().poll() {
+            return false;
         }
-        self.entries.last().and_then(|e| e.2.as_ref())
+        self.sync(app, model);
+        if let Some(h) = self.host.clone() {
+            let r = app.abs_rect(&h);
+            app.invalidate_rect(r);
+        }
+        true
+    }
+}
+
+impl crate::Editor {
+    /// Per frame: repaint waveforms decoded in the background.
+    pub fn poll_waveforms(&mut self) -> bool {
+        self.inspector.poll_waveforms(&mut self.app, &self.model)
+    }
+
+    /// Decode waveforms off the UI thread from now on (a live window;
+    /// it calls [`Self::poll_waveforms`] every frame).
+    pub fn decode_waveforms_in_background(&self) {
+        dreist_engine::peaks::decode_in_background();
     }
 }
 
@@ -206,8 +197,6 @@ impl Inspector {
     }
 }
 
-const PEAK_BUCKETS: usize = 2048;
-
 /// Visit the controls tagged `layerZoom` (the layer wave display's zoom bar).
 fn walk_tagged(c: &mut Ctrl, f: &mut dyn FnMut(&mut Ctrl)) {
     for k in &mut c.children {
@@ -220,19 +209,6 @@ fn walk_tagged(c: &mut Ctrl, f: &mut dyn FnMut(&mut Ctrl)) {
 
 fn find_tagged<'a>(c: &'a Ctrl, name: &str) -> Option<&'a Ctrl> {
     c.children.iter().find_map(|k| if k.attr("layerZoom").is_some() && k.name == name { Some(k) } else { find_tagged(k, name) })
-}
-
-fn load_peaks(path: &std::path::Path) -> Option<Peaks> {
-    let mut cache = dreist_engine::audio::SampleCache::default();
-    let data = cache.get(path)?;
-    let n = data.left.len();
-    if n == 0 {
-        return None;
-    }
-    let per = n.div_ceil(PEAK_BUCKETS).max(1);
-    let buckets = data.left.chunks(per).map(|c| c.iter().fold((f32::MAX, f32::MIN), |(lo, hi), &x| (lo.min(x), hi.max(x)))).collect();
-    let zeros = data.left.windows(2).enumerate().filter(|(_, w)| (w[0] <= 0.0) != (w[1] <= 0.0)).map(|(i, _)| i as u32 + 1).collect();
-    Some(Peaks { buckets, frames: n, zeros, rate: data.sample_rate.max(1.0) })
 }
 
 impl Inspector {
@@ -965,7 +941,7 @@ impl Inspector {
             "WaveDisplayZoomSlider" if c.attr("layerZoom").is_some() => {
                 let e = model.engine;
                 let mut cache = self.peaks.borrow_mut();
-                let overview = model.layer_sample(e, model.pad[e], model.layer[e]).and_then(|f| cache.get(&f)).map_or(&[][..], |pk| &pk.buckets[..]);
+                let overview = model.layer_sample(e, model.pad[e], model.layer[e]).and_then(|f| cache.get(&f)).map_or(&[][..], |pk| pk.left());
                 crate::zoomslider::draw(p, r.styles, "WaveDisplayZoomSliderStyle", c.rect.w as f32, c.rect.h as f32, self.view, overview);
                 true
             }
@@ -1020,7 +996,7 @@ impl Inspector {
         let disabled = s.colour(WAVE_STYLE, "colLineDisabled", line);
         let looping_col = s.colour(WAVE_STYLE, "colLineLooping", line);
         let m = wave_markers(model, e, pad, l, pk.frames as u32);
-        let n = pk.buckets.len();
+        let n = pk.left().len();
         let cols = w as usize;
         let (v0, vl) = self.view;
         let frac_of = |x: f32| v0 + x / w.max(1.0) * vl;
@@ -1037,7 +1013,7 @@ impl Inspector {
             } else {
                 line
             };
-            let (lo, hi) = pk.buckets[a..b].iter().fold((f32::MAX, f32::MIN), |(l0, h0), (l1, h1)| (l0.min(*l1), h0.max(*h1)));
+            let (lo, hi) = pk.left()[a..b].iter().fold((f32::MAX, f32::MIN), |(l0, h0), (l1, h1)| (l0.min(*l1), h0.max(*h1)));
             let y0 = wy + h / 2.0 - hi.clamp(-1.0, 1.0) * h / 2.0;
             let y1 = wy + h / 2.0 - lo.clamp(-1.0, 1.0) * h / 2.0;
             p.fill_rect(RectF::new(x as f32, y0, 1.0, (y1 - y0).max(1.0)), line);

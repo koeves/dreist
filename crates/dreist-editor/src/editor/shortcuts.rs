@@ -9,6 +9,10 @@ const MENU_AUDIO: isize = 1001;
 
 const MENU_MIDI: isize = 1002;
 
+const MENU_EXPORT_DIAGNOSTICS: isize = 1003;
+
+const MENU_COPY_DIAGNOSTICS: isize = 1004;
+
 impl Editor {
     /// [re:907a56] (see `accel`): run the key's
     /// function. Keys a panel uses first (pattern step nudges, delete in
@@ -72,16 +76,22 @@ impl Editor {
             item(0x00),
             Item { title: "Audio Settings...".into(), tag: MENU_AUDIO, ..Item::default() },
             Item { title: "MIDI Settings...".into(), tag: MENU_MIDI, ..Item::default() },
+            Item::separator(),
+            Item { title: "Export Diagnostics...".into(), tag: MENU_EXPORT_DIAGNOSTICS, ..Item::default() },
+            Item { title: "Copy Diagnostics".into(), tag: MENU_COPY_DIAGNOSTICS, ..Item::default() },
         ];
         (app, accel::MENUS.iter().map(|(t, m)| (t.to_string(), items(m))).collect())
     }
 
     /// A menu bar item was chosen.
     pub fn menu_command(&mut self, tag: isize) {
+        let before = self.app.marks();
         match tag {
             MENU_ABOUT => self.handle(&UiEvent::MenuSelected { anchor: Vec::new(), name: "HelpButton".into(), index: 0 }),
             MENU_AUDIO => self.devices.show(devices::Panel::Audio),
             MENU_MIDI => self.devices.show(devices::Panel::Midi),
+            MENU_EXPORT_DIAGNOSTICS => self.diagnostics(false),
+            MENU_COPY_DIAGNOSTICS => self.diagnostics(true),
             t => {
                 if let Some((_, a)) = u32::try_from(t).ok().and_then(accel::entry) {
                     self.run_action(a);
@@ -89,7 +99,7 @@ impl Editor {
             }
         }
         self.sync();
-        self.app.dirty = true;
+        self.invalidate_changes(&before);
     }
 
     /// The editor messages the shortcuts post ([re:695294]).
