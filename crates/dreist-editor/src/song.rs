@@ -121,6 +121,16 @@ pub struct SongPanel {
     retro: [Vec<(SongPart, bool)>; ENGINES],
 }
 
+impl SongPanel {
+    /// The app's menu closed without a pick (Escape, a click elsewhere):
+    /// forget the menu kept open here, so a later pick in another menu is
+    /// not taken for it.
+    pub(crate) fn menu_dismissed(&mut self) {
+        self.pattern_menu = false;
+        self.menu = None;
+    }
+}
+
 #[cfg(test)]
 pub(crate) fn retro_len_for_test(model: &Model, t: usize, pattern: usize) -> f64 {
     retro_len(model, t, pattern)

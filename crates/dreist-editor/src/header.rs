@@ -67,6 +67,15 @@ pub struct Header {
     named: dreist_gui::app::PathCache,
 }
 
+impl Header {
+    /// The app's menu closed without a pick (Escape, a click elsewhere):
+    /// forget the menu kept open here, so a later pick in another menu is
+    /// not taken for it.
+    pub(crate) fn menu_dismissed(&mut self) {
+        self.menu = 0;
+    }
+}
+
 /// Indicator hold (10 ticks of the 1/30 s timer).
 const INDICATOR_TICKS: u32 = 10;
 const GAIN_EDIT: &str = "GlobalGainEdit";
