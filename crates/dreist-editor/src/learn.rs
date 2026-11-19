@@ -57,6 +57,15 @@ pub struct Learn {
     pub rects: Vec<(Rect, Option<String>, bool)>,
 }
 
+impl Learn {
+    /// The app's menu closed without a pick (Escape, a click elsewhere):
+    /// forget the menu kept open here, so a later pick in another menu is
+    /// not taken for it.
+    pub(crate) fn menu_dismissed(&mut self) {
+        self.menu = None;
+    }
+}
+
 pub fn is_control_event(ev: &UiEvent) -> bool {
     matches!(ev, UiEvent::Clicked { .. } | UiEvent::ValueChanged { .. })
 }

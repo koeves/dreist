@@ -462,6 +462,15 @@ pub struct FxPanel {
 }
 
 impl FxPanel {
+    /// The app's menu closed without a pick (Escape, a click elsewhere):
+    /// forget the menu kept open here, so a later pick in another menu is
+    /// not taken for it.
+    pub(crate) fn menu_dismissed(&mut self) {
+        self.menu = None;
+    }
+}
+
+impl FxPanel {
     pub fn new(skin: &mut Skin, host: Vec<usize>) -> FxPanel {
         let load = |skin: &mut Skin, name: &str| -> Option<Ctrl> {
             let rel = skin.find(name)?;

@@ -196,6 +196,16 @@ pub struct Inspector {
     timeline_menu: Option<Vec<usize>>,
 }
 
+impl Inspector {
+    /// The app's menu closed without a pick (Escape, a click elsewhere):
+    /// forget the menu kept open here, so a later pick in another menu is
+    /// not taken for it.
+    pub(crate) fn menu_dismissed(&mut self) {
+        self.timeline_menu = None;
+        self.vsplit.menu_dismissed();
+    }
+}
+
 const PEAK_BUCKETS: usize = 2048;
 
 /// Visit the controls tagged `layerZoom` (the layer wave display's zoom bar).

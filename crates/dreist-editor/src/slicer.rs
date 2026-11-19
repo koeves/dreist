@@ -121,6 +121,16 @@ pub struct Slicer {
     pub drag_slice: Option<(u32, u32, usize)>,
 }
 
+impl Slicer {
+    /// The app's menu closed without a pick (Escape, a click elsewhere):
+    /// forget the menu kept open here, so a later pick in another menu is
+    /// not taken for it.
+    pub(crate) fn menu_dismissed(&mut self) {
+        self.slice_menu = None;
+        self.timeline_menu = None;
+    }
+}
+
 /// What the slicer's undo restores.
 #[derive(Clone, PartialEq)]
 struct SliceState {
