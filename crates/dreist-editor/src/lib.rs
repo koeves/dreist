@@ -579,10 +579,11 @@ impl Editor {
             self.app.dirty = true;
         }
         if self.scenes.as_mut().is_some_and(|sc| sc.animate()) {
+            let before = self.app.marks();
             if let Some(sc) = &mut self.scenes {
                 sc.sync(&mut self.app, &self.model);
             }
-            self.app.dirty = true;
+            self.invalidate_changes(&before);
         }
     }
 
