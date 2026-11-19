@@ -338,6 +338,17 @@ pub struct MidiMap {
     col_drag: Option<(usize, f32)>,
 }
 
+impl MidiMap {
+    /// The app's menu closed without a pick (Escape, a click elsewhere):
+    /// forget the menu kept open here, so a later pick in another menu is
+    /// not taken for it.
+    pub(crate) fn menu_dismissed(&mut self) {
+        self.menu_row = None;
+        self.row_menu = None;
+        self.confirm = false;
+    }
+}
+
 /// Column x positions: the columns side by side at their widths (header
 /// cells laid out in order; the table does not stretch them).
 fn layout(widths: &[f32; 8]) -> [(f32, f32); 8] {
