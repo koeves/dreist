@@ -85,6 +85,7 @@ impl Editor {
 
     /// A menu bar item was chosen.
     pub fn menu_command(&mut self, tag: isize) {
+        let before = self.app.marks();
         match tag {
             MENU_ABOUT => self.handle(&UiEvent::MenuSelected { anchor: Vec::new(), name: "HelpButton".into(), index: 0 }),
             MENU_AUDIO => self.devices.show(devices::Panel::Audio),
@@ -98,7 +99,7 @@ impl Editor {
             }
         }
         self.sync();
-        self.app.dirty = true;
+        self.invalidate_changes(&before);
     }
 
     /// The editor messages the shortcuts post ([re:695294]).

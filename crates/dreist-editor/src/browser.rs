@@ -59,6 +59,31 @@ pub struct Entry {
     pub(crate) name: String,
     path: PathBuf,
     dir: bool,
+    /// A file's size in bytes, read once when it is listed so the Size
+    /// column and its sort never touch the disk; `None` for a folder or
+    /// a file that cannot be read.
+    size: Option<u64>,
+}
+
+impl Entry {
+    /// One stat per listed path: folder or not, and a file's size.
+    fn new(path: PathBuf) -> Entry {
+        let meta = std::fs::metadata(&path).ok();
+        let dir = meta.as_ref().is_some_and(|m| m.is_dir());
+        Entry::with_meta(path, dir, meta)
+    }
+
+    /// A search hit, whose folder flag the scan already knows.
+    fn scanned(path: PathBuf, dir: bool) -> Entry {
+        let meta = if dir { None } else { std::fs::metadata(&path).ok() };
+        Entry::with_meta(path, dir, meta)
+    }
+
+    fn with_meta(path: PathBuf, dir: bool, meta: Option<std::fs::Metadata>) -> Entry {
+        let name = path.file_name().map(|n| n.to_string_lossy().into_owned()).unwrap_or_default();
+        let size = if dir { None } else { meta.map(|m| m.len()) };
+        Entry { name, path, dir, size }
+    }
 }
 
 /// File kinds the column headings' View menu shows or hides, and their
@@ -126,7 +151,7 @@ fn type_text(en: &Entry) -> String {
 }
 
 fn file_size(en: &Entry) -> u64 {
-    if en.dir { 0 } else { std::fs::metadata(&en.path).map(|m| m.len()).unwrap_or(0) }
+    en.size.unwrap_or(0)
 }
 
 /// The Size column's text.
@@ -141,12 +166,11 @@ fn size_text(n: u64) -> String {
 /// The listing's order: folders first, then by the sort column
 /// (0 name, 1 type, 2 size; names break ties).
 fn sort_entries(v: &mut [Entry], column: usize, descending: bool) {
-    let sizes: std::collections::HashMap<PathBuf, u64> = if column == 2 { v.iter().map(|e| (e.path.clone(), file_size(e))).collect() } else { Default::default() };
     let name = |e: &Entry| e.name.to_lowercase();
     v.sort_by(|a, b| {
         let key = match column {
             1 => type_text(a).cmp(&type_text(b)).then_with(|| name(a).cmp(&name(b))),
-            2 => sizes[&a.path].cmp(&sizes[&b.path]).then_with(|| name(a).cmp(&name(b))),
+            2 => file_size(a).cmp(&file_size(b)).then_with(|| name(a).cmp(&name(b))),
             _ => name(a).cmp(&name(b)),
         };
         b.dir.cmp(&a.dir).then(if descending { key.reverse() } else { key })
@@ -803,7 +827,7 @@ fn list(dir: &Path) -> Vec<Entry> {
                     let samples = p.extension().is_some_and(|e| e == "samples");
                     (p.is_dir() && !samples) || p.extension().is_some_and(listed)
                 })
-                .map(|p| Entry { name: p.file_name().unwrap().to_string_lossy().into_owned(), dir: p.is_dir(), path: p })
+                .map(Entry::new)
                 .collect()
         })
         .unwrap_or_default();
@@ -1037,12 +1061,7 @@ impl Browser {
         }
         if let Some(f) = dir.to_str().and_then(|s| s.strip_prefix("cache:")) {
             let text = std::fs::read_to_string(f).unwrap_or_default();
-            let v = text
-                .lines()
-                .filter(|l| !l.is_empty())
-                .map(PathBuf::from)
-                .map(|p| Entry { name: p.file_name().map(|n| n.to_string_lossy().into_owned()).unwrap_or_default(), dir: p.is_dir(), path: p })
-                .collect();
+            let v = text.lines().filter(|l| !l.is_empty()).map(PathBuf::from).map(Entry::new).collect();
             self.set_entries(v);
             self.search = Path::new(f).file_stem().map(|s| s.to_string_lossy().into_owned());
             self.shortlist = None;
@@ -1088,7 +1107,7 @@ impl Browser {
     /// [re:4f921b]: the shortlist's files.
     fn show_shortlist(&mut self, name: String) {
         let files = self.shortlists.iter().find(|(n, _)| *n == name).map(|(_, f)| f.clone()).unwrap_or_default();
-        self.set_entries(files.into_iter().map(|p| Entry { name: p.file_name().map(|n| n.to_string_lossy().into_owned()).unwrap_or_default(), dir: p.is_dir(), path: p }).collect());
+        self.set_entries(files.into_iter().map(Entry::new).collect());
         self.shortlist = Some(name);
         self.search = None;
         self.selected = None;
@@ -1630,8 +1649,7 @@ impl Browser {
         if self.pane.favourites {
             locs.extend(self.favourites.iter().filter(|f| f.is_dir()).map(|f| (f.clone(), deep)));
         }
-        let mut v: Vec<Entry> =
-            crate::search::scan(&locs, opts, match_all).into_iter().map(|(p, dir)| Entry { name: p.file_name().map(|n| n.to_string_lossy().into_owned()).unwrap_or_default(), path: p, dir }).collect();
+        let mut v: Vec<Entry> = crate::search::scan(&locs, opts, match_all).into_iter().map(|(p, dir)| Entry::scanned(p, dir)).collect();
         v.sort_by(|a, b| b.dir.cmp(&a.dir).then(a.name.to_lowercase().cmp(&b.name.to_lowercase())));
         v
     }

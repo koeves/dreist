@@ -122,13 +122,14 @@ impl Editor {
                     }
                     KnobAction::Edit => self.start_knob_edit(&path, &name, id),
                     KnobAction::RemoveModulation => {
+                        let before = self.app.marks();
                         let cmds = self.remove_modulation_commands(&path);
                         for c in &cmds {
                             self.model.apply(c);
                         }
                         self.outbox.extend(cmds);
                         self.sync();
-                        self.app.dirty = true;
+                        self.invalidate_changes(&before);
                     }
                     // [re:bcf3d5]: e_tuneLayer for the current layer.
                     KnobAction::TuneToTempo => {
