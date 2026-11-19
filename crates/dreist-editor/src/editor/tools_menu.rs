@@ -32,6 +32,23 @@ impl Editor {
         }
     }
 
+    /// The diagnostics export (`dreist_engine::diag::export`): the log's
+    /// report with the settings, to a file shown in the file manager or to
+    /// the clipboard. Paths outside the settings and log folders are left
+    /// out.
+    pub(crate) fn diagnostics(&self, copy: bool) {
+        let settings: Vec<(String, String)> = self.modals.options.entries().map(|(k, v)| (k.to_string(), v.to_string())).collect();
+        let keep: Vec<std::path::PathBuf> = options::settings_dir().into_iter().collect();
+        if cfg!(test) {
+            return;
+        }
+        if copy {
+            dreist_host::shell::copy_text(&dreist_engine::diag::report(&settings, &keep));
+        } else if let Ok(p) = dreist_engine::diag::export(&settings, &keep) {
+            dreist_host::shell::reveal(&[&p]);
+        }
+    }
+
     /// The CPU and memory readout is on.
     pub fn perf_shown(&self) -> bool {
         self.modals.options.bool(PERF_OPTION, false)
@@ -69,7 +86,7 @@ impl Editor {
         let tools: [&str; 11] = ["Preferences", "", &reset, "Save as default preset", "Clear default preset", "", "Find missing files...", "", "Export as audio...", "", &embed];
         let perf = if self.perf_shown() { "Hide CPU and memory" } else { "Show CPU and memory" };
         let power = self.power_hold_item();
-        let mut help: Vec<&str> = vec!["About", "", "Reset UI size to default", "Reset UI scale to 100%", "Show MIDI Console", perf];
+        let mut help: Vec<&str> = vec!["About", "", "Reset UI size to default", "Reset UI scale to 100%", "Show MIDI Console", perf, "", "Export diagnostics...", "Copy diagnostics"];
         if self.power_hold_offered() {
             help.push(&power);
         }
@@ -147,7 +164,9 @@ impl Editor {
                         }
                     }
                     4 => self.midiconsole.open = true,
-                    6 if self.power_hold_offered() => self.toggle_power_hold(),
+                    7 => self.diagnostics(false),
+                    8 => self.diagnostics(true),
+                    9 if self.power_hold_offered() => self.toggle_power_hold(),
                     5 => {
                         let on = !self.perf_shown();
                         self.modals.options.set(PERF_OPTION, on);
