@@ -1,5 +1,5 @@
 //! What this editor knows about its app beyond the shared profile
-//! (`dreist_formats::profile`): the About text, the settings folder, the
+//! (`dreist_formats::profile`): the About text, the
 //! effect menu and how documents are read.
 
 use std::path::Path;
@@ -8,17 +8,6 @@ use dreist_formats::Node;
 
 /// The About text.
 pub const ABOUT: &str = "Dreist: drum sampler, sequencer and performance instrument.\nNative for macOS, Windows and Linux, written in Rust.";
-
-/// Settings folder name (`~/Library/Application Support/<name>`,
-/// `%APPDATA%\<name>`, `$XDG_CONFIG_HOME/<name>`).
-pub const SETTINGS_DIR: &str = "Dreist";
-
-/// Earlier settings folder names: the first one found is moved to
-/// [`SETTINGS_DIR`] when that does not exist yet (the beta's).
-pub const LEGACY_SETTINGS_DIRS: &[&str] = &["Geist-rs"];
-
-/// Environment variable naming a separate settings folder.
-pub const SETTINGS_ENV: &str = "DREIST_SETTINGS_DIR";
 
 /// Further extensions the Open dialog offers besides projects (files
 /// [`read_project`] turns into a project).

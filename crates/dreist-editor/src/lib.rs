@@ -4,9 +4,10 @@
 //! the dreist-re GUI notes.
 
 mod accel;
+pub use dreist_editor_core::{command, options};
+use dreist_editor_core::{fxtext, swing, tabs, timeline, transmodvis, undo};
 pub mod app;
 pub mod browser;
-pub mod command;
 mod conv;
 mod convertor;
 mod cursors;
@@ -16,7 +17,6 @@ mod editbind;
 mod editor;
 pub mod filefind;
 mod fxchain;
-mod fxtext;
 mod guru;
 mod header;
 mod inspector;
@@ -29,7 +29,6 @@ mod mixer;
 mod modal;
 pub mod model;
 mod multipad;
-pub mod options;
 mod padmenu;
 mod pads;
 mod patmenu;
@@ -42,14 +41,9 @@ mod scenes;
 mod search;
 mod slicer;
 mod song;
-mod swing;
-mod tabs;
-mod timeline;
 mod tooltips;
 mod transmod;
-mod transmodvis;
 mod trigger;
-mod undo;
 mod velsplit;
 mod zoomslider;
 

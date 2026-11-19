@@ -819,11 +819,22 @@ name = "dreist-editor"
 version = "0.0.0"
 dependencies = [
  "dreist-dsp",
+ "dreist-editor-core",
  "dreist-engine",
  "dreist-formats",
  "dreist-gui",
  "dreist-host",
  "dreist-testkit",
+]
+
+[[package]]
+name = "dreist-editor-core"
+version = "0.0.0"
+dependencies = [
+ "dreist-dsp",
+ "dreist-engine",
+ "dreist-formats",
+ "dreist-gui",
 ]
 
 [[package]]
