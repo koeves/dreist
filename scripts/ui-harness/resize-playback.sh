@@ -41,7 +41,11 @@ while [ "$i" -le "$runs" ]; do
     sleep 15
     before=$(count "$err")
     # shellcheck disable=SC2086 # grow holds two numbers
-    drag=$(python3 -I "$here/xui.py" sizer "$app" 10 60 $grow)
+    if ! drag=$(python3 -I "$here/xui.py" sizer "$app" 10 60 $grow 2>&1); then
+        kill "$pid" 2>/dev/null || true
+        echo "run $i: $drag" >&2
+        exit 1
+    fi
     during=$(count "$err")
     wait "$pid" || true
     after=$(count "$err")

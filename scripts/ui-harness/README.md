@@ -14,3 +14,4 @@ Scripts that drive the standalone's window on X11 or XWayland the way a hand doe
 - The app starts with `DREIST_BACKGROUND_GUI=1` and is never raised; a covered window makes `xui.py` stop before it presses anything.
 - The window's saved size is set to `START` (1150,747) before each run and put back at the end.
 - One or two isolated underruns in a run are fine; several in a row are audible crackles.
+- A window that does not resize during the drag (no window sizer in that corner) stops the run with an error.

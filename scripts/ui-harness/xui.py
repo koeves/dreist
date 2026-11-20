@@ -138,6 +138,7 @@ def sizer(title, seconds, hz=60.0, grow_x=0, grow_y=0, shrink=0.25):
     steps = max(1, int(hz))
     end = time.time() + seconds
     i = sent = 0
+    widest = (w0, h0)
     while time.time() < end:
         p = abs((i % (2 * steps)) - steps) / steps  # 1 -> 0 -> 1 over 2 s
         if grow_x or grow_y:
@@ -149,12 +150,18 @@ def sizer(title, seconds, hz=60.0, grow_x=0, grow_y=0, shrink=0.25):
         sent += 1
         i += 1
         time.sleep(1.0 / hz)
+        if i % steps == 0:  # an end of the triangle: the window should have followed
+            _, _, wn, hn = geometry(w)
+            if (wn, hn) != (w0, h0):
+                widest = (wn, hn)
     xtst.XTestFakeMotionEvent(dpy, -1, sx, sy, 0)
     xtst.XTestFakeButtonEvent(dpy, 1, 0, 0)
     x11.XSync(dpy, 0)
     time.sleep(0.5)
     _, _, w1, h1 = geometry(find(title))
-    print(f"sizer: {sent} moves over {seconds:g}s; window {w0}x{h0} -> {w1}x{h1}")
+    if widest == (w0, h0) and (w1, h1) == (w0, h0):
+        sys.exit(f"sizer: the window stayed {w0}x{h0} during the drag (no window sizer in its bottom-right corner?)")
+    print(f"sizer: {sent} moves over {seconds:g}s; window {w0}x{h0} -> {w1}x{h1} (moved to {widest[0]}x{widest[1]})")
 
 
 def click(title, x, y):
