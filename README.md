@@ -103,7 +103,7 @@ xattr -dr com.apple.quarantine ~/Library/Audio/Plug-Ins/VST3/Dreist.vst3 ~/Libra
 
 ### Limitations
 
-- **Drags out of the window**: macOS only.
+- **Drags out of the window**: macOS and Windows.
 - **Drops into the window**: macOS and Windows only.
 - **REX files**: macOS only.
 - **Wayland** desktops run Dreist through XWayland.
