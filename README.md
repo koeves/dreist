@@ -123,9 +123,6 @@ xattr -dr com.apple.quarantine ~/Library/Audio/Plug-Ins/VST3/Dreist.vst3 ~/Libra
 | Windows | Rust through rustup (MSVC), Visual Studio Build Tools with "Desktop development with C++", LLVM (`winget install LLVM.LLVM`), Git for Windows |
 | Linux | Rust through rustup, the packages below |
 
-- **macOS**: no Homebrew packages; `brew install rust` lacks rustup, which `scripts/build.sh` uses to add the targets.
-- **Windows**: LLVM gives the time-stretch bindings libclang; `scripts/build-windows.sh` runs in Git Bash.
-
 ```bash
 git clone --recursive https://github.com/koeves/dreist
 scripts/build.sh                  # macOS: target/bundled/Dreist.{app,vst3,clap}
