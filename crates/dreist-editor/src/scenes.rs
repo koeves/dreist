@@ -47,6 +47,15 @@ pub struct Scenes {
     last_tick: Option<std::time::Instant>,
 }
 
+impl Scenes {
+    /// The app's menu closed without a pick (Escape, a click elsewhere):
+    /// forget the menu kept open here, so a later pick in another menu is
+    /// not taken for it.
+    pub(crate) fn menu_dismissed(&mut self) {
+        self.menu = None;
+    }
+}
+
 /// Animation tick period: [re:cfb303] registers [re:5fc9f5]
 /// (every tick of [re:6556de], whose event-loop timer runs at 1/30 s,
 /// [re:6ae388]).

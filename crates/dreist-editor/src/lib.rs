@@ -4,9 +4,10 @@
 //! the dreist-re GUI notes.
 
 mod accel;
+pub use dreist_editor_core::{command, options};
+use dreist_editor_core::{fxtext, swing, tabs, timeline, transmodvis, undo};
 pub mod app;
 pub mod browser;
-pub mod command;
 mod conv;
 mod convertor;
 mod cursors;
@@ -16,7 +17,6 @@ mod editbind;
 mod editor;
 pub mod filefind;
 mod fxchain;
-mod fxtext;
 mod guru;
 mod header;
 mod inspector;
@@ -29,7 +29,6 @@ mod mixer;
 mod modal;
 pub mod model;
 mod multipad;
-pub mod options;
 mod padmenu;
 mod pads;
 mod patmenu;
@@ -42,14 +41,9 @@ mod scenes;
 mod search;
 mod slicer;
 mod song;
-mod swing;
-mod tabs;
-mod timeline;
 mod tooltips;
 mod transmod;
-mod transmodvis;
 mod trigger;
-mod undo;
 mod velsplit;
 mod zoomslider;
 
@@ -571,18 +565,24 @@ impl Editor {
         }
         self.animate_drop_highlights();
         self.save_window_size();
-        if self.filefind.scanning() && self.filefind.tick(&mut self.app, &mut self.model) {
-            self.outbox.push(self.model.rebuild_command());
-            self.sync();
+        if self.filefind.scanning() {
+            // The progress bar and label repaint, not the window.
+            let before = self.app.marks();
+            if self.filefind.tick(&mut self.app, &mut self.model) {
+                self.outbox.push(self.model.rebuild_command());
+                self.sync();
+            }
+            self.invalidate_changes(&before);
         }
         if self.modals.tick(&mut self.app) {
             self.app.dirty = true;
         }
         if self.scenes.as_mut().is_some_and(|sc| sc.animate()) {
+            let before = self.app.marks();
             if let Some(sc) = &mut self.scenes {
                 sc.sync(&mut self.app, &self.model);
             }
-            self.app.dirty = true;
+            self.invalidate_changes(&before);
         }
     }
 
