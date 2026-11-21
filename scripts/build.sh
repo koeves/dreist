@@ -1,5 +1,6 @@
 #!/usr/bin/env bash
-# Build Dreist: VST3 + CLAP bundles and the standalone macOS app.
+# Build Dreist: VST3, CLAP and Audio Unit (AUv2) bundles and the standalone
+# macOS app.
 #
 #   scripts/build.sh            release build into target/bundled/
 #   scripts/build.sh --debug    debug build
@@ -8,7 +9,8 @@
 #   scripts/build.sh --install  also install for this user (target/bundled/install.sh)
 #   scripts/build.sh --uninstall  remove that install
 #
-# Output: target/bundled/Dreist.vst3, Dreist.clap, Dreist.app and install.sh
+# Output: target/bundled/Dreist.vst3, Dreist.clap, Dreist.component, Dreist.app and
+# install.sh
 # (commons/packaging/install.sh, which the release archive also carries;
 # commons/packaging/README.md lists what goes where).
 #
@@ -17,6 +19,9 @@
 # with the hardened runtime and a timestamp; with DREIST_NOTARY_PROFILE
 # also set (a `xcrun notarytool store-credentials` profile) they are
 # notarised and stapled.
+#
+# The Audio Unit wraps the CLAP (commons/packaging/auv2/build.sh: AU
+# instrument Drst, manufacturer Drst) and needs CMake.
 set -euo pipefail
 
 cd "$(dirname "$0")/.."
@@ -36,7 +41,7 @@ while [ $# -gt 0 ]; do
         --arch=*) arch=${1#--arch=} ;;
         --install) install=1 ;;
         --uninstall) uninstall=1 ;;
-        -h|--help) sed -n '2,15p' "$0"; exit 0 ;;
+        -h|--help) sed -n '2,24p' "$0"; exit 0 ;;
         *) echo "unknown option: $1" >&2; exit 2 ;;
     esac
     shift
@@ -140,8 +145,14 @@ for b in "$app" "$out/Dreist.vst3" "$out/Dreist.clap"; do
         codesign --force --deep --sign - "$b" >/dev/null 2>&1 || echo "warning: ad-hoc codesign failed for $b" >&2
     fi
 done
+# The Audio Unit: the signed CLAP inside a clap-wrapper .component.
+au_sign=()
+[ -n "${DREIST_SIGN_IDENTITY:-}" ] && au_sign=(--sign "$DREIST_SIGN_IDENTITY")
+commons/packaging/auv2/build.sh --clap "$out/Dreist.clap" --subtype Drst \
+    --bundle-id rs.dreist.component --manufacturer-name Dreist --arch "$arch" \
+    --version "$version" ${au_sign[@]+"${au_sign[@]}"}
 if [ -n "${DREIST_SIGN_IDENTITY:-}" ] && [ -n "${DREIST_NOTARY_PROFILE:-}" ]; then
-    for b in "$app" "$out/Dreist.vst3" "$out/Dreist.clap"; do
+    for b in "$app" "$out/Dreist.vst3" "$out/Dreist.clap" "$out/Dreist.component"; do
         echo "==> Notarising $b"
         zip="$out/$(basename "$b").zip"
         rm -f "$zip"

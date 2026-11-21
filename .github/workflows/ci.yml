@@ -120,9 +120,15 @@ jobs:
         run: scripts/build.sh --arch universal
       - name: Universal binaries
         run: |
-          for b in Dreist.vst3/Contents/MacOS/Dreist Dreist.clap/Contents/MacOS/Dreist Dreist.app/Contents/MacOS/Dreist; do
+          for b in Dreist.vst3/Contents/MacOS/Dreist Dreist.clap/Contents/MacOS/Dreist Dreist.component/Contents/MacOS/Dreist Dreist.app/Contents/MacOS/Dreist; do
             lipo "target/bundled/$b" -verify_arch arm64 x86_64
           done
+      - name: Audio Unit (auval)
+        # The installed .component, both halves (the Intel one under Rosetta).
+        run: |
+          sh target/bundled/install.sh
+          auval -v aumu Drst Drst
+          arch -x86_64 auval -v aumu Drst Drst
 
   macos-intel:
     needs: changes

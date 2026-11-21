@@ -2,8 +2,8 @@ name: Release
 
 # Releases a tag `vX.Y.Z`: checks that commons is a dreist-commons release,
 # checks the commit subjects, runs the CI suite, builds Dreist (VST3, CLAP,
-# standalone) on macOS, Windows and Linux with the tag's version written into
-# Cargo.toml, tests it and publishes the GitHub release with the zips (tarballs on Linux). Called
+# Audio Unit on macOS, standalone) on macOS, Windows and Linux with the
+# tag's version written into Cargo.toml, tests it and publishes the GitHub release with the zips (tarballs on Linux). Called
 # by release-on-main.yml once it has tagged the merge of a release pull
 # request; also runs on a tag pushed by hand (a tag pushed by
 # release-on-main.yml with GITHUB_TOKEN starts no second run) and by hand
@@ -109,11 +109,14 @@ jobs:
         if: runner.os == 'macOS'
         run: |
           scripts/build.sh --arch ${{ matrix.arch }}
+          # The Audio Unit passes auval on this kind of Mac.
+          sh target/bundled/install.sh
+          auval -v aumu Drst Drst
           cd target/bundled
-          # install.sh (commons/packaging) and the three parts in one folder.
+          # install.sh (commons/packaging) and the four parts in one folder.
           full="Dreist-$TAG-${{ matrix.name }}"
           mkdir "$full"
-          for p in install.sh Dreist.vst3 Dreist.clap Dreist.app; do ditto "$p" "$full/$p"; done
+          for p in install.sh Dreist.vst3 Dreist.clap Dreist.component Dreist.app; do ditto "$p" "$full/$p"; done
           ditto -c -k --keepParent "$full" "$full.zip"
       - name: Build (Windows)
         if: runner.os == 'Windows'
