@@ -73,6 +73,12 @@ if [ "$arch" = universal ]; then
 else
     cargo run --package xtask --release -- bundle dreist-plugin $flag --target "$targets"
 fi
+# The bundler writes 1.0.0 into the plug-ins' Info.plist; they carry the
+# release version like the app.
+for b in "$out/Dreist.vst3" "$out/Dreist.clap"; do
+    plutil -replace CFBundleShortVersionString -string "$version" "$b/Contents/Info.plist"
+    plutil -replace CFBundleVersion -string "$version" "$b/Contents/Info.plist"
+done
 
 echo "==> Standalone app ($profile, $arch)"
 slices=()
