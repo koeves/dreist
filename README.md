@@ -26,7 +26,6 @@ Dreist is a drum sampler, step sequencer and performance instrument: a Rust rebu
 - **Opens**: Geist2 `.geist` projects, kits and patterns.
 - **Saves**: its own `.dreist` family (`.dreist`, `.dreistkit`, ...) in Geist2's XML.
 - **Runs as**: VST3, CLAP and a standalone app on macOS, Windows and Linux.
-- **Built on**: [dreist-commons](https://github.com/koeves/dreist-commons), shared with [Einst](https://github.com/koeves/einst), the Geist v1 rebuild.
 
 ## Install
 
@@ -114,6 +113,11 @@ scripts/build-windows.sh            # Windows, in Git Bash
 - **Tools**: Rust through [rustup](https://rustup.rs), plus the Xcode Command Line Tools on macOS and Visual Studio Build Tools (C++) with LLVM on Windows.
 - **Linux packages** (Debian / Ubuntu): `sudo apt-get install build-essential clang libclang-dev pkg-config libasound2-dev libjack-jackd2-dev libx11-dev libx11-xcb-dev libxcb1-dev libxcb-icccm4-dev libxcb-dri2-0-dev libxcursor-dev libgl1-mesa-dev`.
 - **Contributing**: [CONTRIBUTING.md](CONTRIBUTING.md).
+
+## Related projects
+
+- [dreist-commons](https://github.com/koeves/dreist-commons): the shared formats, DSP, engine and GUI crates.
+- [Einst](https://github.com/koeves/einst): the Geist v1 rebuild on the same crates.
 
 ## Licence
 
