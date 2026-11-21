@@ -3000,9 +3000,6 @@ mod shading_tests {
     }
 }
 
-/// [re:6f3ef7].
-const SVF_MODES: [&str; 10] = ["L2", "L4", "H2", "H4", "B2", "B4", "N2", "N4", "P2", "P4"];
-
 /// A filter type step's text for one layer's filter model
 /// (`round(FilterAlgorithm · 3)`): SH101, SVF, MS20, else none.
 fn filter_type_text(algorithm: Option<f32>, f: f32) -> String {
@@ -3011,7 +3008,7 @@ fn filter_type_text(algorithm: Option<f32>, f: f32) -> String {
         k => names.get(k as usize).map(|s| s.to_string()).unwrap_or_default(),
     };
     match algorithm.map(|a| (a * 3.0).round() as i32) {
-        None | Some(1) => pick(&SVF_MODES, 10.0),
+        None | Some(1) => pick(&crate::popups::SVF_MODES, 10.0),
         Some(0) => pick(&dreist_dsp::sh101::SH101_MODES, 22.0),
         Some(2) => pick(&dreist_dsp::ms20::MS20_MODES, 4.0),
         _ => match (f * 3.0) as i32 {

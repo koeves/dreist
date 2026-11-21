@@ -226,3 +226,39 @@ fn menu_items_are_picked_on_release() {
     assert_eq!(pad_mode(&ed), normal);
     assert!(ed.app.menu.is_none());
 }
+
+/// The layer panel's Algorithm and Type menus list the selected
+/// algorithm's filter types and send the picked one as the layer's
+/// `FilterAlgorithm` / `FilterType`.
+#[test]
+fn filter_algorithm_and_type_menus() {
+    let Ok(mut ed) = Editor::new(dreist_gui::skin::default_theme(), Model::new(crate::project::new_document())) else { return };
+    ed.sync();
+    let alg = ed.app.root.path_of("FilterAlgorithm").expect("layer panel");
+    let ty = ed.app.root.path_of("FilterType").unwrap();
+    // Default 0.3: the SVF, lowpass.
+    assert_eq!(ed.app.ctrl(&alg).unwrap().text, "SVF");
+    assert_eq!(ed.app.ctrl(&ty).unwrap().text, "L2");
+    let pick = |ed: &mut Editor, path: &[usize], name: &str, index: usize| {
+        ed.handle(&UiEvent::Clicked { path: path.to_vec(), name: name.into(), id: 0, on: false });
+        let items = ed.app.menu.as_ref().expect("menu open").items.len();
+        ed.app.menu = None;
+        ed.take_commands();
+        ed.handle(&UiEvent::MenuSelected { anchor: path.to_vec(), name: name.into(), index });
+        ed.sync();
+        let sent: Vec<[f32; 3]> =
+            ed.take_commands().into_iter().filter_map(|c| if let Command::Message(m) = c { (m.kind == id::SET_LAYER_PARAMETER).then(|| [m.value[0], m.value[1], m.value[2]]) } else { None }).collect();
+        (items, sent)
+    };
+    let (n, sent) = pick(&mut ed, &ty, "FilterType", 2);
+    assert_eq!(n, 10);
+    assert_eq!(sent, vec![[dreist_formats::LayerParam::FilterType as u8 as f32, 2.0 / 9.0, 0.0]]);
+    assert_eq!(ed.app.ctrl(&ty).unwrap().text, "H2");
+    let (n, sent) = pick(&mut ed, &alg, "FilterAlgorithm", 2);
+    assert_eq!(n, 4);
+    assert_eq!(sent, vec![[dreist_formats::LayerParam::FilterAlgorithm as u8 as f32, 2.0 / 3.0, 0.0]]);
+    assert_eq!(ed.app.ctrl(&alg).unwrap().text, "MS20");
+    let (n, _) = pick(&mut ed, &ty, "FilterType", 3);
+    assert_eq!(n, 4);
+    assert_eq!(ed.app.ctrl(&ty).unwrap().text, "Notch");
+}
