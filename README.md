@@ -48,7 +48,7 @@ sudo ./install.sh --system  # all users
 
 - **First launch**: the builds are unsigned, so open the app with right-click › Open › Open.
 - **Plugins blocked by a host**: `xattr -dr com.apple.quarantine ~/Library/Audio/Plug-Ins/VST3/Dreist.vst3 ~/Library/Audio/Plug-Ins/CLAP/Dreist.clap`.
-- **REX files**: need the REX Shared Library (Reason Studios); on Apple Silicon also Rosetta 2.
+- **REX files**: need the REX Shared Library (Reason Studios), and Rosetta 2 on Apple Silicon.
 
 ### Windows
 
@@ -59,7 +59,7 @@ sudo ./install.sh --system  # all users
 
 - **Blocked scripts**: `powershell -ExecutionPolicy Bypass -File .\install.ps1`.
 - **Runtime**: the [Microsoft Visual C++ Redistributable](https://learn.microsoft.com/cpp/windows/latest-supported-vc-redist) (2015–2022, x64).
-- **First launch**: the builds are unsigned; if SmartScreen warns, choose More info › Run anyway.
+- **First launch**: if SmartScreen warns about the unsigned build, choose More info › Run anyway.
 
 ### Linux
 
@@ -69,7 +69,7 @@ sudo ./install.sh --system  # all users
 ```
 
 - **Launcher**: the app shows in the desktop's app list, and `dreist` starts it.
-- **Runtime**: ALSA, OpenGL, X11 and XCB; JACK for `dreist --backend jack`; the XDG desktop portal or `zenity` for file dialogs.
+- **Runtime**: ALSA, OpenGL, X11 and XCB.
 
 ## Uninstall
 
@@ -78,7 +78,7 @@ sudo ./install.sh --system  # all users
 .\install.ps1 --uninstall          # Windows (--user for a per-user install)
 ```
 
-- **Kept**: settings, content and the diagnostics log; add `--purge` to remove the log too.
+- **Kept**: settings, content and the diagnostics log, unless `--purge` is added.
 
 ## Files
 
@@ -95,7 +95,7 @@ sudo ./install.sh --system  # all users
 
 ## Limitations
 
-- **Samples**: none included; Dreist plays Geist2 content (kits, presets, expansions), found in `~/Documents/FXpansion/Geist2` or the folder set under Preferences.
+- **Samples**: none included. Dreist plays Geist2 content (kits, presets, expansions).
 - **Drags out of the window**: macOS only.
 - **Drops into the window**: macOS and Windows only.
 - **REX files**: macOS only.
@@ -111,7 +111,7 @@ scripts/build-linux.sh --install    # Linux
 scripts/build-windows.sh            # Windows, in Git Bash
 ```
 
-- **Tools**: Rust through [rustup](https://rustup.rs); on macOS the Xcode Command Line Tools, on Windows Visual Studio Build Tools (C++) and LLVM.
+- **Tools**: Rust through [rustup](https://rustup.rs), plus the Xcode Command Line Tools on macOS and Visual Studio Build Tools (C++) with LLVM on Windows.
 - **Linux packages** (Debian / Ubuntu): `sudo apt-get install build-essential clang libclang-dev pkg-config libasound2-dev libjack-jackd2-dev libx11-dev libx11-xcb-dev libxcb1-dev libxcb-icccm4-dev libxcb-dri2-0-dev libxcursor-dev libgl1-mesa-dev`.
 - **Contributing**: [CONTRIBUTING.md](CONTRIBUTING.md).
 
