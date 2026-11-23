@@ -2998,10 +2998,15 @@ mod shading_tests {
         assert_eq!(crate::modal::SHADING.iter().position(|s| *s == "Cyclic"), Some(2));
         assert!(shaded(8, 4) && !shaded(8, 3) && !shaded(8, 8));
     }
-}
 
-/// [re:6f3ef7].
-const SVF_MODES: [&str; 10] = ["L2", "L4", "H2", "H4", "B2", "B4", "N2", "N4", "P2", "P4"];
+    /// [re:407d1e] comb buckets: As layer setup, Positive, Negative, and
+    /// nothing at the top value.
+    #[test]
+    fn comb_step_texts() {
+        let t = |f| filter_type_text(Some(1.0), f);
+        assert_eq!((t(0.1), t(0.4), t(0.8), t(1.0)), ("As layer setup".into(), "Positive".into(), "Negative".into(), String::new()));
+    }
+}
 
 /// A filter type step's text for one layer's filter model
 /// (`round(FilterAlgorithm · 3)`): SH101, SVF, MS20, else none.
@@ -3011,13 +3016,14 @@ fn filter_type_text(algorithm: Option<f32>, f: f32) -> String {
         k => names.get(k as usize).map(|s| s.to_string()).unwrap_or_default(),
     };
     match algorithm.map(|a| (a * 3.0).round() as i32) {
-        None | Some(1) => pick(&SVF_MODES, 10.0),
+        None | Some(1) => pick(&crate::popups::SVF_MODES, 10.0),
         Some(0) => pick(&dreist_dsp::sh101::SH101_MODES, 22.0),
         Some(2) => pick(&dreist_dsp::ms20::MS20_MODES, 4.0),
         _ => match (f * 3.0) as i32 {
             0 => "As layer setup".into(),
             1 => "Positive".into(),
-            _ => "Negative".into(),
+            2 => "Negative".into(),
+            _ => String::new(),
         },
     }
 }
