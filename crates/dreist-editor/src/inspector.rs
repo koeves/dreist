@@ -849,7 +849,9 @@ impl Inspector {
                             out.push(msg(kind, &idx, &[*on as i32 as f32]));
                             return true;
                         }
-                        if let Some(par) = param_for_control(name) {
+                        // Toggles only: the Algorithm and Type popups set
+                        // their parameter from the menu pick.
+                        if let Some(par) = param_for_control(name).filter(|_| app.ctrl(path).is_some_and(|c| c.class == "CtrlButton")) {
                             out.push(msg(id::SET_LAYER_PARAMETER, &idx, &[par as u8 as f32, if *on { 1.0 } else { 0.0 }, 0.0]));
                             return true;
                         }

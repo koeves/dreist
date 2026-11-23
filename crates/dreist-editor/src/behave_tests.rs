@@ -240,10 +240,12 @@ fn filter_algorithm_and_type_menus() {
     assert_eq!(ed.app.ctrl(&alg).unwrap().text, "SVF");
     assert_eq!(ed.app.ctrl(&ty).unwrap().text, "L2");
     let pick = |ed: &mut Editor, path: &[usize], name: &str, index: usize| {
+        ed.take_commands();
         ed.handle(&UiEvent::Clicked { path: path.to_vec(), name: name.into(), id: 0, on: false });
         let items = ed.app.menu.as_ref().expect("menu open").items.len();
         ed.app.menu = None;
-        ed.take_commands();
+        // Opening the menu changes nothing.
+        assert!(ed.take_commands().is_empty(), "{name}: the click sent a change");
         ed.handle(&UiEvent::MenuSelected { anchor: path.to_vec(), name: name.into(), index });
         ed.sync();
         let sent: Vec<[f32; 3]> =
@@ -261,4 +263,8 @@ fn filter_algorithm_and_type_menus() {
     let (n, _) = pick(&mut ed, &ty, "FilterType", 3);
     assert_eq!(n, 4);
     assert_eq!(ed.app.ctrl(&ty).unwrap().text, "Notch");
+    // Opening the Algorithm menu again keeps MS20.
+    let (_, sent) = pick(&mut ed, &alg, "FilterAlgorithm", 2);
+    assert_eq!(sent.len(), 1);
+    assert_eq!(ed.app.ctrl(&alg).unwrap().text, "MS20");
 }
