@@ -2998,6 +2998,14 @@ mod shading_tests {
         assert_eq!(crate::modal::SHADING.iter().position(|s| *s == "Cyclic"), Some(2));
         assert!(shaded(8, 4) && !shaded(8, 3) && !shaded(8, 8));
     }
+
+    /// [re:407d1e] comb buckets: As layer setup, Positive, Negative, and
+    /// nothing at the top value.
+    #[test]
+    fn comb_step_texts() {
+        let t = |f| filter_type_text(Some(1.0), f);
+        assert_eq!((t(0.1), t(0.4), t(0.8), t(1.0)), ("As layer setup".into(), "Positive".into(), "Negative".into(), String::new()));
+    }
 }
 
 /// A filter type step's text for one layer's filter model
@@ -3014,7 +3022,8 @@ fn filter_type_text(algorithm: Option<f32>, f: f32) -> String {
         _ => match (f * 3.0) as i32 {
             0 => "As layer setup".into(),
             1 => "Positive".into(),
-            _ => "Negative".into(),
+            2 => "Negative".into(),
+            _ => String::new(),
         },
     }
 }

@@ -18,8 +18,8 @@ use crate::model::Model;
 pub const FILTER_ALGORITHM_LABELS: [&str; 4] = ["Japan", "SVF", "MS20", "Comb"];
 /// [re:6f3ef7].
 pub const SVF_MODES: [&str; 10] = ["L2", "L4", "H2", "H4", "B2", "B4", "N2", "N4", "P2", "P4"];
-/// The comb core's two polarities (`mode < 0.5` negative).
-const COMB_MODES: [&str; 2] = ["Negative", "Positive"];
+/// The comb types: Positive below 0.5, Negative from 0.5 (the original's layer panel).
+const COMB_MODES: [&str; 2] = ["Positive", "Negative"];
 
 /// The filter type names of algorithm `a` (an index into
 /// [`FILTER_ALGORITHM_LABELS`]); the menu's items are spread evenly over

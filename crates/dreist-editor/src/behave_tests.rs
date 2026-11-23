@@ -270,4 +270,12 @@ fn filter_algorithm_and_type_menus() {
     // Help text over both popups.
     assert_eq!(ed.tooltip_text(&alg).map(|t| t.0).as_deref(), Some("Filter Algorithm: MS20"));
     assert_eq!(ed.tooltip_text(&ty).map(|t| t.0).as_deref(), Some("Filter Type: Notch"));
+    // Comb: Positive (0) and Negative (1), Negative shown from 0.5.
+    pick(&mut ed, &alg, "FilterAlgorithm", 3);
+    let (n, sent) = pick(&mut ed, &ty, "FilterType", 1);
+    assert_eq!(n, 2);
+    assert_eq!(sent, vec![[dreist_formats::LayerParam::FilterType as u8 as f32, 1.0, 0.0]]);
+    assert_eq!(ed.app.ctrl(&ty).unwrap().text, "Negative");
+    pick(&mut ed, &ty, "FilterType", 0);
+    assert_eq!(ed.app.ctrl(&ty).unwrap().text, "Positive");
 }
