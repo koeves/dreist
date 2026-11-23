@@ -102,8 +102,9 @@ impl Editor {
             let e = self.model.engine;
             let label = crate::transmod::camel_words(par.enum_name());
             if c.class == "CtrlButton" || c.class == "CtrlPopupButton" {
+                // The Algorithm and Type popups: the parameter and its pick.
                 if c.class == "CtrlPopupButton" {
-                    return None;
+                    return below(format!("{label}: {}", c.text));
                 }
                 // Conversion handler [re:fbe4f3].
                 if name == "TimestretchMode" {

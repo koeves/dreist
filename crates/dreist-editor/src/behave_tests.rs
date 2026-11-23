@@ -267,4 +267,7 @@ fn filter_algorithm_and_type_menus() {
     let (_, sent) = pick(&mut ed, &alg, "FilterAlgorithm", 2);
     assert_eq!(sent.len(), 1);
     assert_eq!(ed.app.ctrl(&alg).unwrap().text, "MS20");
+    // Help text over both popups.
+    assert_eq!(ed.tooltip_text(&alg).map(|t| t.0).as_deref(), Some("Filter Algorithm: MS20"));
+    assert_eq!(ed.tooltip_text(&ty).map(|t| t.0).as_deref(), Some("Filter Type: Notch"));
 }
