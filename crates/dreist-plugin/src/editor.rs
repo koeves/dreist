@@ -254,6 +254,8 @@ pub struct DreistEditor {
     /// The host's scale factor (`f32` bits; Windows and Linux, see
     /// `set_scale_factor`).
     pub host_scale: std::sync::atomic::AtomicU32,
+    /// The open window's inbox for the keys the host passes the editor.
+    pub host_keys: std::sync::Mutex<Option<Arc<dreist_gui::hostkeys::HostKeys>>>,
 }
 
 /// The UI scale (Preferences › UI scaling).
@@ -542,6 +544,7 @@ impl Editor for DreistEditor {
             inbox.clear();
         });
         let scale = f32::from_bits(self.host_scale.load(std::sync::atomic::Ordering::Relaxed)) as f64;
+        *lock(&self.host_keys) = Some(gui.app.host_keys.clone());
         Box::new(Handle(dreist_editor::window::open_parented(&parent, gui, link, scale)))
     }
 
@@ -579,6 +582,11 @@ impl Editor for DreistEditor {
         // window takes it too.
         self.host_scale.store(factor.to_bits(), std::sync::atomic::Ordering::Relaxed);
         true
+    }
+
+    /// Live on Windows passes the keys for text boxes here.
+    fn host_key(&self, down: bool, character: u16, key_code: i16, modifiers: i16) -> bool {
+        lock(&self.host_keys).as_ref().is_some_and(|k| k.vst3(down, character, key_code, modifiers))
     }
 
     fn param_value_changed(&self, _id: &str, _normalized_value: f32) {}
@@ -732,8 +740,14 @@ mod tests {
     /// reaches the open editor through the bridge.
     #[test]
     fn host_resizes_follow_with_a_minimum() {
-        let ed =
-            DreistEditor { bridge: Arc::new(Bridge::default()), theme: String::new(), params: Arc::new(crate::DreistParams::default()), size: Default::default(), host_scale: 1.0f32.to_bits().into() };
+        let ed = DreistEditor {
+            bridge: Arc::new(Bridge::default()),
+            theme: String::new(),
+            params: Arc::new(crate::DreistParams::default()),
+            size: Default::default(),
+            host_scale: 1.0f32.to_bits().into(),
+            host_keys: Default::default(),
+        };
         let (mw, mh) = ed.min_size().expect("resizable");
         let (w, h) = dreist_gui::app::MIN_WINDOW;
         assert!(mw >= (w as f64 * 0.5) as u32 && mh >= (h as f64 * 0.5) as u32);
