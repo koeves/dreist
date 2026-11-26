@@ -335,8 +335,8 @@ S("WaveDisplayStyle", kind="WaveDisplayStyle", enumDisabledDrawMode="NormalDrawi
   colFill="PanelGradientStart", colAltFill="PanelGradientEnd", colTimelineBackground="PanelDark", colTimelineText="PanelBright",
   colTimelineMarkers="PanelBright", colCenterLine="PanelDark", colLine="PanelDark", colLineDisabled="PanelMedium", colLineLooping="EditorMedium",
   colStartMarker="PanelBrightest", colEndMarker="PanelBrightest", colLoopStartMarker="EditorBrightest", colLoopEndMarker="EditorBrightest",
-  colPlaybackMarker="EditorMedium", colText="PanelBrightest", colEnvelopeBack="EditorAltMedium", colEnvelopeLine="EditorAltDarkest",
-  colEnvelopeGrab="EditorAltBrightest")
+  colPlaybackMarker="EditorMedium", colText="PanelBrightest", colEnvelopeBack="PanelSpark", colEnvelopeLine="PanelSpark",
+  colEnvelopeGrab="PanelSpark")
 S("WaveDisplayZoomSliderStyle", "ScrollbarStyle", colFill="EditorMedium", colBorder="Transparent")
 S("WaveDisplayZoomSliderWaveStyle", "WaveDisplayStyle", "WaveDisplayStyle", colLine="PanelBright")
 ZOOM = dict(optDrawShadow="false", colText="PanelMedium", colAltText="EditorAltBrightest", **CLEAR)
