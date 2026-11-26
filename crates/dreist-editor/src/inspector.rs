@@ -1070,13 +1070,11 @@ impl Inspector {
                 if poly.len() < 2 {
                     continue;
                 }
-                // The 2 px line stays inside the area, so a full sustain
-                // does not vanish into the area's top edge.
-                let line_pts: Vec<(f32, f32)> = poly.iter().map(|&(x, py)| (x, py.clamp(y + 1.0, y + ah - 1.0))).collect();
+                let line_pts = poly.clone();
                 poly.push((poly.last().unwrap().0, y + ah));
                 poly.insert(0, (poly[0].0, y + ah));
-                p.fill_polygon(&poly, s.colour(WAVE_STYLE, "colEnvelopeBack", Colour::rgba(255, 192, 203, 255)).with_alpha(0.12));
-                p.polyline(&line_pts, s.colour(WAVE_STYLE, "colEnvelopeLine", Colour::rgba(255, 192, 203, 255)), 2.0);
+                p.fill_polygon(&poly, s.colour(WAVE_STYLE, "colEnvelopeBack", Colour::rgba(255, 192, 203, 255)).with_alpha(0.2));
+                p.polyline(&line_pts, s.colour(WAVE_STYLE, "colEnvelopeLine", Colour::rgba(255, 192, 203, 255)), 1.0);
                 let geo = EnvGeo { w, y0: wy, h, v0, vl, frames, rate: pk.rate, start: m.start, end: m.end };
                 let grabbed = self.env_drag.filter(|d| d.0 == is_amp).map(|d| d.1);
                 let handles = if mode == "OneShotLengthBound" { Vec::new() } else { env_handles(model, e, pad, l, is_amp, &mode, &geo, y, ah) };
